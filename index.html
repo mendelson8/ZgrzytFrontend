@@ -21,8 +21,6 @@
             background-color: #2a2a2a; border-radius: 8px; overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-
-        /* ZMIANA HTML: Kontener na wideo (miejsce na miniaturkę LUB odtwarzacz) */
         .video-placeholder {
             width: 100%;
             height: 180px;
@@ -34,12 +32,9 @@
             height: 100%;
             object-fit: cover;
         }
-        /* iframe będzie miał 'width: 100%' i 'height: 180px' z JS */
-
         .movie-info { padding: 16px; }
         .movie-info h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.15em; color: white; }
         .movie-info p { font-size: 0.9em; color: #b0b0b0; margin: 4px 0; }
-
         .segments-container {
             padding: 0 16px 16px 16px;
             max-height: 200px;
@@ -48,52 +43,76 @@
         }
         .segments-container h4 { margin-bottom: 8px; color: #eee; }
         .segments-container ul { list-style: none; padding-left: 0; margin: 0; }
-
-        /* ZMIANA HTML: Segmenty są teraz klikalne */
         .segment-item {
             border-bottom: 1px solid #3a3a3a; padding: 8px 4px;
-            cursor: pointer; /* Wskazuje, że można kliknąć */
+            cursor: pointer;
             transition: background-color 0.2s;
         }
         .segment-item:last-child { border-bottom: none; }
         .segment-item:hover { background-color: #3c3c3c; }
-
         .segment-time { font-weight: bold; color: #80cbc4; pointer-events: none; }
         .segment-desc { font-size: 0.9em; color: #ccc; pointer-events: none; }
         .segment-tags { font-size: 0.8em; color: #80cbc4; font-family: monospace; pointer-events: none; }
-
         #loading, #error { text-align: center; font-size: 1.2em; padding: 40px; }
         .error { color: #ff8a80; }
 
-        /* NOWE STYLE DLA SCROLLBARA */
-        .segments-container {
-            /* Dla Firefox */
+        /* --- STYLE DLA SCROLLBARÓW --- */
+
+        /* Ustawienia globalne dla Firefox (główny scrollbar) */
+        html {
             scrollbar-width: thin;
-            scrollbar-color: #555 #2a2a2a;
+            scrollbar-color: #555 #121212; /* Kciuk i Tło strony */
         }
 
-        /* Dla Chrome, Safari, Edge i innych (WebKit) */
-        .segments-container::-webkit-scrollbar {
+        /* Ustawienia dla wewnętrznego kontenera w Firefox */
+        .segments-container {
+            scrollbar-color: #555 #2a2a2a; /* Kciuk i Tło karty */
+        }
+
+        /* --- Ustawienia dla WebKit (Chrome, Safari, Edge) --- */
+
+        /* Ustawia szerokość dla WSZYSTKICH scrollbarów */
+        ::-webkit-scrollbar {
             width: 8px;
         }
 
-        .segments-container::-webkit-scrollbar-track {
-            background: #2a2a2a;
+        /* Tło dla scrollbara głównej strony */
+        html::-webkit-scrollbar-track {
+            background: #121212; /* Tło całej strony */
         }
 
-        .segments-container::-webkit-scrollbar-thumb {
+        /* Tło dla scrollbara wewnątrz karty */
+        .segments-container::-webkit-scrollbar-track {
+            background: #2a2a2a; /* Tło karty */
+        }
+
+        /* Wygląd "kciuka" (przesuwaka) */
+        ::-webkit-scrollbar-thumb {
             background-color: #555;
             border-radius: 10px;
+        }
+
+        /* Dodaje obramowanie w kolorze tła strony (dla głównego scrollbara) */
+        html::-webkit-scrollbar-thumb {
+            border: 2px solid #121212;
+        }
+
+        /* Dodaje obramowanie w kolorze tła karty (dla wewnętrznego scrollbara) */
+        .segments-container::-webkit-scrollbar-thumb {
             border: 2px solid #2a2a2a;
         }
 
-        .segments-container::-webkit-scrollbar-thumb:hover {
+        /* Efekt hover dla "kciuka" */
+        ::-webkit-scrollbar-thumb:hover {
             background-color: #777;
         }
-        .segments-container::-webkit-scrollbar-button {
-            display: none;
-        }
 
+        /* Agresywne ukrywanie strzałek (góra/dół) */
+        ::-webkit-scrollbar-button {
+            display: none;
+            width: 0;
+            height: 0;
+        }
     </style>
 </head>
 <body>
@@ -104,8 +123,6 @@
 </div>
 
 <script>
-    // KROK 2: Logika JavaScript
-
     const movieListContainer = document.getElementById('movieList');
     const loadingIndicator = document.getElementById('loading');
     const apiUrl = 'https://zgrzyt-api-901505990545.europe-west4.run.app/api';
@@ -116,7 +133,6 @@
         fetchAndRenderMovies();
     }
 
-    // 2. Funkcja pobierająca dane z Twojego API Spring Boot
     function fetchAndRenderMovies() {
         fetch(apiUrl)
             .then(response => {
@@ -133,7 +149,6 @@
                 movies.forEach(movie => {
                     const movieCard = document.createElement('div');
                     movieCard.className = 'movie-card';
-                    // Przechowujemy ID filmu na karcie, aby łatwo je odczytać
                     movieCard.dataset.movieId = movie.movieId;
 
                     let formattedDate = 'Brak daty';
@@ -142,7 +157,6 @@
                     }
                     const thumbnailUrl = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
 
-                    // ZMIANA HTML: Tworzymy placeholder, który zostanie zastąpiony przez odtwarzacz
                     let movieHtml = `
                             <div class="video-placeholder">
                                 <div id="player-${movie.movieId}">
@@ -155,7 +169,6 @@
                             </div>
                         `;
 
-                    // ZMIANA HTML: Tworzymy listę segmentów
                     let segmentsHtml = '<div class="segments-container"><h4>Segmenty:</h4>';
                     if (movie.segments && movie.segments.length > 0) {
                         segmentsHtml += '<ul>';
@@ -165,11 +178,10 @@
                             const seconds = (startTime % 60).toString().padStart(2, '0');
                             const time = `${minutes}:${seconds}`;
 
-                            // Dodajemy klasę 'segment-item' i 'data-start-time' do <li>
                             segmentsHtml += `
                                     <li class="segment-item" data-start-time="${startTime}">
                                         <span class="segment-time">${time}</span>
-                                        <p class="segment-desc">${segment.description || 'Brak descriptionu'}</p>
+                                        <p class="segment-desc">${segment.description || 'Brak opisu'}</p>
                                         <p class="segment-tags">${(segment.tags || []).join(', ')}</p>
                                     </li>
                                 `;
@@ -186,54 +198,40 @@
             })
             .catch(error => {
                 console.error('Błąd pobierania danych:', error);
-                movieListContainer.innerHTML = `<p id="error" class="error">Nie udało się załadować filmów.</p>`;
+                movieListContainer.innerHTML = `<p id="error" class="error">Nie udało się załadować filmów. Sprawdź, czy API działa i czy CORS jest włączony.</p>`;
             });
     }
 
-    // 3. Główna funkcja do odtwarzania wideo
     function playVideo(movieId, startTime) {
         const player = activePlayers[movieId];
 
-        // Jeśli odtwarzacz dla tego filmu już istnieje:
         if (player) {
-            player.seekTo(startTime, true); // Przewiń do czasu
-            player.playVideo();             // Odtwórz
-        }
-        // Jeśli odtwarzacz nie istnieje (pierwsze kliknięcie):
-        else {
-            // Stwórz nowy odtwarzacz YouTube
-            // Zastąpi on div o ID 'player-movieId' (w którym jest miniaturka)
+            player.seekTo(startTime, true);
+            player.playVideo();
+        } else {
             activePlayers[movieId] = new YT.Player(`player-${movieId}`, {
                 height: '180',
                 width: '100%',
                 videoId: movieId,
                 playerVars: {
-                    'autoplay': 1,     // Odtwórz automatycznie
-                    'start': startTime,  // Zacznij od podanego czasu
-                    'playsinline': 1   // Ważne dla urządzeń mobilnych
+                    'autoplay': 1,
+                    'start': startTime,
+                    'playsinline': 1
                 }
             });
         }
     }
 
-    // 4. Globalny "słuchacz" kliknięć
-    // Zamiast dodawać setki "słuchaczy", dodajemy jeden do rodzica
     movieListContainer.addEventListener('click', (event) => {
-        // Znajdź kliknięty element <li> z klasą 'segment-item'
         const segmentElement = event.target.closest('.segment-item');
-
-        // Jeśli kliknięto poza segmentem, nic nie rób
         if (!segmentElement) {
             return;
         }
 
-        // Znajdź kartę rodzica, aby dostać ID filmu
         const cardElement = event.target.closest('.movie-card');
-
         const movieId = cardElement.dataset.movieId;
         const startTime = segmentElement.dataset.startTime;
 
-        // Odtwórz wideo!
         playVideo(movieId, startTime);
     });
 
