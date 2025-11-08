@@ -9,11 +9,29 @@
 
     <style>
         body {
-            overflow: auto;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 24px; background-color: #121212; color: #e0e0e0;
         }
         h1 { text-align: center; color: white; }
+
+        #searchBar {
+            display: block;
+            width: 80%;
+            max-width: 600px;
+            margin: 20px auto 30px auto;
+            padding: 12px 16px;
+            font-size: 1.1em;
+            color: #e0e0e0;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #searchBar:focus {
+            border-color: #80cbc4;
+        }
+
         #movieList {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px; max-width: 1400px; margin: 20px auto;
@@ -23,111 +41,81 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         .video-placeholder {
-            width: 100%;
-            height: 180px;
-            background-color: #000;
+            width: 100%; height: 180px; background-color: #000;
             border-bottom: 1px solid #444;
         }
-        .video-placeholder img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .video-placeholder img { width: 100%; height: 100%; object-fit: cover; }
         .movie-info { padding: 16px; }
         .movie-info h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.15em; color: white; }
         .movie-info p { font-size: 0.9em; color: #b0b0b0; margin: 4px 0; }
         .segments-container {
-            padding: 0 16px 16px 16px;
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #444;
+            padding: 0 16px 16px 16px; max-height: 200px;
+            overflow-y: auto; border-top: 1px solid #444;
         }
         .segments-container h4 { margin-bottom: 8px; color: #eee; }
         .segments-container ul { list-style: none; padding-left: 0; margin: 0; }
         .segment-item {
             border-bottom: 1px solid #3a3a3a; padding: 8px 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            cursor: pointer; transition: background-color 0.2s;
         }
         .segment-item:last-child { border-bottom: none; }
         .segment-item:hover { background-color: #3c3c3c; }
         .segment-time { font-weight: bold; color: #80cbc4; pointer-events: none; }
         .segment-desc { font-size: 0.9em; color: #ccc; pointer-events: none; }
         .segment-tags { font-size: 0.8em; color: #80cbc4; font-family: monospace; pointer-events: none; }
-        #loading, #error { text-align: center; font-size: 1.2em; padding: 40px; }
+        #loading, #error, #noResults { text-align: center; font-size: 1.2em; padding: 40px; }
         .error { color: #ff8a80; }
 
-        /* --- STYLE DLA SCROLLBARÓW --- */
-
-        /* Ustawienia globalne dla Firefox (główny scrollbar) */
+        /* --- STYLE DLA SCROLLBARÓW (v4) --- */
         html {
             scrollbar-width: thin;
-            scrollbar-color: #555 #121212; /* Kciuk i Tło strony */
+            scrollbar-color: #555 #121212;
         }
-
-        /* Ustawienia dla wewnętrznego kontenera w Firefox */
         .segments-container {
-            scrollbar-color: #555 #2a2a2a; /* Kciuk i Tło karty */
+            scrollbar-color: #555 #2a2a2a;
         }
-
-        /* --- Ustawienia dla WebKit (Chrome, Safari, Edge) --- */
-
-        /* Ustawia szerokość dla WSZYSTKICH scrollbarów */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
-
-        /* Tło dla scrollbara głównej strony */
-        html::-webkit-scrollbar-track {
-            background: #121212; /* Tło całej strony */
+        html::-webkit-scrollbar-track,
+        body::-webkit-scrollbar-track {
+            background: #121212;
         }
-
-        /* Tło dla scrollbara wewnątrz karty */
         .segments-container::-webkit-scrollbar-track {
-            background: #2a2a2a; /* Tło karty */
+            background: #2a2a2a;
         }
-
-        /* Wygląd "kciuka" (przesuwaka) */
         ::-webkit-scrollbar-thumb {
             background-color: #555;
             border-radius: 10px;
         }
-
-        /* Dodaje obramowanie w kolorze tła strony (dla głównego scrollbara) */
-        html::-webkit-scrollbar-thumb {
+        html::-webkit-scrollbar-thumb,
+        body::-webkit-scrollbar-thumb {
             border: 2px solid #121212;
         }
-
-        /* Dodaje obramowanie w kolorze tła karty (dla wewnętrznego scrollbara) */
         .segments-container::-webkit-scrollbar-thumb {
             border: 2px solid #2a2a2a;
         }
-
-        /* Efekt hover dla "kciuka" */
         ::-webkit-scrollbar-thumb:hover {
             background-color: #777;
         }
-
-        ::-webkit-scrollbar-button {
-            display: none;
-            height: 0;
-            width: 0;
-        }
-
+        ::-webkit-scrollbar-button,
         ::-webkit-scrollbar-button:start:decrement,
         ::-webkit-scrollbar-button:end:increment {
             display: none !important;
-            height: 0;
-            width: 0;
-        }
-        scrollbarbutton {
-            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
     </style>
 </head>
 <body>
 
 <h1>🎞️ Filmy z Playlisty Zgrzytu</h1>
+
+<input type="search" id="searchBar" placeholder="Filtruj po tagach, opisie, tytule...">
+
+<p id="noResults" style="display: none;">Brak wyników...</p>
+
 <div id="movieList">
     <p id="loading">Ładowanie filmów...</p>
 </div>
@@ -138,6 +126,71 @@
     const apiUrl = 'https://zgrzyt-api-901505990545.europe-west4.run.app/api';
 
     let activePlayers = {};
+
+    // --- LOGIKA FILTROWANIA (v2 - Poprawiona) ---
+    let searchDebounceTimer;
+
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    }
+
+    function filterContent() {
+        const searchInput = document.getElementById('searchBar');
+        const searchTerms = searchInput.value.toLowerCase().split(' ').filter(term => term.length > 0);
+
+        let totalVisibleCards = 0;
+
+        document.querySelectorAll('.movie-card').forEach(card => {
+            if (searchTerms.length === 0) {
+                card.style.display = 'block';
+                card.querySelectorAll('.segment-item').forEach(segment => {
+                    segment.style.display = 'list-item';
+                });
+                totalVisibleCards++;
+                return;
+            }
+
+            let isMovieVisible = false;
+            const movieText = card.dataset.searchText || '';
+
+            if (searchTerms.every(term => movieText.includes(term))) {
+                isMovieVisible = true;
+            }
+
+            card.querySelectorAll('.segment-item').forEach(segment => {
+                const segmentText = segment.dataset.searchText || '';
+                const isSegmentVisible = searchTerms.every(term => segmentText.includes(term));
+
+                if (isSegmentVisible) {
+                    isMovieVisible = true;
+                    segment.style.display = 'list-item';
+                } else {
+                    segment.style.display = 'none';
+                }
+            });
+
+            card.style.display = isMovieVisible ? 'block' : 'none';
+            if (isMovieVisible) {
+                totalVisibleCards++;
+            }
+        });
+
+        const noResultsMessage = document.getElementById('noResults');
+        if (totalVisibleCards === 0 && searchTerms.length > 0) {
+            noResultsMessage.style.display = 'block';
+        } else {
+            noResultsMessage.style.display = 'none';
+        }
+    }
+
+    document.getElementById('searchBar').addEventListener('input', debounce(filterContent, 300));
+    // --- KONIEC LOGIKI FILTROWANIA ---
+
 
     function onYouTubeIframeAPIReady() {
         fetchAndRenderMovies();
@@ -160,6 +213,7 @@
                     const movieCard = document.createElement('div');
                     movieCard.className = 'movie-card';
                     movieCard.dataset.movieId = movie.movieId;
+                    movieCard.dataset.searchText = (movie.title || '').toLowerCase();
 
                     let formattedDate = 'Brak daty';
                     if (movie.date) {
@@ -188,8 +242,14 @@
                             const seconds = (startTime % 60).toString().padStart(2, '0');
                             const time = `${minutes}:${seconds}`;
 
+                            const segmentSearchText = `
+                                    ${time}
+                                    ${segment.description || ''}
+                                    ${(segment.tags || []).join(' ')}
+                                `.toLowerCase();
+
                             segmentsHtml += `
-                                    <li class="segment-item" data-start-time="${startTime}">
+                                    <li class="segment-item" data-start-time="${startTime}" data-search-text="${segmentSearchText}">
                                         <span class="segment-time">${time}</span>
                                         <p class="segment-desc">${segment.description || 'Brak opisu'}</p>
                                         <p class="segment-tags">${(segment.tags || []).join(', ')}</p>
