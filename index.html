@@ -107,13 +107,20 @@
             background-color: #777;
         }
 
-        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-button {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+
         ::-webkit-scrollbar-button:start:decrement,
         ::-webkit-scrollbar-button:end:increment {
             display: none;
-            width: 0;
             height: 0;
-            background-color: transparent;
+            width: 0;
+        }
+        scrollbarbutton {
+            display: none !important;
         }
     </style>
 </head>
