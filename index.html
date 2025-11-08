@@ -107,11 +107,13 @@
             background-color: #777;
         }
 
-        /* Agresywne ukrywanie strzałek (góra/dół) */
-        ::-webkit-scrollbar-button {
+        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-button:start:decrement,
+        ::-webkit-scrollbar-button:end:increment {
             display: none;
             width: 0;
             height: 0;
+            background-color: transparent;
         }
     </style>
 </head>
