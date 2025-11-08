@@ -107,8 +107,8 @@
                     movieCard.dataset.movieId = movie.movieId;
 
                     let formattedDate = 'Brak daty';
-                    if (movie.publicationDate) {
-                        formattedDate = new Date(movie.publicationDate).toLocaleDateString('pl-PL');
+                    if (movie.date) {
+                        formattedDate = new Date(movie.date).toLocaleDateString('pl-PL');
                     }
                     const thumbnailUrl = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
 
