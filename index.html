@@ -13,14 +13,88 @@
         gtag('config', 'G-0M91WW2KTX');
     </script>
 
-    <script async src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 24px; background-color: #121212; color: #e0e0e0;
         }
-        h1 { text-align: center; color: white; }
+
+        #headerContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin: 0 auto;
+            padding-right: 15px;
+        }
+
+        #aboutButton {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 101;
+            padding: 8px 15px;
+            background-color: #2a2a2a;
+            color: #80cbc4;
+            border: 1px solid #80cbc4;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #aboutButton:hover {
+            background-color: #80cbc4;
+            color: #121212;
+            box-shadow: 0 0 10px rgba(128, 203, 196, 0.5);
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            right: 0;
+            background-color: #1a1a1a;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
+            color: #e0e0e0;
+            text-align: left;
+        }
+        #sidebar-content {
+            padding: 25px;
+        }
+        #sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            cursor: pointer;
+            color: #80cbc4;
+        }
+        .sidebar-title {
+            color: white;
+            border-bottom: 2px solid #3c3c3c;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .skills-list p { margin: 5px 0; font-size: 0.95em; }
+        .skills-list strong { color: #80cbc4; }
+        .sidebar-contact { margin-top: 30px; font-weight: bold; color: #80cbc4; }
+        .sidebar-contact a { color: #80cbc4; text-decoration: none; }
 
         #searchBar {
             display: block;
@@ -32,29 +106,95 @@
             background-color: #2a2a2a;
             border: 1px solid #444;
             border-radius: 25px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #searchBar:focus {
+            border-color: #80cbc4;
         }
 
         #movieList {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px; max-width: 1400px; margin: 20px auto;
         }
-
         .movie-card {
             background-color: #2a2a2a; border-radius: 8px; overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
         }
         .video-placeholder { width: 100%; height: 180px; background-color: #000; }
         .video-placeholder img { width: 100%; height: 100%; object-fit: cover; }
         .movie-info { padding: 16px; }
         .movie-info h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.15em; color: white; }
         .movie-info p { font-size: 0.9em; color: #b0b0b0; margin: 4px 0; }
-        .segments-container { padding: 0 16px 16px 16px; max-height: 200px; overflow-y: auto; border-top: 1px solid #444; }
-        .segments-container ul { list-style: none; padding: 0; margin: 0; }
-        .segment-item { border-bottom: 1px solid #3a3a3a; padding: 8px 4px; cursor: pointer; }
+
+        .segments-container {
+            padding: 0 16px 16px 16px;
+            overflow-y: auto;
+            border-top: 1px solid #444;
+            position: relative;
+            flex-grow: 1;
+            min-height: 0;
+        }
+
+        .segments-container h4 { margin-bottom: 8px; color: #eee; }
+        .segments-container ul { list-style: none; padding-left: 0; margin: 0; }
+        .segment-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #3a3a3a; padding: 8px 4px; cursor: pointer;
+        }
+        .segment-item:last-child { border-bottom: none; }
         .segment-item:hover { background-color: #3c3c3c; }
-        .segment-time { font-weight: bold; color: #80cbc4; }
-        .segment-desc { font-size: 0.9em; color: #ccc; }
-        .segment-tags { font-size: 0.8em; color: #80cbc4; font-family: monospace; }
+
+        .play-icon {
+            font-size: 0.7em;
+            margin-right: 6px;
+            color: #80cbc4;
+        }
+
+        .segment-time { font-weight: bold; color: #80cbc4; pointer-events: none; margin-right: 10px; }
+        .segment-desc { font-size: 0.9em; color: #ccc; pointer-events: none; flex-grow: 1; }
+        .segment-tags { display: none; }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            color: #80cbc4;
+            padding: 20px;
+        }
+        #error, #noResults { text-align: center; font-size: 1.2em; padding: 40px; }
+        .error { color: #ff8a80; }
+        #loadingMore {
+            text-align: center;
+            padding: 20px;
+            color: #80cbc4;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            #headerContainer {
+                flex-direction: column;
+                gap: 15px;
+            }
+            h1 {
+                padding-right: 0;
+                font-size: 1.8em;
+            }
+            #aboutButton {
+                position: relative;
+                right: auto;
+                top: auto;
+                transform: none;
+            }
+        }
+
         html { scrollbar-width: thin; scrollbar-color: #555 #121212; }
         .segments-container { scrollbar-color: #555 #2a2a2a; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -65,147 +205,311 @@
         .segments-container::-webkit-scrollbar-thumb { border: 2px solid #2a2a2a; }
         ::-webkit-scrollbar-thumb:hover { background-color: #777; }
         ::-webkit-scrollbar-button, ::-webkit-scrollbar-button:start:decrement, ::-webkit-scrollbar-button:end:increment { display: none !important; width: 0 !important; height: 0 !important; }
-        #noResults { text-align:center; font-size:1.2em; padding:20px; display:none; }
     </style>
 </head>
 <body>
 
-<h1>🎞️ Filmy z Playlisty Zgrzytu</h1>
+<div id="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
+    <div id="sidebar-content">
+        <h2 class="sidebar-title">O PROJEKCIE I KONTAKT</h2>
+        <p style="font-size: 1.1em;">
+            Projekt zrobiony czysto hobbystycznie. Jeżeli chcesz przyczynić się do rozbudowy tej strony napisz tutaj:
+        </p>
+        <p class="sidebar-contact" style="font-size: 1.2em;">
+            <a href="mailto:kuba.mendel@wp.pl">📧 KONTAKT: kuba.mendel@wp.pl</a>
+        </p>
+    </div>
+</div>
+
+<div id="headerContainer">
+    <h1>🎞️ Filmy z Playlisty Zgrzytu</h1>
+    <button id="aboutButton" onclick="toggleSidebar()">O MNIE</button>
+</div>
+
 <input type="search" id="searchBar" placeholder="Filtruj po tagach, opisie, tytule...">
-<p id="noResults">Brak wyników...</p>
-<div id="movieList"></div>
+
+<p id="noResults" style="display: none;">Brak wyników...</p>
+
+<div id="movieList">
+    <p id="loading">Ładowanie...</p>
+</div>
+
+<div id="intersection-sentinel" style="height: 10px;"></div>
+<p id="loadingMore"></p>
 
 <script>
-    const apiUrl = 'https://zgrzyt-api-901505990545.europe-west4.run.app/api';
-    const movieList = document.getElementById('movieList');
-    let activePlayers = {};
-
-    fetch(apiUrl)
-        .then(res => res.json())
-        .then(movies => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if(entry.isIntersecting) {
-                        const placeholder = entry.target;
-                        const movie = JSON.parse(placeholder.dataset.movie);
-                        renderMovieCard(placeholder, movie);
-                        observer.unobserve(placeholder);
-                    }
-                });
-            }, { rootMargin: "200px" });
-
-            movies.forEach(movie => {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'movie-card';
-                placeholder.style.minHeight = '260px';
-                placeholder.dataset.movie = JSON.stringify(movie);
-                placeholder.innerHTML = `<div style='padding:20px;color:#777;'>Ładowanie...</div>`;
-                movieList.appendChild(placeholder);
-                observer.observe(placeholder);
-            });
-        });
-
-    function renderMovieCard(card, movie){
-        const date = movie.date ? new Date(movie.date).toLocaleDateString('pl-PL') : 'Brak daty';
-        const thumb = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
-
-        card.innerHTML = `
-        <div class="video-placeholder">
-            <img src="${thumb}">
-        </div>
-        <div class="movie-info">
-            <h3>${movie.title}</h3>
-            <p><strong>Data:</strong> ${date}</p>
-        </div>
-        <div class="segments-container">
-            <h4>Segmenty:</h4>
-            <ul>
-                ${movie.segments?.map(s => segmentHTML(s)).join('') || '<p>Brak segmentów</p>'}
-            </ul>
-        </div>`;
-
-        card.querySelectorAll('.segment-item').forEach(seg => {
-            seg.onclick = () => playVideo(movie.movieId, seg.dataset.start, card);
-        });
-    }
-
-    function segmentHTML(segment){
-        const t = segment.id.timestamp;
-        const h = Math.floor(t/3600), m = Math.floor((t%3600)/60), s = (t%60).toString().padStart(2,'0');
-        const time = h ? `${h}:${m.toString().padStart(2,'0')}:${s}` : `${m}:${s}`;
-        return `<li class='segment-item' data-start='${t}'>
-        <span class='segment-time'>${time}</span>
-        <p class='segment-desc'>${segment.description||''}</p>
-        <p class='segment-tags'>${(segment.tags||[]).join(', ')}</p>
-    </li>`;
-    }
-
-    function playVideo(id, start, card){
-        const box = card.querySelector('.video-placeholder');
-        if(!activePlayers[id]){
-            box.innerHTML = `<div id='player-${id}' style='width:100%;height:100%;'></div>`;
-            activePlayers[id] = new YT.Player(`player-${id}`,{
-                height:'180',width:'100%',videoId:id,
-                playerVars:{autoplay:1,start:start,playsinline:1}
-            });
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const button = document.getElementById("aboutButton");
+        if (sidebar.style.width === "300px") {
+            sidebar.style.width = "0";
+            button.style.display = "block";
         } else {
-            activePlayers[id].seekTo(start); activePlayers[id].playVideo();
+            sidebar.style.width = "300px";
+            button.style.display = "none";
         }
     }
 
-    let timer;
-    document.getElementById('searchBar').addEventListener('input', e => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            const q = e.target.value.toLowerCase();
-            const cards = [...movieList.children];
-            let visible = 0;
-            cards.forEach(c => {
-                const movie = JSON.parse(c.dataset.movie||'{}');
-                const text = (movie.title + (movie.segments||[]).map(s=>s.description).join(' ')).toLowerCase();
-                const show = text.includes(q);
-                c.style.display = show ? 'block' : 'none';
-                if(show) visible++;
+    const movieListContainer = document.getElementById('movieList');
+    const loadingIndicator = document.getElementById('loading');
+    const loadingMoreIndicator = document.getElementById('loadingMore');
+    const apiUrl = 'https://zgrzyt-api-901505990545.europe-west4.run.app/api';
+
+    let activePlayers = {};
+    let allMovies = [];
+    let renderedIndex = 0;
+    const BATCH_SIZE = 12;
+    let observer;
+
+    function debounce(func, delay) {
+        let searchDebounceTimer;
+        return function(...args) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    }
+
+    function filterContent() {
+        const searchInput = document.getElementById('searchBar');
+        const searchTerms = searchInput.value.toLowerCase().split(' ').filter(term => term.length > 0);
+
+        observer.unobserve(document.getElementById('intersection-sentinel'));
+        loadingMoreIndicator.style.display = 'none';
+        movieListContainer.innerHTML = '';
+
+        const filteredMovies = allMovies.map(movie => {
+            const movieTitleText = (movie.title || '').toLowerCase();
+            const titleMatches = searchTerms.every(term => movieTitleText.includes(term));
+
+            const matchingSegments = (movie.segments || []).filter(segment => {
+                const segmentSearchText = (
+                    (segment.description || '') + ' ' + (segment.tags || []).join(' ')
+                ).toLowerCase();
+                return searchTerms.every(term => segmentSearchText.includes(term));
             });
-            document.getElementById('noResults').style.display = visible? 'none':'block';
-        },300);
-    });
-</script>
-<script>
-    let searchTimer;
-    const searchInput = document.getElementById('searchBar');
 
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            const terms = searchInput.value.toLowerCase().split(' ').filter(t => t);
-            const cards = [...movieList.children];
-            let anyVisible = false;
+            if (titleMatches || matchingSegments.length > 0) {
+                const movieClone = { ...movie };
+                movieClone.segments = titleMatches ? movie.segments : matchingSegments;
+                return movieClone;
+            }
+            return null;
+        }).filter(movie => movie !== null);
 
-            cards.forEach(card => {
-                const movie = JSON.parse(card.dataset.movie || '{}');
-                const movieText = `${movie.title} ${(movie.segments||[]).map(s=>`${s.description} ${(s.tags||[]).join(' ')}`).join(' ')}`.toLowerCase();
-                let movieVisible = terms.every(t => movieText.includes(t));
+        renderCards(filteredMovies, false);
 
-                const segments = card.querySelectorAll('.segment-item');
-                let segmentMatches = false;
+        const noResultsMessage = document.getElementById('noResults');
+        if (filteredMovies.length === 0 && searchTerms.length > 0) {
+            noResultsMessage.style.display = 'block';
+        } else {
+            noResultsMessage.style.display = 'none';
+        }
 
-                segments.forEach(seg => {
-                    const segText = `${seg.querySelector('.segment-time')?.textContent} ${seg.querySelector('.segment-desc')?.textContent} ${seg.querySelector('.segment-tags')?.textContent}`.toLowerCase();
-                    const showSeg = terms.every(t => segText.includes(t));
-                    seg.style.display = showSeg ? 'list-item' : 'none';
-                    if (showSeg) segmentMatches = true;
+        if (searchTerms.length === 0) {
+            renderedIndex = BATCH_SIZE;
+            setupScrollObserver();
+        }
+    }
+
+    document.getElementById('searchBar').addEventListener('input', debounce(filterContent, 300));
+
+    function renderCards(moviesToRender, append = true) {
+        if (!append) {
+            movieListContainer.innerHTML = '';
+        }
+
+        moviesToRender.forEach(movie => {
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
+            movieCard.dataset.movieId = movie.movieId;
+            movieCard.dataset.searchText = (movie.title || '').toLowerCase();
+
+            let formattedDate = 'Brak daty';
+            if (movie.date) {
+                formattedDate = new Date(movie.date).toLocaleDateString('pl-PL');
+            }
+            const thumbnailUrl = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
+
+            let segmentsHtml = '<div class="segments-container"><h4>Segmenty:</h4>';
+            if (movie.segments && movie.segments.length > 0) {
+                segmentsHtml += '<ul>';
+                movie.segments.forEach(segment => {
+                    const totalSeconds = segment.id.timestamp;
+
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+                    const time = hours > 0
+                        ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds}`
+                        : `${minutes.toString().padStart(2, '0')}:${seconds}`;
+
+                    const segmentSearchText = (
+                        time + ' ' +
+                        (segment.description || '') + ' ' +
+                        (segment.tags || []).join(' ')
+                    ).toLowerCase();
+
+                    segmentsHtml += `
+                            <li class="segment-item" data-start-time="${totalSeconds}" data-search-text="${segmentSearchText}">
+                                <span class="play-icon">►</span>
+                                <span class="segment-time">${time}</span>
+                                <p class="segment-desc">${segment.description || 'Brak opisu'}</p>
+                            </li>
+                        `;
                 });
+                segmentsHtml += '</ul>';
+            } else {
+                segmentsHtml += '<p>Brak segmentów dla tego filmu.</p>';
+            }
+            segmentsHtml += '</div>';
 
-                const finalVisible = movieVisible || segmentMatches;
-                card.style.display = finalVisible ? 'block' : 'none';
-                if(finalVisible) anyVisible = true;
+            movieCard.innerHTML = `
+                    <div class="video-placeholder">
+                        <div id="player-${movie.movieId}">
+                            <img src="${thumbnailUrl}" alt="Miniaturka filmu" style="width:100%; height:100%; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3>${movie.title}</h3>
+                        <p><strong>Data:</strong> ${formattedDate}</p>
+                    </div>
+                    ${segmentsHtml}
+                `;
+            movieListContainer.appendChild(movieCard);
+            const segmentsContainer = movieCard.querySelector('.segments-container');
+            segmentsContainer.addEventListener('wheel', (event) => {
+                const container = event.currentTarget;
+
+                if (container.scrollHeight <= container.clientHeight) {
+                    return;
+                }
+
+                const isAtTop = container.scrollTop === 0;
+                const isAtBottom = Math.abs(container.scrollHeight - container.clientHeight - container.scrollTop) < 1;
+
+                if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
+                    event.preventDefault();
+                }
+            });
+        });
+        loadingMoreIndicator.style.display = 'none';
+    }
+
+    function loadNextBatch() {
+        if (renderedIndex >= allMovies.length) {
+            observer.unobserve(document.getElementById('intersection-sentinel'));
+            loadingMoreIndicator.textContent = "Wszystkie filmy załadowane.";
+            loadingMoreIndicator.style.display = 'block';
+            return;
+        }
+
+        loadingMoreIndicator.textContent = "Ładuję więcej...";
+        loadingMoreIndicator.style.display = 'block';
+
+        const nextBatch = allMovies.slice(renderedIndex, renderedIndex + BATCH_SIZE);
+        renderCards(nextBatch, true);
+        renderedIndex += BATCH_SIZE;
+    }
+
+    function setupScrollObserver() {
+        const sentinel = document.getElementById('intersection-sentinel');
+        if (observer) {
+            observer.disconnect();
+        }
+
+        observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadNextBatch();
+            }
+        }, {
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+
+        observer.observe(sentinel);
+    }
+
+    function onYouTubeIframeAPIReady() {
+        fetchAndRenderMovies();
+    }
+
+    function fetchAndRenderMovies() {
+        console.time("Pobieranie wszystkich filmów (dla wyszukiwarki)");
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(movies => {
+                console.timeEnd("Pobieranie wszystkich filmów (dla wyszukiwarki)");
+                allMoviesForSearch = movies;
+            })
+            .catch(error => {
+                console.timeEnd("Pobieranie wszystkich filmów (dla wyszukiwarki)");
+                console.error('Błąd pobierania danych do wyszukiwarki:', error);
             });
 
-            document.getElementById('noResults').style.display = anyVisible ? 'none' : 'block';
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
+                return response.json();
+            })
+            .then(movies => {
+                loadingIndicator.remove();
+                if (movies.length === 0) {
+                    movieListContainer.innerHTML = '<p>Brak filmów w bazie danych.</p>';
+                    return;
+                }
 
-        }, 300);
+                allMovies = movies;
+                movieListContainer.innerHTML = '';
+
+                renderedIndex = 0;
+                loadNextBatch();
+                setupScrollObserver();
+
+            })
+            .catch(error => {
+                console.error('Błąd pobierania danych:', error);
+                loadingIndicator.remove();
+                movieListContainer.innerHTML = `<p id="error" class="error">Nie udało się załadować filmów. Spróbuj później.</p>`;
+            });
+    }
+
+    function playVideo(movieId, startTime) {
+        const player = activePlayers[movieId];
+
+        if (player) {
+            player.seekTo(startTime, true);
+            player.playVideo();
+        } else {
+            activePlayers[movieId] = new YT.Player(`player-${movieId}`, {
+                height: '180',
+                width: '100%',
+                videoId: movieId,
+                playerVars: {
+                    'autoplay': 1,
+                    'start': startTime,
+                    'playsinline': 1
+                }
+            });
+        }
+    }
+
+    movieListContainer.addEventListener('click', (event) => {
+        const segmentElement = event.target.closest('.segment-item');
+        if (!segmentElement) {
+            return;
+        }
+
+        const cardElement = event.target.closest('.movie-card');
+        const movieId = cardElement.dataset.movieId;
+        const startTime = segmentElement.dataset.startTime;
+
+        playVideo(movieId, startTime);
     });
 </script>
+
 </body>
 </html>
