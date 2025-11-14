@@ -198,6 +198,11 @@
       padding: 16px;
       padding-top: 8px;
       flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
     }
 
     .movie-info h3 {
@@ -206,12 +211,32 @@
       color: var(--text-primary);
       word-wrap: break-word;
       overflow-wrap: break-word;
+      margin: 0;
     }
 
     .movie-info p {
       font-size: 0.9em;
       color: var(--text-tertiary);
       margin: 4px 0;
+    }
+
+    .movie-info-left {
+      flex-grow: 1;
+    }
+
+    .movie-info .edit-icon {
+      position: absolute;
+      right: 16px;
+      top: 78%;
+      transform: translateY(-50%);
+      font-size: 0.9em;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .movie-info .edit-icon:hover {
+      color: var(--text-primary);
     }
 
     /* Segments Container */
@@ -564,6 +589,7 @@
         width: 95%;
         margin: 30% auto;
       }
+
     }
   </style>
 </head>
@@ -625,8 +651,8 @@
 <script>
   // ========== CONFIG ==========
   const CONFIG = {
-    API_URL: 'https://zgrzyt-api-901505990545.europe-west4.run.app/api',
-    //API_URL: 'http://localhost:8080/api',
+    //API_URL: 'https://zgrzyt-api-901505990545.europe-west4.run.app/api',
+    API_URL: 'http://localhost:8080/api',
     BATCH_SIZE: 12,
     SEARCH_DELAY: 300,
     INTERSECTION_MARGIN: '100px'
@@ -711,6 +737,7 @@
     segments.forEach(segment => {
       const time = formatTime(segment.id.timestamp);
       const description = segment.description || 'Brak opisu';
+      const tags = segment.tags ? segment.tags.join(', ') : '';
 
       const option = document.createElement('div');
       option.className = 'segment-option';
@@ -721,6 +748,10 @@
         state.currentFixData.timestamp = segment.id.timestamp;
         document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('selected'));
         option.classList.add('selected');
+
+        // Pre-fill the description and tags fields
+        DOM.fixDescription.value = segment.description || '';
+        DOM.fixTags.value = tags;
       });
 
       DOM.segmentSelector.appendChild(option);
@@ -794,9 +825,7 @@
   });
 
   function buildSegmentsHtml(segments, movieId) {
-    let html = '<div class="segments-container"><div class="segments-header"><h4>Segmenty:</h4>';
-    html += `<i class="fas fa-pencil-alt edit-icon" title="Zaproponuj poprawkę" data-movie-id="${movieId}"></i></div>`;
-
+    let html = '<div class="segments-container"><div class="segments-header"><h4>Segmenty:</h4></div>';
     if (!segments || segments.length === 0) {
       return html + '<p>Brak segmentów dla tego filmu.</p></div>';
     }
@@ -834,14 +863,17 @@
         </div>
       </div>
       <div class="movie-info">
-        <h3>${movie.title}</h3>
-        <p><strong>Data:</strong> ${formatDate(movie.date)}</p>
+        <div class="movie-info-left">
+          <h3>${movie.title}</h3>
+          <p><strong>Data:</strong> ${formatDate(movie.date)}</p>
+        </div>
+        <i class="fas fa-pencil-alt edit-icon" title="Zaproponuj poprawkę" data-movie-id="${movie.movieId}"></i>
       </div>
       ${segmentsHtml}
     `;
 
-    // Attach edit icon handler in segments header
-    const editIcon = card.querySelector('.segments-header .edit-icon');
+    // Attach edit icon handler
+    const editIcon = card.querySelector('.movie-info .edit-icon');
     if (editIcon) {
       editIcon.addEventListener('click', (e) => {
         e.stopPropagation();
