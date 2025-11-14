@@ -1,514 +1,1024 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zgrzyt Wiki - Filmy</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zgrzyt Wiki - Filmy</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0M91WW2KTX"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <style>
+    :root {
+      --bg-primary: #121212;
+      --bg-secondary: #2a2a2a;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #e0e0e0;
+      --text-tertiary: #b0b0b0;
+      --accent: #80cbc4;
+      --border: #444;
+      --border-light: #3a3a3a;
+      --border-lighter: #3c3c3c;
+    }
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0M91WW2KTX"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-0M91WW2KTX');
-    </script>
+    * {
+      box-sizing: border-box;
+    }
 
-    <script src="https://www.youtube.com/iframe_api"></script>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background-color: var(--bg-primary);
+      color: var(--text-secondary);
+    }
 
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 24px; background-color: #121212; color: #e0e0e0;
-        }
+    h1, h2, h3, h4 {
+      margin: 0;
+    }
 
-        #headerContainer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin-bottom: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: white;
-            margin: 0 auto;
-            padding-right: 15px;
-        }
+    /* Header */
+    #headerContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      margin-bottom: 20px;
+    }
 
-        #aboutButton {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 101;
-            padding: 8px 15px;
-            background-color: #2a2a2a;
-            color: #80cbc4;
-            border: 1px solid #80cbc4;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        #aboutButton:hover {
-            background-color: #80cbc4;
-            color: #121212;
-            box-shadow: 0 0 10px rgba(128, 203, 196, 0.5);
-        }
+    h1 {
+      text-align: center;
+      color: var(--text-primary);
+      padding-right: 15px;
+    }
 
-        #sidebar {
-            height: 100%;
-            width: 0;
-            position: fixed;
-            z-index: 100;
-            top: 0;
-            right: 0;
-            background-color: #1a1a1a;
-            overflow-x: hidden;
-            transition: 0.3s;
-            padding-top: 60px;
-            box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
-            color: #e0e0e0;
-            text-align: left;
-        }
-        #sidebar-content {
-            padding: 25px;
-        }
-        #sidebar .closebtn {
-            position: absolute;
-            top: 0;
-            right: 25px;
-            font-size: 36px;
-            margin-left: 50px;
-            cursor: pointer;
-            color: #80cbc4;
-        }
-        .sidebar-title {
-            color: white;
-            border-bottom: 2px solid #3c3c3c;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .skills-list p { margin: 5px 0; font-size: 0.95em; }
-        .skills-list strong { color: #80cbc4; }
-        .sidebar-contact { margin-top: 30px; font-weight: bold; color: #80cbc4; }
-        .sidebar-contact a { color: #80cbc4; text-decoration: none; }
+    /* Buttons */
+    #aboutButton {
+      position: absolute;
+      right: 20px;
+      padding: 8px 15px;
+      background-color: var(--bg-secondary);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: background-color 0.2s, color 0.2s;
+    }
 
-        #searchBar {
-            display: block;
-            width: 80%; max-width: 600px;
-            margin: 20px auto 30px auto;
-            padding: 12px 16px;
-            font-size: 1.1em;
-            color: #e0e0e0;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 25px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        #searchBar:focus {
-            border-color: #80cbc4;
-        }
+    #aboutButton:hover {
+      background-color: var(--accent);
+      color: var(--bg-primary);
+      box-shadow: 0 0 10px rgba(128, 203, 196, 0.5);
+    }
 
-        #movieList {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px; max-width: 1400px; margin: 20px auto;
-        }
-        .movie-card {
-            background-color: #2a2a2a; border-radius: 8px; overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            max-height: 600px;
-        }
-        .video-placeholder { width: 100%; height: 180px; background-color: #000; }
-        .video-placeholder img { width: 100%; height: 100%; object-fit: cover; }
-        .movie-info { padding: 16px; }
-        .movie-info h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.15em; color: white; }
-        .movie-info p { font-size: 0.9em; color: #b0b0b0; margin: 4px 0; }
+    /* Sidebar */
+    #sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      z-index: 100;
+      top: 0;
+      right: 0;
+      background-color: var(--bg-tertiary);
+      overflow-x: hidden;
+      transition: width 0.3s;
+      padding-top: 60px;
+      box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
+      color: var(--text-secondary);
+    }
 
-        .segments-container {
-            padding: 0 16px 16px 16px;
-            overflow-y: auto;
-            border-top: 1px solid #444;
-            position: relative;
-            flex-grow: 1;
-            min-height: 0;
-        }
+    #sidebar-content {
+      padding: 25px;
+    }
 
-        .segments-container h4 { margin-bottom: 8px; color: #eee; }
-        .segments-container ul { list-style: none; padding-left: 0; margin: 0; }
-        .segment-item {
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #3a3a3a; padding: 8px 4px; cursor: pointer;
-        }
-        .segment-item:last-child { border-bottom: none; }
-        .segment-item:hover { background-color: #3c3c3c; }
+    #sidebar .closebtn {
+      position: absolute;
+      top: 0;
+      right: 25px;
+      font-size: 36px;
+      cursor: pointer;
+      color: var(--accent);
+    }
 
-        .play-icon {
-            font-size: 0.7em;
-            margin-right: 6px;
-            color: #80cbc4;
-        }
+    .sidebar-title {
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-light);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
 
-        .segment-time { font-weight: bold; color: #80cbc4; pointer-events: none; margin-right: 10px; }
-        .segment-desc { font-size: 0.9em; color: #ccc; pointer-events: none; flex-grow: 1; }
-        .segment-tags { display: none; }
+    .sidebar-contact {
+      margin-top: 30px;
+      font-weight: bold;
+      color: var(--accent);
+    }
 
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5em;
-            color: #80cbc4;
-            padding: 20px;
-        }
-        #error, #noResults { text-align: center; font-size: 1.2em; padding: 40px; }
-        .error { color: #ff8a80; }
-        #loadingMore {
-            text-align: center;
-            padding: 20px;
-            color: #80cbc4;
-            font-size: 1.1em;
-            display: none;
-        }
+    .sidebar-contact a {
+      color: var(--accent);
+      text-decoration: none;
+    }
 
-        @media (max-width: 600px) {
-            #headerContainer {
-                flex-direction: column;
-                gap: 15px;
-            }
-            h1 {
-                padding-right: 0;
-                font-size: 1.8em;
-            }
-            #aboutButton {
-                position: relative;
-                right: auto;
-                top: auto;
-                transform: none;
-            }
-        }
+    .sidebar-contact a:hover {
+      text-decoration: underline;
+    }
 
-        html { scrollbar-width: thin; scrollbar-color: #555 #121212; }
-        .segments-container { scrollbar-color: #555 #2a2a2a; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        html::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: #121212; }
-        .segments-container::-webkit-scrollbar-track { background: #2a2a2a; }
-        ::-webkit-scrollbar-thumb { background-color: #555; border-radius: 10px; }
-        html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { border: 2px solid #121212; }
-        .segments-container::-webkit-scrollbar-thumb { border: 2px solid #2a2a2a; }
-        ::-webkit-scrollbar-thumb:hover { background-color: #777; }
-        ::-webkit-scrollbar-button, ::-webkit-scrollbar-button:start:decrement, ::-webkit-scrollbar-button:end:increment { display: none !important; width: 0 !important; height: 0 !important; }
-    </style>
+    /* Search Bar */
+    #searchBar {
+      display: block;
+      width: 80%;
+      max-width: 600px;
+      margin: 20px auto 30px;
+      padding: 12px 16px;
+      font-size: 1.1em;
+      color: var(--text-secondary);
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 25px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #searchBar:focus {
+      border-color: var(--accent);
+    }
+
+    /* Movie List Grid */
+    #movieList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 20px auto;
+    }
+
+    /* Movie Card */
+    .movie-card {
+      position: relative;
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      max-height: 600px;
+    }
+
+    .edit-icon {
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      font-size: 0.9em;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .edit-icon:hover {
+      color: var(--text-primary);
+    }
+
+    .video-placeholder {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      flex-shrink: 0;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    .video-placeholder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .movie-info {
+      padding: 16px;
+      padding-top: 8px;
+      flex-shrink: 0;
+    }
+
+    .movie-info h3 {
+      margin-bottom: 8px;
+      font-size: 1.15em;
+      color: var(--text-primary);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .movie-info p {
+      font-size: 0.9em;
+      color: var(--text-tertiary);
+      margin: 4px 0;
+    }
+
+    /* Segments Container */
+    .segments-container {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+      flex-grow: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .segments-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .segments-header .edit-icon {
+      font-size: 0.8em;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: color 0.2s;
+      margin-left: 10px;
+      position: relative;
+      top: -5px;
+    }
+
+    .segments-header .edit-icon:hover {
+      color: var(--text-primary);
+    }
+
+    .segments-container h4 {
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .segments-container ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .segment-item {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+      padding: 8px 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .segment-item:last-child {
+      border-bottom: none;
+    }
+
+    .segment-item:hover {
+      background-color: var(--border-lighter);
+    }
+
+    .play-icon {
+      font-size: 0.7em;
+      margin-right: 6px;
+      color: var(--accent);
+    }
+
+    .segment-time {
+      font-weight: bold;
+      color: var(--accent);
+      pointer-events: none;
+      margin-right: 10px;
+    }
+
+    .segment-desc {
+      font-size: 0.9em;
+      color: #ccc;
+      pointer-events: none;
+      flex-grow: 1;
+      margin: 0;
+    }
+
+    /* Messages */
+    #loading, #loadingMore, #noResults, #error {
+      text-align: center;
+      padding: 20px;
+      color: var(--accent);
+      font-size: 1.1em;
+    }
+
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5em;
+    }
+
+    #error {
+      color: #ff8a80;
+      font-size: 1.2em;
+      padding: 40px;
+    }
+
+    #noResults {
+      font-size: 1.2em;
+      padding: 40px;
+    }
+
+    #loadingMore {
+      display: none;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 200;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .close-modal {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--accent);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .close-modal:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      background-color: var(--bg-primary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.95em;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 5px rgba(128, 203, 196, 0.3);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .modal-button.cancel {
+      background-color: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .modal-button.cancel:hover {
+      background-color: var(--border-light);
+    }
+
+    .modal-button.submit {
+      background-color: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .modal-button.submit:hover {
+      background-color: #6ab8b0;
+    }
+
+    .modal-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .success-message {
+      color: #4caf50;
+      padding: 10px;
+      background-color: rgba(76, 175, 80, 0.1);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .segments-selector {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+
+    .segment-option {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .segment-option:last-child {
+      border-bottom: none;
+    }
+
+    .segment-option:hover {
+      background-color: var(--border-lighter);
+    }
+
+    .segment-option.selected {
+      background-color: rgba(128, 203, 196, 0.2);
+      border-left: 3px solid var(--accent);
+      padding-left: 7px;
+    }
+
+    /* Scrollbars */
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #555 var(--bg-primary);
+    }
+
+    .segments-container {
+      scrollbar-color: #555 var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    .segments-container::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #555;
+      border-radius: 10px;
+    }
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+      border: 2px solid var(--bg-primary);
+    }
+
+    .segments-container::-webkit-scrollbar-thumb {
+      border: 2px solid var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #777;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      #headerContainer {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      h1 {
+        padding-right: 0;
+        font-size: 1.8em;
+      }
+
+      #aboutButton {
+        position: relative;
+        right: auto;
+      }
+
+      #searchBar {
+        width: 90%;
+      }
+
+      .modal-content {
+        width: 95%;
+        margin: 30% auto;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
-    <div id="sidebar-content">
-        <h2 class="sidebar-title">O PROJEKCIE I KONTAKT</h2>
-        <p style="font-size: 1.1em;">
-            Projekt zrobiony czysto hobbystycznie. Jeżeli chcesz przyczynić się do rozbudowy tej strony napisz tutaj:
-        </p>
-        <p class="sidebar-contact" style="font-size: 1.2em;">
-            <a href="mailto:kuba.mendel@wp.pl">📧 KONTAKT: kuba.mendel@wp.pl</a>
-        </p>
-    </div>
+  <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
+  <div id="sidebar-content">
+    <h2 class="sidebar-title">O PROJEKCIE I KONTAKT</h2>
+    <p>Projekt zrobiony czysto hobbystycznie. Jeżeli chcesz przyczynić się do rozbudowy tej strony napisz tutaj:</p>
+    <p class="sidebar-contact"><a href="mailto:kuba.mendel@wp.pl">📧 KONTAKT: kuba.mendel@wp.pl</a></p>
+  </div>
 </div>
 
 <div id="headerContainer">
-    <h1>🎞️ Filmy z Playlisty Zgrzytu</h1>
-    <button id="aboutButton" onclick="toggleSidebar()">O MNIE</button>
+  <h1>🎞️ Filmy z Playlisty Zgrzytu</h1>
+  <button id="aboutButton" onclick="toggleSidebar()">O MNIE</button>
 </div>
 
 <input type="search" id="searchBar" placeholder="Filtruj po tagach, opisie, tytule...">
-
 <p id="noResults" style="display: none;">Brak wyników...</p>
 
 <div id="movieList">
-    <p id="loading">Ładowanie...</p>
+  <p id="loading">Ładowanie...</p>
 </div>
 
 <div id="intersection-sentinel" style="height: 10px;"></div>
 <p id="loadingMore"></p>
 
+<!-- Fix Modal -->
+<div id="fixModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Zaproponuj Poprawkę</h2>
+      <span class="close-modal" onclick="closeFixModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="success-message" id="successMessage">✓ Poprawka wysłana pomyślnie!</div>
+      <div class="form-group">
+        <label>Wybierz Segment:</label>
+        <div class="segments-selector" id="segmentSelector"></div>
+      </div>
+      <div class="form-group">
+        <label for="fixDescription">Nowy Opis:</label>
+        <textarea id="fixDescription" placeholder="Zaproponuj nowy opis dla tego segmentu..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="fixTags">Tagi (oddzielone przecinkami):</label>
+        <input type="text" id="fixTags" placeholder="np. tag1, tag2, tag3">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-button cancel" onclick="closeFixModal()">Anuluj</button>
+      <button class="modal-button submit" id="submitFixBtn" onclick="submitFix()">Wyślij Poprawkę</button>
+    </div>
+  </div>
+</div>
+
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const button = document.getElementById("aboutButton");
-        if (sidebar.style.width === "300px") {
-            sidebar.style.width = "0";
-            button.style.display = "block";
-        } else {
-            sidebar.style.width = "300px";
-            button.style.display = "none";
-        }
+  // ========== CONFIG ==========
+  const CONFIG = {
+    API_URL: 'https://zgrzyt-api-901505990545.europe-west4.run.app/api',
+    //API_URL: 'http://localhost:8080/api',
+    BATCH_SIZE: 12,
+    SEARCH_DELAY: 300,
+    INTERSECTION_MARGIN: '100px'
+  };
+
+
+  const state = {
+    allMovies: [],
+    activePlayers: {},
+    renderedIndex: 0,
+    observer: null,
+    currentFixData: { movieId: null, timestamp: null }
+  };
+
+  const DOM = {
+    sidebar: document.getElementById('sidebar'),
+    aboutButton: document.getElementById('aboutButton'),
+    movieList: document.getElementById('movieList'),
+    searchBar: document.getElementById('searchBar'),
+    loading: document.getElementById('loading'),
+    loadingMore: document.getElementById('loadingMore'),
+    noResults: document.getElementById('noResults'),
+    sentinel: document.getElementById('intersection-sentinel'),
+    fixModal: document.getElementById('fixModal'),
+    segmentSelector: document.getElementById('segmentSelector'),
+    fixDescription: document.getElementById('fixDescription'),
+    fixTags: document.getElementById('fixTags'),
+    submitFixBtn: document.getElementById('submitFixBtn'),
+    successMessage: document.getElementById('successMessage')
+  };
+
+
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', 'G-0M91WW2KTX');
+
+  function toggleSidebar() {
+    const isOpen = DOM.sidebar.style.width === '300px';
+    DOM.sidebar.style.width = isOpen ? '0' : '300px';
+    DOM.aboutButton.style.display = isOpen ? 'block' : 'none';
+  }
+
+  function formatDate(date) {
+    return date ? new Date(date).toLocaleDateString('pl-PL') : 'Brak daty';
+  }
+
+  function formatTime(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    return hours > 0
+      ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds}`
+      : `${minutes.toString().padStart(2, '0')}:${seconds}`;
+  }
+
+  // ========== FIX MODAL ==========
+  function openFixModal(movieId) {
+    state.currentFixData = { movieId, timestamp: null };
+    DOM.successMessage.style.display = 'none';
+    DOM.fixDescription.value = '';
+    DOM.fixTags.value = '';
+    DOM.submitFixBtn.disabled = false;
+    DOM.fixModal.style.display = 'block';
+
+    const movie = state.allMovies.find(m => m.movieId === movieId);
+    if (movie && movie.segments && movie.segments.length > 0) {
+      populateSegmentSelector(movie.segments);
     }
+  }
 
-    const movieListContainer = document.getElementById('movieList');
-    const loadingIndicator = document.getElementById('loading');
-    const loadingMoreIndicator = document.getElementById('loadingMore');
-    const apiUrl = 'https://zgrzyt-api-901505990545.europe-west4.run.app/api';
+  function closeFixModal() {
+    DOM.fixModal.style.display = 'none';
+    state.currentFixData = { movieId: null, timestamp: null };
+  }
 
-    let activePlayers = {};
-    let allMovies = [];
-    let renderedIndex = 0;
-    const BATCH_SIZE = 12;
-    let observer;
+  function populateSegmentSelector(segments) {
+    DOM.segmentSelector.innerHTML = '';
 
-    function debounce(func, delay) {
-        let searchDebounceTimer;
-        return function(...args) {
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                func.apply(this, args);
-            }, delay);
-        };
-    }
+    segments.forEach(segment => {
+      const time = formatTime(segment.id.timestamp);
+      const description = segment.description || 'Brak opisu';
 
-    function filterContent() {
-        const searchInput = document.getElementById('searchBar');
-        const searchTerms = searchInput.value.toLowerCase().split(' ').filter(term => term.length > 0);
+      const option = document.createElement('div');
+      option.className = 'segment-option';
+      option.innerHTML = `<strong style="color: var(--accent);">${time}</strong> - ${description}`;
+      option.dataset.timestamp = segment.id.timestamp;
 
-        observer.unobserve(document.getElementById('intersection-sentinel'));
-        loadingMoreIndicator.style.display = 'none';
-        movieListContainer.innerHTML = '';
+      option.addEventListener('click', () => {
+        state.currentFixData.timestamp = segment.id.timestamp;
+        document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+      });
 
-        const filteredMovies = allMovies.map(movie => {
-            const movieTitleText = (movie.title || '').toLowerCase();
-            const titleMatches = searchTerms.every(term => movieTitleText.includes(term));
-
-            const matchingSegments = (movie.segments || []).filter(segment => {
-                const segmentSearchText = (
-                    (segment.description || '') + ' ' + (segment.tags || []).join(' ')
-                ).toLowerCase();
-                return searchTerms.every(term => segmentSearchText.includes(term));
-            });
-
-            if (titleMatches || matchingSegments.length > 0) {
-                const movieClone = { ...movie };
-                movieClone.segments = titleMatches ? movie.segments : matchingSegments;
-                return movieClone;
-            }
-            return null;
-        }).filter(movie => movie !== null);
-
-        renderCards(filteredMovies, false);
-
-        const noResultsMessage = document.getElementById('noResults');
-        if (filteredMovies.length === 0 && searchTerms.length > 0) {
-            noResultsMessage.style.display = 'block';
-        } else {
-            noResultsMessage.style.display = 'none';
-        }
-
-        if (searchTerms.length === 0) {
-            renderedIndex = BATCH_SIZE;
-            setupScrollObserver();
-        }
-    }
-
-    document.getElementById('searchBar').addEventListener('input', debounce(filterContent, 300));
-
-    function renderCards(moviesToRender, append = true) {
-        if (!append) {
-            movieListContainer.innerHTML = '';
-        }
-
-        moviesToRender.forEach(movie => {
-            const movieCard = document.createElement('div');
-            movieCard.className = 'movie-card';
-            movieCard.dataset.movieId = movie.movieId;
-            movieCard.dataset.searchText = (movie.title || '').toLowerCase();
-
-            let formattedDate = 'Brak daty';
-            if (movie.date) {
-                formattedDate = new Date(movie.date).toLocaleDateString('pl-PL');
-            }
-            const thumbnailUrl = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
-
-            let segmentsHtml = '<div class="segments-container"><h4>Segmenty:</h4>';
-            if (movie.segments && movie.segments.length > 0) {
-                segmentsHtml += '<ul>';
-                movie.segments.forEach(segment => {
-                    const totalSeconds = segment.id.timestamp;
-
-                    const hours = Math.floor(totalSeconds / 3600);
-                    const minutes = Math.floor((totalSeconds % 3600) / 60);
-                    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-                    const time = hours > 0
-                        ? `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds}`
-                        : `${minutes.toString().padStart(2, '0')}:${seconds}`;
-
-                    const segmentSearchText = (
-                        time + ' ' +
-                        (segment.description || '') + ' ' +
-                        (segment.tags || []).join(' ')
-                    ).toLowerCase();
-
-                    segmentsHtml += `
-                            <li class="segment-item" data-start-time="${totalSeconds}" data-search-text="${segmentSearchText}">
-                                <span class="play-icon">►</span>
-                                <span class="segment-time">${time}</span>
-                                <p class="segment-desc">${segment.description || 'Brak opisu'}</p>
-                            </li>
-                        `;
-                });
-                segmentsHtml += '</ul>';
-            } else {
-                segmentsHtml += '<p>Brak segmentów dla tego filmu.</p>';
-            }
-            segmentsHtml += '</div>';
-
-            movieCard.innerHTML = `
-                    <div class="video-placeholder">
-                        <div id="player-${movie.movieId}">
-                            <img src="${thumbnailUrl}" alt="Miniaturka filmu" style="width:100%; height:100%; object-fit: cover;">
-                        </div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>${movie.title}</h3>
-                        <p><strong>Data:</strong> ${formattedDate}</p>
-                    </div>
-                    ${segmentsHtml}
-                `;
-            movieListContainer.appendChild(movieCard);
-            const segmentsContainer = movieCard.querySelector('.segments-container');
-            segmentsContainer.addEventListener('wheel', (event) => {
-                const container = event.currentTarget;
-
-                if (container.scrollHeight <= container.clientHeight) {
-                    return;
-                }
-
-                const isAtTop = container.scrollTop === 0;
-                const isAtBottom = Math.abs(container.scrollHeight - container.clientHeight - container.scrollTop) < 1;
-
-                if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
-                    event.preventDefault();
-                }
-            });
-        });
-        loadingMoreIndicator.style.display = 'none';
-    }
-
-    function loadNextBatch() {
-        if (renderedIndex >= allMovies.length) {
-            observer.unobserve(document.getElementById('intersection-sentinel'));
-            loadingMoreIndicator.textContent = "Wszystkie filmy załadowane.";
-            loadingMoreIndicator.style.display = 'block';
-            return;
-        }
-
-        loadingMoreIndicator.textContent = "Ładuję więcej...";
-        loadingMoreIndicator.style.display = 'block';
-
-        const nextBatch = allMovies.slice(renderedIndex, renderedIndex + BATCH_SIZE);
-        renderCards(nextBatch, true);
-        renderedIndex += BATCH_SIZE;
-    }
-
-    function setupScrollObserver() {
-        const sentinel = document.getElementById('intersection-sentinel');
-        if (observer) {
-            observer.disconnect();
-        }
-
-        observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                loadNextBatch();
-            }
-        }, {
-            rootMargin: '100px',
-            threshold: 0.1
-        });
-
-        observer.observe(sentinel);
-    }
-
-    function onYouTubeIframeAPIReady() {
-        fetchAndRenderMovies();
-    }
-
-    function fetchAndRenderMovies() {
-        console.time("Pobieranie wszystkich filmów (dla wyszukiwarki)");
-
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(movies => {
-                console.timeEnd("Pobieranie wszystkich filmów (dla wyszukiwarki)");
-                allMoviesForSearch = movies;
-            })
-            .catch(error => {
-                console.timeEnd("Pobieranie wszystkich filmów (dla wyszukiwarki)");
-                console.error('Błąd pobierania danych do wyszukiwarki:', error);
-            });
-
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
-                return response.json();
-            })
-            .then(movies => {
-                loadingIndicator.remove();
-                if (movies.length === 0) {
-                    movieListContainer.innerHTML = '<p>Brak filmów w bazie danych.</p>';
-                    return;
-                }
-
-                allMovies = movies;
-                movieListContainer.innerHTML = '';
-
-                renderedIndex = 0;
-                loadNextBatch();
-                setupScrollObserver();
-
-            })
-            .catch(error => {
-                console.error('Błąd pobierania danych:', error);
-                loadingIndicator.remove();
-                movieListContainer.innerHTML = `<p id="error" class="error">Nie udało się załadować filmów. Spróbuj później.</p>`;
-            });
-    }
-
-    function playVideo(movieId, startTime) {
-        const player = activePlayers[movieId];
-
-        if (player) {
-            player.seekTo(startTime, true);
-            player.playVideo();
-        } else {
-            activePlayers[movieId] = new YT.Player(`player-${movieId}`, {
-                height: '180',
-                width: '100%',
-                videoId: movieId,
-                playerVars: {
-                    'autoplay': 1,
-                    'start': startTime,
-                    'playsinline': 1
-                }
-            });
-        }
-    }
-
-    movieListContainer.addEventListener('click', (event) => {
-        const segmentElement = event.target.closest('.segment-item');
-        if (!segmentElement) {
-            return;
-        }
-
-        const cardElement = event.target.closest('.movie-card');
-        const movieId = cardElement.dataset.movieId;
-        const startTime = segmentElement.dataset.startTime;
-
-        playVideo(movieId, startTime);
+      DOM.segmentSelector.appendChild(option);
     });
+  }
+
+  function highlightSelectedSegment(selectedOption) {
+    const options = DOM.segmentSelector.querySelectorAll('.segment-option');
+    options.forEach(option => {
+      option.classList.remove('selected');
+    });
+    selectedOption.classList.add('selected');
+  }
+
+  function submitFix() {
+    const description = DOM.fixDescription.value.trim();
+    const tagsInput = DOM.fixTags.value.trim();
+
+    if (!state.currentFixData.timestamp) {
+      alert('Proszę wybrać segment.');
+      return;
+    }
+
+    if (!description) {
+      alert('Proszę wpisać opis.');
+      return;
+    }
+
+    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+
+    const fixPayload = {
+      id: {
+        movieId: state.currentFixData.movieId,
+        timestamp: parseInt(state.currentFixData.timestamp, 10)
+      },
+      description: description,
+      tags: tags
+    };
+
+    DOM.submitFixBtn.disabled = true;
+
+    fetch(`${CONFIG.API_URL}/fix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fixPayload)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(() => {
+        DOM.successMessage.style.display = 'block';
+        DOM.fixDescription.value = '';
+        DOM.fixTags.value = '';
+        setTimeout(closeFixModal, 1500);
+      })
+      .catch(error => {
+        console.error('Błąd wysyłania poprawki:', error);
+        alert('Nie udało się wysłać poprawki. Spróbuj później.');
+        DOM.submitFixBtn.disabled = false;
+      });
+  }
+
+  window.closeFixModal = closeFixModal;
+  window.submitFix = submitFix;
+
+  window.addEventListener('click', event => {
+    if (event.target === DOM.fixModal) {
+      closeFixModal();
+    }
+  });
+
+  function buildSegmentsHtml(segments, movieId) {
+    let html = '<div class="segments-container"><div class="segments-header"><h4>Segmenty:</h4>';
+    html += `<i class="fas fa-pencil-alt edit-icon" title="Zaproponuj poprawkę" data-movie-id="${movieId}"></i></div>`;
+
+    if (!segments || segments.length === 0) {
+      return html + '<p>Brak segmentów dla tego filmu.</p></div>';
+    }
+
+    html += '<ul>';
+    segments.forEach(segment => {
+      const time = formatTime(segment.id.timestamp);
+      const description = segment.description || 'Brak opisu';
+
+      html += `
+        <li class="segment-item" data-start-time="${segment.id.timestamp}">
+          <span class="play-icon">►</span>
+          <span class="segment-time">${time}</span>
+          <p class="segment-desc">${description}</p>
+        </li>
+      `;
+    });
+    html += '</ul></div>';
+
+    return html;
+  }
+
+  function createMovieCard(movie) {
+    const card = document.createElement('div');
+    card.className = 'movie-card';
+    card.dataset.movieId = movie.movieId;
+
+    const thumbnail = movie.thumbnailUrl || 'https://via.placeholder.com/300x170?text=Brak+Miniaturki';
+    const segmentsHtml = buildSegmentsHtml(movie.segments, movie.movieId);
+
+    card.innerHTML = `
+      <div class="video-placeholder">
+        <div id="player-${movie.movieId}">
+          <img src="${thumbnail}" alt="Miniaturka filmu" style="width:100%; height:100%; object-fit: cover;">
+        </div>
+      </div>
+      <div class="movie-info">
+        <h3>${movie.title}</h3>
+        <p><strong>Data:</strong> ${formatDate(movie.date)}</p>
+      </div>
+      ${segmentsHtml}
+    `;
+
+    // Attach edit icon handler in segments header
+    const editIcon = card.querySelector('.segments-header .edit-icon');
+    if (editIcon) {
+      editIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openFixModal(movie.movieId);
+      });
+    }
+
+    setupSegmentsScroll(card);
+    return card;
+  }
+
+  function setupSegmentsScroll(card) {
+    const container = card.querySelector('.segments-container');
+    container.addEventListener('wheel', (event) => {
+      if (container.scrollHeight <= container.clientHeight) return;
+
+      const isAtTop = container.scrollTop === 0;
+      const isAtBottom = Math.abs(container.scrollHeight - container.clientHeight - container.scrollTop) < 1;
+
+      if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  function renderCards(movies, append = true) {
+    if (!append) {
+      DOM.movieList.innerHTML = '';
+    }
+
+    movies.forEach(movie => {
+      DOM.movieList.appendChild(createMovieCard(movie));
+    });
+
+    DOM.loadingMore.style.display = 'none';
+  }
+
+  function getSearchTerms() {
+    return DOM.searchBar.value.toLowerCase().split(' ').filter(term => term.length > 0);
+  }
+
+  function matchesSearch(text, terms) {
+    return terms.every(term => text.toLowerCase().includes(term));
+  }
+
+  function filterMovies() {
+    const terms = getSearchTerms();
+
+    if (terms.length === 0) {
+      DOM.noResults.style.display = 'none';
+      state.renderedIndex = CONFIG.BATCH_SIZE;
+      setupScrollObserver();
+      return;
+    }
+
+    state.observer?.unobserve(DOM.sentinel);
+    DOM.loadingMore.style.display = 'none';
+
+    const filtered = state.allMovies
+      .map(movie => {
+        const titleMatches = matchesSearch(movie.title || '', terms);
+        const matchingSegments = (movie.segments || []).filter(segment => {
+          const text = (segment.description || '') + ' ' + (segment.tags || []).join(' ');
+          return matchesSearch(text, terms);
+        });
+
+        if (titleMatches || matchingSegments.length > 0) {
+          return {
+            ...movie,
+            segments: titleMatches ? movie.segments : matchingSegments
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    DOM.noResults.style.display = filtered.length === 0 ? 'block' : 'none';
+    renderCards(filtered, false);
+  }
+
+  const debouncedFilter = debounce(filterMovies, CONFIG.SEARCH_DELAY);
+  DOM.searchBar.addEventListener('input', debouncedFilter);
+
+  function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  function loadNextBatch() {
+    if (state.renderedIndex >= state.allMovies.length) {
+      state.observer?.unobserve(DOM.sentinel);
+      DOM.loadingMore.textContent = 'Wszystkie filmy załadowane.';
+      DOM.loadingMore.style.display = 'block';
+      return;
+    }
+
+    DOM.loadingMore.textContent = 'Ładuję więcej...';
+    DOM.loadingMore.style.display = 'block';
+
+    const batch = state.allMovies.slice(state.renderedIndex, state.renderedIndex + CONFIG.BATCH_SIZE);
+    renderCards(batch, true);
+    state.renderedIndex += CONFIG.BATCH_SIZE;
+  }
+
+  function setupScrollObserver() {
+    if (state.observer) {
+      state.observer.disconnect();
+    }
+
+    state.observer = new IntersectionObserver(
+      entries => entries[0].isIntersecting && loadNextBatch(),
+      {
+        rootMargin: CONFIG.INTERSECTION_MARGIN,
+        threshold: 0.1
+      }
+    );
+
+    state.observer.observe(DOM.sentinel);
+  }
+
+  function playVideo(movieId, startTime) {
+    const player = state.activePlayers[movieId];
+
+    if (player) {
+      player.seekTo(startTime, true);
+      player.playVideo();
+    } else {
+      state.activePlayers[movieId] = new YT.Player(`player-${movieId}`, {
+        height: '180',
+        width: '100%',
+        videoId: movieId,
+        playerVars: { autoplay: 1, start: startTime, playsinline: 1 }
+      });
+    }
+  }
+
+  DOM.movieList.addEventListener('click', event => {
+    const segment = event.target.closest('.segment-item');
+    if (!segment) return;
+
+    const card = event.target.closest('.movie-card');
+    playVideo(card.dataset.movieId, segment.dataset.startTime);
+  });
+
+  function fetchAndRenderMovies() {
+    fetch(CONFIG.API_URL)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(movies => {
+        DOM.loading.remove();
+
+        if (movies.length === 0) {
+          DOM.movieList.innerHTML = '<p>Brak filmów w bazie danych.</p>';
+          return;
+        }
+
+        state.allMovies = movies;
+        DOM.movieList.innerHTML = '';
+        state.renderedIndex = 0;
+        loadNextBatch();
+        setupScrollObserver();
+      })
+      .catch(error => {
+        console.error('Błąd pobierania danych:', error);
+        DOM.loading.remove();
+        DOM.movieList.innerHTML = '<p id="error">Nie udało się załadować filmów. Spróbuj później.</p>';
+      });
+  }
+
+  function onYouTubeIframeAPIReady() {
+    fetchAndRenderMovies();
+  }
 </script>
 
 </body>
