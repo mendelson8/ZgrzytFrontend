@@ -1,0 +1,16 @@
+# Ignore big SDK and local/IDE files that break Jekyll on GitHub Pages
+google-cloud-sdk/
+node_modules/
+.DS_Store
+.idea/
+.git/
+*.log
+.vscode/
+# Optional: ignore build output and docs folder if you use them
+_site/
+.bundle/
+vendor/
+
+# Keep your published site files (if you use /docs) uncomment if needed
+# /docs/
+
