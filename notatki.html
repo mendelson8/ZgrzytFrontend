@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refleksja w C# - Notatki</title>
+  <style>
+      body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f9f9f9;
+      }
+
+      h1 {
+          color: #2c3e50;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 10px;
+          text-align: center;
+      }
+
+      h2 {
+          color: #2980b9;
+          margin-top: 40px;
+          border-left: 5px solid #2980b9;
+          padding-left: 10px;
+      }
+
+      p {
+          margin-bottom: 15px;
+      }
+
+      .note-container {
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          margin-bottom: 20px;
+      }
+
+      /* Stylizacja bloków kodu */
+      pre {
+          background-color: #1e1e1e;
+          color: #d4d4d4;
+          padding: 15px;
+          border-radius: 5px;
+          overflow-x: auto;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 0.95em;
+      }
+
+      code {
+          font-family: 'Consolas', 'Monaco', monospace;
+      }
+
+      /* Prosta emulacja kolorowania składni C# */
+      .keyword { color: #569cd6; font-weight: bold; }
+      .type { color: #4ec9b0; }
+      .string { color: #ce9178; }
+      .comment { color: #6a9955; }
+      .method { color: #dcdcaa; }
+  </style>
+</head>
+<body>
+
+<h1>Refleksja (Reflection) - Co trzeba umieć</h1>
+
+<div class="note-container">
+  <p><strong>Wymagane przestrzenie nazw:</strong></p>
+  <pre><code><span class="keyword">using</span> System;
+<span class="keyword">using</span> System.Reflection;
+<span class="keyword">using</span> System.Linq;</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>1. Tworzenie własnych atrybutów</h2>
+  <p>Atrybut to klasa dziedzicząca po <code>System.Attribute</code>. Używamy dekoratora <code>AttributeUsage</code>, aby określić, gdzie atrybut może być stosowany (np. na klasach, właściwościach).</p>
+  <pre><code>[<span class="type">AttributeUsage</span>(<span class="type">AttributeTargets</span>.Class | <span class="type">AttributeTargets</span>.Property)]
+<span class="keyword">public class</span> <span class="type">MojAtrybut</span> : <span class="type">Attribute</span>
+{
+    <span class="keyword">public string</span> Opis { <span class="keyword">get</span>; }
+
+    <span class="keyword">public</span> <span class="type">MojAtrybut</span>(<span class="keyword">string</span> opis)
+    {
+        Opis = opis;
+    }
+}</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>2. Pobieranie z Assembly typów oznaczonych atrybutem</h2>
+  <p>Należy pobrać bieżące Assembly, pobrać wszystkie typy, a następnie przefiltrować je używając <code>GetCustomAttribute</code>.</p>
+  <pre><code><span class="keyword">var</span> assembly = <span class="type">Assembly</span>.GetExecutingAssembly();
+
+<span class="keyword">var</span> znalezioneTypy = assembly.<span class="method">GetTypes</span>()
+    .<span class="method">Where</span>(t => t.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>3. Pobieranie typów dziedziczących po klasie abstrakcyjnej</h2>
+  <p>Używamy metody <code>IsSubclassOf</code>. Warto pamiętać, aby odfiltrować samą klasę abstrakcyjną (<code>!IsAbstract</code>).</p>
+  <pre><code><span class="keyword">var</span> typBazowy = <span class="keyword">typeof</span>(<span class="type">BazaRaportu</span>);
+
+<span class="keyword">var</span> raporty = assembly.<span class="method">GetTypes</span>()
+    .<span class="method">Where</span>(t => t.<span class="method">IsSubclassOf</span>(typBazowy) && !t.IsAbstract);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>4. Pobieranie z typu właściwości oznaczonych atrybutem</h2>
+  <p>Używamy metody <code>GetProperties()</code> na konkretnym typie i filtrujemy wynik.</p>
+  <pre><code><span class="keyword">var</span> typ = <span class="keyword">typeof</span>(<span class="type">Uzytkownik</span>);
+
+<span class="keyword">var</span> props = typ.<span class="method">GetProperties</span>()
+    .<span class="method">Where</span>(p => p.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>5. Czy typ implementuje generyczny interfejs?</h2>
+  <p>Sprawdzenie czy klasa implementuje interfejs typu <code>IRepository&lt;&gt;</code> (open generic) wymaga sprawdzenia definicji typu generycznego.</p>
+  <pre><code><span class="keyword">bool</span> <span class="method">CzyToGeneryk</span>(<span class="type">Type</span> typ, <span class="type">Type</span> szukanyInterfejs)
+{
+    <span class="comment">// szukanyInterfejs to np. typeof(IRepository&lt;&gt;)</span>
+    <span class="keyword">return</span> typ.<span class="method">GetInterfaces</span>().<span class="method">Any</span>(i =>
+        i.IsGenericType &&
+        i.<span class="method">GetGenericTypeDefinition</span>() == szukanyInterfejs);
+}</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>6. Ustawienie wartości właściwości przez .SetValue()</h2>
+  <p>Wymaga instancji obiektu oraz obiektu <code>PropertyInfo</code>. Nazwę właściwości podajemy jako string.</p>
+  <pre><code><span class="keyword">var</span> produkt = <span class="keyword">new</span> <span class="type">Produkt</span>(); <span class="comment">// Instancja</span>
+<span class="keyword">var</span> propInfo = <span class="keyword">typeof</span>(<span class="type">Produkt</span>).<span class="method">GetProperty</span>(<span class="string">"Cena"</span>);
+
+<span class="keyword">if</span> (propInfo != <span class="keyword">null</span>)
+{
+    <span class="comment">// SetValue(obiekt, nowaWartosc)</span>
+    propInfo.<span class="method">SetValue</span>(produkt, <span class="number">99.99</span>);
+}</code></pre>
+</div>
+
+</body>
+</html>
