@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refleksja w C# - Notatki</title>
+  <style>
+      body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 950px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f9f9f9;
+      }
+
+      h1 {
+          color: #2c3e50;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 10px;
+          text-align: center;
+      }
+
+      h2 {
+          color: #2980b9;
+          margin-top: 0;
+          margin-bottom: 15px;
+          font-size: 1.4em;
+      }
+
+      h3 {
+          color: #2c3e50;
+          margin-top: 20px;
+          font-size: 1.1em;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 5px;
+      }
+
+      p {
+          margin-bottom: 10px;
+      }
+
+      ul {
+          margin-bottom: 15px;
+          padding-left: 20px;
+      }
+
+      li {
+          margin-bottom: 8px;
+      }
+
+      .note-container {
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          margin-bottom: 25px;
+          border-left: 5px solid #2980b9;
+      }
+
+      /* Styl dla sekcji Case Study */
+      .case-study-container {
+          background-color: #f0f7fb;
+          border-left: 5px solid #8e44ad;
+      }
+      .case-study-container h2 {
+          color: #8e44ad;
+      }
+
+      /* Styl dla sekcji Ważne */
+      .warning-container {
+          background-color: #fff4f4;
+          border-left: 5px solid #c0392b;
+      }
+      .warning-container h2 {
+          color: #c0392b;
+      }
+
+      /* Stylizacja bloków kodu */
+      pre {
+          background-color: #1e1e1e;
+          color: #d4d4d4;
+          padding: 15px;
+          border-radius: 5px;
+          overflow-x: auto;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 0.9em;
+          margin-top: 10px;
+      }
+
+      code {
+          font-family: 'Consolas', 'Monaco', monospace;
+      }
+
+      /* Prosta emulacja kolorowania składni C# */
+      .keyword { color: #569cd6; font-weight: bold; }
+      .type { color: #4ec9b0; }
+      .string { color: #ce9178; }
+      .comment { color: #6a9955; }
+      .method { color: #dcdcaa; }
+      .number { color: #b5cea8; }
+      .highlight { background-color: #333; display: inline-block; width: 100%; }
+  </style>
+</head>
+<body>
+
+<h1>Refleksja (Reflection) - Kompendium</h1>
+
+<div class="note-container">
+  <p><strong>Wymagane przestrzenie nazw:</strong></p>
+  <pre><code><span class="keyword">using</span> System;
+<span class="keyword">using</span> System.Reflection;
+<span class="keyword">using</span> System.Linq;</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>1. Tworzenie własnych atrybutów</h2>
+  <p>Atrybut to klasa dziedzicząca po <code>System.Attribute</code>.</p>
+  <pre><code>[<span class="type">AttributeUsage</span>(<span class="type">AttributeTargets</span>.Class | <span class="type">AttributeTargets</span>.Property)]
+<span class="keyword">public class</span> <span class="type">MojAtrybut</span> : <span class="type">Attribute</span>
+{
+    <span class="keyword">public string</span> Opis { <span class="keyword">get</span>; }
+    <span class="keyword">public</span> <span class="type">MojAtrybut</span>(<span class="keyword">string</span> opis) { Opis = opis; }
+}</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>2. Pobieranie z Assembly typów oznaczonych atrybutem</h2>
+  <pre><code><span class="keyword">var</span> assembly = <span class="type">Assembly</span>.GetExecutingAssembly();
+<span class="keyword">var</span> znalezioneTypy = assembly.<span class="method">GetTypes</span>()
+    .<span class="method">Where</span>(t => t.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>3. Pobieranie typów dziedziczących po klasie abstrakcyjnej</h2>
+  <pre><code><span class="keyword">var</span> typBazowy = <span class="keyword">typeof</span>(<span class="type">BazaRaportu</span>);
+<span class="keyword">var</span> raporty = assembly.<span class="method">GetTypes</span>()
+    .<span class="method">Where</span>(t => t.<span class="method">IsSubclassOf</span>(typBazowy) && !t.IsAbstract);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>4. Pobieranie z typu właściwości oznaczonych atrybutem</h2>
+  <pre><code><span class="keyword">var</span> typ = <span class="keyword">typeof</span>(<span class="type">Uzytkownik</span>);
+<span class="keyword">var</span> props = typ.<span class="method">GetProperties</span>()
+    .<span class="method">Where</span>(p => p.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>5. Czy typ implementuje generyczny interfejs?</h2>
+  <p>Przykład sprawdzania <code>IParsable&lt;T&gt;</code> znajduje się w sekcji Case Study poniżej.</p>
+  <pre><code><span class="keyword">bool</span> <span class="method">CzyToGeneryk</span>(<span class="type">Type</span> typ, <span class="type">Type</span> szukanyInterfejs)
+{
+    <span class="keyword">return</span> typ.<span class="method">GetInterfaces</span>().<span class="method">Any</span>(i =>
+        i.IsGenericType &&
+        i.<span class="method">GetGenericTypeDefinition</span>() == szukanyInterfejs);
+}</code></pre>
+</div>
+
+<div class="note-container">
+  <h2>6. Ustawienie wartości przez .SetValue()</h2>
+  <pre><code><span class="keyword">var</span> produkt = <span class="keyword">new</span> <span class="type">Produkt</span>();
+<span class="keyword">var</span> propInfo = <span class="keyword">typeof</span>(<span class="type">Produkt</span>).<span class="method">GetProperty</span>(<span class="string">"Cena"</span>);
+propInfo?.<span class="method">SetValue</span>(produkt, <span class="number">99.99</span>);</code></pre>
+</div>
+
+<div class="note-container case-study-container">
+  <h2>7. Case Study: TypeCrafter (Praktyczne zastosowanie)</h2>
+  <p>Poniższa klasa <code>TypeCrafter</code> automatycznie tworzy obiekt dowolnego typu, pytając użytkownika o wartości właściwości w konsoli. Obsługuje zagnieżdżone obiekty (rekurencja) oraz typy proste (parsowanie).</p>
+
+  <h3>Analiza kodu i użytych mechanizmów:</h3>
+  <ul>
+    <li><strong>Instancja typu generycznego:</strong> Użycie <code>GetConstructor(Type.EmptyTypes)</code> aby znaleźć konstruktor bez parametrów, a następnie <code>Invoke(null)</code>.</li>
+    <li><strong>Wykrywanie IParsable:</strong> Sprawdzenie, czy właściwość implementuje <code>IParsable&lt;&gt;</code>, co pozwala obsługiwać int, double, date itp. jednym kodem.</li>
+    <li><strong>Metoda statyczna z parametrem OUT:</strong> Najtrudniejszy element. Aby wywołać <code>TryParse(string, IFormatProvider, out T)</code>, musimy użyć <code>MakeByRefType()</code> dla parametru wyjściowego.</li>
+    <li><strong>Rekurencja generyczna:</strong> Jeśli typ jest złożony, metoda <code>CraftInstance</code> wywołuje samą siebie używając <code>MakeGenericMethod</code>.</li>
+  </ul>
+
+  <pre><code><span class="keyword">public static class</span> <span class="type">TypeCrafter</span>
+{
+    <span class="keyword">public static</span> T <span class="method">CraftInstance</span>&lt;T&gt;()
+    {
+        <span class="keyword">var</span> type = <span class="keyword">typeof</span>(T);
+        <span class="keyword">var</span> parsableType = <span class="keyword">typeof</span>(IParsable&lt;&gt;);
+
+        <span class="comment">// 1. Tworzenie instancji głównego obiektu</span>
+        <span class="keyword">var</span> constructor = type.<span class="method">GetConstructor</span>(Type.EmptyTypes)
+            ?? <span class="keyword">throw new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Brak konstruktora bez parametrów."</span>);
+        <span class="keyword">var</span> result = (T)constructor.<span class="method">Invoke</span>(<span class="keyword">null</span>);
+
+        <span class="keyword">foreach</span> (<span class="keyword">var</span> property <span class="keyword">in</span> type.<span class="method">GetProperties</span>())
+        {
+            <span class="keyword">var</span> pType = property.PropertyType;
+
+            <span class="comment">// 2. Sprawdzenie czy typ implementuje IParsable&lt;T&gt;</span>
+            <span class="keyword">var</span> isParsable = pType.<span class="method">GetInterfaces</span>().<span class="method">Any</span>(t =>
+                t.IsGenericType &&
+                t.<span class="method">GetGenericTypeDefinition</span>() == parsableType);
+
+            <span class="keyword">if</span> (pType == <span class="keyword">typeof</span>(<span class="keyword">string</span>))
+            {
+                <span class="keyword">var</span> input = <span class="method">AskForInput</span>(property.Name, pType.Name);
+                property.<span class="method">SetValue</span>(result, input);
+            }
+            <span class="keyword">else if</span> (isParsable)
+            {
+                <span class="keyword">var</span> input = <span class="method">AskForInput</span>(property.Name, pType.Name);
+
+                <span class="comment">// 3. Szukanie metody TryParse z parametrem 'out' (MakeByRefType)</span>
+                <span class="keyword">var</span> tryParse = pType.<span class="method">GetMethod</span>(
+                    <span class="string">"TryParse"</span>,
+                    BindingFlags.Public | BindingFlags.Static,
+                    <span class="keyword">null</span>,
+                    <span class="keyword">new</span>[] { <span class="keyword">typeof</span>(<span class="keyword">string</span>), <span class="keyword">typeof</span>(IFormatProvider), pType.<span class="method">MakeByRefType</span>() },
+                    <span class="keyword">null</span>);
+
+                <span class="comment">// Tablica argumentów dla metody. args[2] to nasz 'out result'</span>
+                <span class="keyword">var</span> args = <span class="keyword">new</span> <span class="keyword">object</span>[] { input, <span class="keyword">null</span>, <span class="keyword">null</span> };
+
+                <span class="keyword">if</span> ((<span class="keyword">bool</span>)tryParse.<span class="method">Invoke</span>(<span class="keyword">null</span>, args))
+                {
+                    property.<span class="method">SetValue</span>(result, args[2]); <span class="comment">// Pobranie wartości z parametru out</span>
+                }
+                <span class="keyword">else</span> <span class="keyword">throw new</span> <span class="type">Exception</span>(<span class="string">"Błąd parsowania."</span>);
+            }
+            <span class="keyword">else</span>
+            {
+                <span class="comment">// 4. Rekurencja: Wywołanie CraftInstance dla typu zagnieżdżonego</span>
+                Console.WriteLine(<span class="string">"Tworzenie zagnieżdżonego obiektu..."</span>);
+
+                <span class="keyword">var</span> method = <span class="keyword">typeof</span>(TypeCrafter).<span class="method">GetMethod</span>(nameof(CraftInstance));
+                <span class="keyword">var</span> genericMethod = method.<span class="method">MakeGenericMethod</span>(pType);
+
+                <span class="keyword">var</span> subObject = genericMethod.<span class="method">Invoke</span>(<span class="keyword">null</span>, <span class="keyword">null</span>);
+                property.<span class="method">SetValue</span>(result, subObject);
+            }
+        }
+        <span class="keyword">return</span> result;
+    }
+
+    <span class="comment">// Metoda pomocnicza (pominięta dla czytelności)...</span>
+    <span class="keyword">private static string</span> <span class="method">AskForInput</span>(<span class="keyword">string</span> name, <span class="keyword">string</span> type) { <span class="comment">/*...*/</span> <span class="keyword">return</span> Console.ReadLine(); }
+}</code></pre>
+</div>
+
+<div class="note-container warning-container">
+  <h2>⚠️ Ważne informacje i Dobre praktyki</h2>
+  <ul>
+    <li><strong>Wydajność:</strong> Refleksja jest wolna. Unikaj jej w pętlach wykonujących się tysiące razy (hot paths). Cache'uj wyniki <code>MethodInfo</code> czy <code>PropertyInfo</code>.</li>
+    <li><strong>Bezpieczeństwo typów:</strong> Błędy w nazwach (np. <code>GetMethod("NiedobraNazwa")</code>) powodują błędy w trakcie działania (Runtime), a nie kompilacji.</li>
+    <li><strong>Prywatne składowe:</strong> Dostęp do pól prywatnych łamie hermetyzację, ale jest możliwy przy użyciu <code>BindingFlags.NonPublic</code>.</li>
+    <li><strong>MakeByRefType():</strong> Kluczowa metoda przy szukaniu metod z parametrami <code>out</code> lub <code>ref</code>. Bez niej <code>GetMethod</code> nie znajdzie np. <code>int.TryParse</code>.</li>
+  </ul>
+</div>
+
+</body>
+</html>
+
+
