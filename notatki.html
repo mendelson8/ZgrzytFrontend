@@ -3,257 +3,304 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Refleksja w C# - Notatki</title>
+  <title>Kompletny Przewodnik: Async, Parallel & Cancellation</title>
   <style>
       body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
           color: #333;
-          max-width: 950px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 20px;
-          background-color: #f9f9f9;
+          background-color: #f4f4f9;
       }
-
       h1 {
           color: #2c3e50;
           border-bottom: 2px solid #3498db;
           padding-bottom: 10px;
-          text-align: center;
       }
-
       h2 {
           color: #2980b9;
-          margin-top: 0;
-          margin-bottom: 15px;
-          font-size: 1.4em;
-      }
-
-      h3 {
-          color: #2c3e50;
-          margin-top: 20px;
-          font-size: 1.1em;
-          border-bottom: 1px solid #ddd;
-          padding-bottom: 5px;
-      }
-
-      p {
-          margin-bottom: 10px;
-      }
-
-      ul {
-          margin-bottom: 15px;
-          padding-left: 20px;
-      }
-
-      li {
-          margin-bottom: 8px;
-      }
-
-      .note-container {
-          background-color: #fff;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-          margin-bottom: 25px;
+          margin-top: 40px;
+          background-color: #e8f6f3;
+          padding: 10px;
           border-left: 5px solid #2980b9;
+          border-radius: 4px;
       }
-
-      /* Styl dla sekcji Case Study */
-      .case-study-container {
-          background-color: #f0f7fb;
-          border-left: 5px solid #8e44ad;
+      h3 {
+          color: #16a085;
+          margin-top: 25px;
       }
-      .case-study-container h2 {
-          color: #8e44ad;
+      p {
+          margin-bottom: 15px;
+          text-align: justify;
       }
-
-      /* Styl dla sekcji Ważne */
-      .warning-container {
-          background-color: #fff4f4;
-          border-left: 5px solid #c0392b;
-      }
-      .warning-container h2 {
-          color: #c0392b;
-      }
-
-      /* Stylizacja bloków kodu */
-      pre {
+      .code-block {
           background-color: #1e1e1e;
           color: #d4d4d4;
           padding: 15px;
           border-radius: 5px;
           overflow-x: auto;
           font-family: 'Consolas', 'Monaco', monospace;
-          font-size: 0.9em;
-          margin-top: 10px;
+          font-size: 14px;
+          border: 1px solid #444;
+          margin-bottom: 20px;
       }
-
-      code {
-          font-family: 'Consolas', 'Monaco', monospace;
-      }
-
-      /* Prosta emulacja kolorowania składni C# */
-      .keyword { color: #569cd6; font-weight: bold; }
+      .keyword { color: #569cd6; }
       .type { color: #4ec9b0; }
       .string { color: #ce9178; }
       .comment { color: #6a9955; }
       .method { color: #dcdcaa; }
-      .number { color: #b5cea8; }
-      .highlight { background-color: #333; display: inline-block; width: 100%; }
+
+      .alert {
+          background-color: #fff3cd;
+          border: 1px solid #ffeeba;
+          color: #856404;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+      }
+      .complex-object {
+          background-color: #e2e3e5;
+          padding: 10px;
+          border-radius: 5px;
+          font-weight: bold;
+          color: #383d41;
+      }
   </style>
 </head>
 <body>
 
-<h1>Refleksja (Reflection) - Kompendium</h1>
+<h1>Asynchroniczność, Równoległość i Anulowanie w C#</h1>
+<p>Poniższy dokument szczegółowo omawia mechanizmy niezbędne do tworzenia wydajnych i responsywnych aplikacji, które przetwarzają dane równolegle, raportują postęp i mogą być bezpiecznie anulowane (np. przez timeout).</p>
 
-<div class="note-container">
-  <p><strong>Wymagane przestrzenie nazw:</strong></p>
-  <pre><code><span class="keyword">using</span> System;
-<span class="keyword">using</span> System.Reflection;
-<span class="keyword">using</span> System.Linq;</code></pre>
+<h2>1. Asynchroniczne Sekwencje i Metody Iterujące (IAsyncEnumerable)</h2>
+<p>
+  <strong>Wyjaśnienie:</strong> Tradycyjna kolekcja (<code>List&lt;T&gt;</code>) wymaga pobrania wszystkich danych do pamięci, zanim zaczniesz je przetwarzać. To blokuje aplikację przy dużych zbiorach.
+  <br><br>
+  <strong>Asynchroniczne strumienie (Async Streams)</strong> używające <code>IAsyncEnumerable&lt;T&gt;</code> pozwalają na zwracanie elementów "jeden po drugim" w momencie, gdy są gotowe (np. pobrane z bazy), używając słowa kluczowego <code>yield return</code> w połączeniu z <code>await</code>.
+</p>
+
+<h3>Przykład 1: Generator liczb z opóźnieniem</h3>
+<div class="code-block">
+  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">int</span>&gt; GenerujLiczbyAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> token)
+  {
+  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 10; i++)
+  {
+  <span class="comment">// Symulacja pobierania danych (np. z sieci)</span>
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(500, token);
+
+  <span class="comment">// Zwracamy element natychmiast po jego uzyskaniu</span>
+  <span class="keyword">yield return</span> i;
+  }
+  }
+
+  <span class="comment">// Użycie:</span>
+  <span class="keyword">await foreach</span> (<span class="type">var</span> liczba <span class="keyword">in</span> GenerujLiczbyAsync(CancellationToken.None))
+  {
+  Console.WriteLine(<span class="string">$"Otrzymano: {liczba}"</span>);
+  }
 </div>
 
-<div class="note-container">
-  <h2>1. Tworzenie własnych atrybutów</h2>
-  <p>Atrybut to klasa dziedzicząca po <code>System.Attribute</code>.</p>
-  <pre><code>[<span class="type">AttributeUsage</span>(<span class="type">AttributeTargets</span>.Class | <span class="type">AttributeTargets</span>.Property)]
-<span class="keyword">public class</span> <span class="type">MojAtrybut</span> : <span class="type">Attribute</span>
-{
-    <span class="keyword">public string</span> Opis { <span class="keyword">get</span>; }
-    <span class="keyword">public</span> <span class="type">MojAtrybut</span>(<span class="keyword">string</span> opis) { Opis = opis; }
-}</code></pre>
+<h3>Przykład 2: Symulacja stronicowanego API</h3>
+<div class="code-block">
+  <span class="keyword">public record</span> <span class="type">User</span>(<span class="type">string</span> Name);
+
+  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">User</span>&gt; PobierzWszystkichUzytkownikowAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
+  {
+  <span class="keyword">int</span> page = 0;
+  <span class="keyword">while</span> (<span class="keyword">true</span>)
+  {
+  ct.ThrowIfCancellationRequested(); <span class="comment">// Bezpiecznik</span>
+
+  <span class="type">var</span> users = <span class="keyword">await</span> PobierzStroneZApi(page, ct); <span class="comment">// Metoda zmyślona</span>
+  <span class="keyword">if</span> (users.Count == 0) <span class="keyword">break</span>;
+
+  <span class="keyword">foreach</span> (<span class="type">var</span> u <span class="keyword">in</span> users)
+  {
+  <span class="keyword">yield return</span> u;
+  }
+  page++;
+  }
+  }
 </div>
 
-<div class="note-container">
-  <h2>2. Pobieranie z Assembly typów oznaczonych atrybutem</h2>
-  <pre><code><span class="keyword">var</span> assembly = <span class="type">Assembly</span>.GetExecutingAssembly();
-<span class="keyword">var</span> znalezioneTypy = assembly.<span class="method">GetTypes</span>()
-    .<span class="method">Where</span>(t => t.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+<h2>2. Anulowanie (CancellationToken) i Timeout</h2>
+<p>
+  <strong>Wyjaśnienie:</strong> W .NET nie "zabijamy" wątków siłowo. Stosujemy <strong>anulowanie kooperacyjne</strong>. Przekazujemy "żeton" (Token) do metody. Metoda musi co jakiś czas sprawdzać: <em>"Czy mam przerwać pracę?"</em>.
+  <br><br>
+  Jeśli ustawimy Timeout w <code>CancellationTokenSource</code>, po upływie czasu token zmieni stan na "Anulowany". Próba wykonania operacji na takim tokenie (lub wywołanie <code>token.ThrowIfCancellationRequested()</code>) rzuci wyjątkiem <code>OperationCanceledException</code> (lub <code>TaskCanceledException</code>).
+</p>
+
+<h3>Przykład 1: Timeout (Automatyczne anulowanie)</h3>
+<div class="code-block">
+  <span class="keyword">public async</span> <span class="type">Task</span> WykonajZTimeoutem()
+  {
+  <span class="comment">// Ustawiamy timeout na 2 sekundy</span>
+  <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(2));
+
+  <span class="keyword">try</span>
+  {
+  <span class="comment">// Przekazujemy Token do metody, która trwa długo (5 sekund)</span>
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(5000, cts.Token);
+  }
+  <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
+  {
+  Console.WriteLine(<span class="string">"Operacja przerwana przez TIMEOUT!"</span>);
+  }
+  }
 </div>
 
-<div class="note-container">
-  <h2>3. Pobieranie typów dziedziczących po klasie abstrakcyjnej</h2>
-  <pre><code><span class="keyword">var</span> typBazowy = <span class="keyword">typeof</span>(<span class="type">BazaRaportu</span>);
-<span class="keyword">var</span> raporty = assembly.<span class="method">GetTypes</span>()
-    .<span class="method">Where</span>(t => t.<span class="method">IsSubclassOf</span>(typBazowy) && !t.IsAbstract);</code></pre>
+<h3>Przykład 2: Ręczne sprawdzanie tokena w pętli</h3>
+<div class="code-block">
+  <span class="keyword">public void</span> ObliczeniaNaProcesorze(<span class="type">CancellationToken</span> token)
+  {
+  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 1_000_000; i++)
+  {
+  <span class="comment">// Sprawdź, czy naciśnięto "Anuluj" - jeśli tak, rzuć wyjątek</span>
+  token.ThrowIfCancellationRequested();
+
+  <span class="comment">// ... skomplikowana matematyka ...</span>
+  Math.Sqrt(i);
+  }
+  }
 </div>
 
-<div class="note-container">
-  <h2>4. Pobieranie z typu właściwości oznaczonych atrybutem</h2>
-  <pre><code><span class="keyword">var</span> typ = <span class="keyword">typeof</span>(<span class="type">Uzytkownik</span>);
-<span class="keyword">var</span> props = typ.<span class="method">GetProperties</span>()
-    .<span class="method">Where</span>(p => p.<span class="method">GetCustomAttribute</span>&lt;<span class="type">MojAtrybut</span>&gt;() != <span class="keyword">null</span>);</code></pre>
+<h2>3. Raportowanie Postępu (IProgress i Obiekt Złożony)</h2>
+<p>
+  <strong>Wyjaśnienie:</strong> Do raportowania postępu (np. paska ładowania) używamy interfejsu <code>IProgress&lt;T&gt;</code>. Jest on bezpieczny dla wątków (thread-safe). Implementacja <code>Progress&lt;T&gt;</code> automatycznie dba o to, by wynik trafił do odpowiedniego kontekstu (np. na wątek UI w WPF/WinForms), więc nie musisz używać <code>Invoke</code>.
+  <br><br>
+  Zamiast przesyłać tylko liczbę (int), często przesyłamy <strong>obiekt złożony</strong> (rekord), aby podać więcej detali (np. nazwę pliku, status, procent).
+</p>
+
+<div class="complex-object">
+  Model danych postępu:<br>
+  <code>public record ProgressInfo(int Id, string Message, int Percentage);</code>
 </div>
 
-<div class="note-container">
-  <h2>5. Czy typ implementuje generyczny interfejs?</h2>
-  <p>Przykład sprawdzania <code>IParsable&lt;T&gt;</code> znajduje się w sekcji Case Study poniżej.</p>
-  <pre><code><span class="keyword">bool</span> <span class="method">CzyToGeneryk</span>(<span class="type">Type</span> typ, <span class="type">Type</span> szukanyInterfejs)
-{
-    <span class="keyword">return</span> typ.<span class="method">GetInterfaces</span>().<span class="method">Any</span>(i =>
-        i.IsGenericType &&
-        i.<span class="method">GetGenericTypeDefinition</span>() == szukanyInterfejs);
-}</code></pre>
+<h3>Przykład 1: Konfiguracja Progressu</h3>
+<div class="code-block">
+  <span class="comment">// Definiujemy, co ma się stać, gdy przyjdzie raport (np. wypisz w konsoli)</span>
+  <span class="type">var</span> progressHandler = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">ProgressInfo</span>&gt;(info =>
+  {
+  Console.WriteLine(<span class="string">$"[{info.Percentage}%] ID: {info.Id} - {info.Message}"</span>);
+  });
+
+  <span class="comment">// Przekazujemy to jako interfejs do metody roboczej</span>
+  <span class="keyword">await</span> PrzetwarzajDane(progressHandler);
 </div>
 
-<div class="note-container">
-  <h2>6. Ustawienie wartości przez .SetValue()</h2>
-  <pre><code><span class="keyword">var</span> produkt = <span class="keyword">new</span> <span class="type">Produkt</span>();
-<span class="keyword">var</span> propInfo = <span class="keyword">typeof</span>(<span class="type">Produkt</span>).<span class="method">GetProperty</span>(<span class="string">"Cena"</span>);
-propInfo?.<span class="method">SetValue</span>(produkt, <span class="number">99.99</span>);</code></pre>
+<h3>Przykład 2: Zgłaszanie postępu wewnątrz metody</h3>
+<div class="code-block">
+  <span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajDane(<span class="type">IProgress</span>&lt;<span class="type">ProgressInfo</span>&gt; progress)
+  {
+  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i <= 100; i += 10)
+  {
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100); <span class="comment">// Praca</span>
+
+  <span class="comment">// Tworzymy obiekt złożony i zgłaszamy</span>
+  <span class="type">var</span> raport = <span class="keyword">new</span> <span class="type">ProgressInfo</span>(Id: i, Message: <span class="string">"Przetwarzanie..."</span>, Percentage: i);
+
+  <span class="comment">// To wywoła lambdę z Przykładu 1</span>
+  progress?.Report(raport);
+  }
+  }
 </div>
 
-<div class="note-container case-study-container">
-  <h2>7. Case Study: TypeCrafter (Praktyczne zastosowanie)</h2>
-  <p>Poniższa klasa <code>TypeCrafter</code> automatycznie tworzy obiekt dowolnego typu, pytając użytkownika o wartości właściwości w konsoli. Obsługuje zagnieżdżone obiekty (rekurencja) oraz typy proste (parsowanie).</p>
+<h2>4. Parallel.ForEachAsync + IAsyncEnumerable + Token (Integracja)</h2>
+<p>
+  <strong>Wyjaśnienie:</strong> To jest najważniejsza część. Tradycyjny <code>Parallel.For</code> jest blokujący i słabo współpracuje z <code>await</code>.
+  W nowoczesnym .NET używamy <strong><code>Parallel.ForEachAsync</code></strong>.
+  Pozwala on na:
+<ul>
+  <li>Równoległe przetwarzanie asynchronicznego strumienia (lub listy).</li>
+  <li>Ograniczenie liczby wątków (<code>MaxDegreeOfParallelism</code>).</li>
+  <li>Obsługę <code>CancellationToken</code> (natychmiastowe przerwanie pętli).</li>
+</ul>
+</p>
 
-  <h3>Analiza kodu i użytych mechanizmów:</h3>
-  <ul>
-    <li><strong>Instancja typu generycznego:</strong> Użycie <code>GetConstructor(Type.EmptyTypes)</code> aby znaleźć konstruktor bez parametrów, a następnie <code>Invoke(null)</code>.</li>
-    <li><strong>Wykrywanie IParsable:</strong> Sprawdzenie, czy właściwość implementuje <code>IParsable&lt;&gt;</code>, co pozwala obsługiwać int, double, date itp. jednym kodem.</li>
-    <li><strong>Metoda statyczna z parametrem OUT:</strong> Najtrudniejszy element. Aby wywołać <code>TryParse(string, IFormatProvider, out T)</code>, musimy użyć <code>MakeByRefType()</code> dla parametru wyjściowego.</li>
-    <li><strong>Rekurencja generyczna:</strong> Jeśli typ jest złożony, metoda <code>CraftInstance</code> wywołuje samą siebie używając <code>MakeGenericMethod</code>.</li>
-  </ul>
+<h3>Przykład 1: Prosta pętla równoległa z limitem wątków</h3>
+<div class="code-block">
+  <span class="keyword">var</span> numbers = <span class="type">Enumerable</span>.Range(1, 100);
 
-  <pre><code><span class="keyword">public static class</span> <span class="type">TypeCrafter</span>
-{
-    <span class="keyword">public static</span> T <span class="method">CraftInstance</span>&lt;T&gt;()
-    {
-        <span class="keyword">var</span> type = <span class="keyword">typeof</span>(T);
-        <span class="keyword">var</span> parsableType = <span class="keyword">typeof</span>(IParsable&lt;&gt;);
+  <span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
+  {
+  MaxDegreeOfParallelism = 4, <span class="comment">// Max 4 zadania naraz</span>
+  CancellationToken = CancellationToken.None
+  };
 
-        <span class="comment">// 1. Tworzenie instancji głównego obiektu</span>
-        <span class="keyword">var</span> constructor = type.<span class="method">GetConstructor</span>(Type.EmptyTypes)
-            ?? <span class="keyword">throw new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Brak konstruktora bez parametrów."</span>);
-        <span class="keyword">var</span> result = (T)constructor.<span class="method">Invoke</span>(<span class="keyword">null</span>);
-
-        <span class="keyword">foreach</span> (<span class="keyword">var</span> property <span class="keyword">in</span> type.<span class="method">GetProperties</span>())
-        {
-            <span class="keyword">var</span> pType = property.PropertyType;
-
-            <span class="comment">// 2. Sprawdzenie czy typ implementuje IParsable&lt;T&gt;</span>
-            <span class="keyword">var</span> isParsable = pType.<span class="method">GetInterfaces</span>().<span class="method">Any</span>(t =>
-                t.IsGenericType &&
-                t.<span class="method">GetGenericTypeDefinition</span>() == parsableType);
-
-            <span class="keyword">if</span> (pType == <span class="keyword">typeof</span>(<span class="keyword">string</span>))
-            {
-                <span class="keyword">var</span> input = <span class="method">AskForInput</span>(property.Name, pType.Name);
-                property.<span class="method">SetValue</span>(result, input);
-            }
-            <span class="keyword">else if</span> (isParsable)
-            {
-                <span class="keyword">var</span> input = <span class="method">AskForInput</span>(property.Name, pType.Name);
-
-                <span class="comment">// 3. Szukanie metody TryParse z parametrem 'out' (MakeByRefType)</span>
-                <span class="keyword">var</span> tryParse = pType.<span class="method">GetMethod</span>(
-                    <span class="string">"TryParse"</span>,
-                    BindingFlags.Public | BindingFlags.Static,
-                    <span class="keyword">null</span>,
-                    <span class="keyword">new</span>[] { <span class="keyword">typeof</span>(<span class="keyword">string</span>), <span class="keyword">typeof</span>(IFormatProvider), pType.<span class="method">MakeByRefType</span>() },
-                    <span class="keyword">null</span>);
-
-                <span class="comment">// Tablica argumentów dla metody. args[2] to nasz 'out result'</span>
-                <span class="keyword">var</span> args = <span class="keyword">new</span> <span class="keyword">object</span>[] { input, <span class="keyword">null</span>, <span class="keyword">null</span> };
-
-                <span class="keyword">if</span> ((<span class="keyword">bool</span>)tryParse.<span class="method">Invoke</span>(<span class="keyword">null</span>, args))
-                {
-                    property.<span class="method">SetValue</span>(result, args[2]); <span class="comment">// Pobranie wartości z parametru out</span>
-                }
-                <span class="keyword">else</span> <span class="keyword">throw new</span> <span class="type">Exception</span>(<span class="string">"Błąd parsowania."</span>);
-            }
-            <span class="keyword">else</span>
-            {
-                <span class="comment">// 4. Rekurencja: Wywołanie CraftInstance dla typu zagnieżdżonego</span>
-                Console.WriteLine(<span class="string">"Tworzenie zagnieżdżonego obiektu..."</span>);
-
-                <span class="keyword">var</span> method = <span class="keyword">typeof</span>(TypeCrafter).<span class="method">GetMethod</span>(nameof(CraftInstance));
-                <span class="keyword">var</span> genericMethod = method.<span class="method">MakeGenericMethod</span>(pType);
-
-                <span class="keyword">var</span> subObject = genericMethod.<span class="method">Invoke</span>(<span class="keyword">null</span>, <span class="keyword">null</span>);
-                property.<span class="method">SetValue</span>(result, subObject);
-            }
-        }
-        <span class="keyword">return</span> result;
-    }
-
-    <span class="comment">// Metoda pomocnicza (pominięta dla czytelności)...</span>
-    <span class="keyword">private static string</span> <span class="method">AskForInput</span>(<span class="keyword">string</span> name, <span class="keyword">string</span> type) { <span class="comment">/*...*/</span> <span class="keyword">return</span> Console.ReadLine(); }
-}</code></pre>
+  <span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(numbers, options, <span class="keyword">async</span> (number, ct) =>
+  {
+  <span class="comment">// To dzieje się równolegle</span>
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
+  Console.WriteLine(<span class="string">$"Przetworzono: {number}"</span>);
+  });
 </div>
 
-<div class="note-container warning-container">
-  <h2>⚠️ Ważne informacje i Dobre praktyki</h2>
-  <ul>
-    <li><strong>Wydajność:</strong> Refleksja jest wolna. Unikaj jej w pętlach wykonujących się tysiące razy (hot paths). Cache'uj wyniki <code>MethodInfo</code> czy <code>PropertyInfo</code>.</li>
-    <li><strong>Bezpieczeństwo typów:</strong> Błędy w nazwach (np. <code>GetMethod("NiedobraNazwa")</code>) powodują błędy w trakcie działania (Runtime), a nie kompilacji.</li>
-    <li><strong>Prywatne składowe:</strong> Dostęp do pól prywatnych łamie hermetyzację, ale jest możliwy przy użyciu <code>BindingFlags.NonPublic</code>.</li>
-    <li><strong>MakeByRefType():</strong> Kluczowa metoda przy szukaniu metod z parametrami <code>out</code> lub <code>ref</code>. Bez niej <code>GetMethod</code> nie znajdzie np. <code>int.TryParse</code>.</li>
-  </ul>
+<h3>Przykład 2: KOMPLETNE ROZWIĄZANIE (Streams + Token + Progress + Parallel)</h3>
+<div class="alert">
+  Ten przykład łączy wszystkie wymagania: pobiera dane strumieniem, przetwarza je równolegle, raportuje stan obiektem złożonym i reaguje na Timeout.
+</div>
+
+<div class="code-block">
+  <span class="keyword">public record</span> <span class="type">WorkStatus</span>(<span class="type">string</span> ItemName, <span class="type">bool</span> IsSuccess);
+
+  <span class="keyword">public async</span> <span class="type">Task</span> UruchomProcesGiant()
+  {
+  <span class="comment">// 1. Timeout 10 sekund na całość</span>
+  <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(10));
+
+  <span class="comment">// 2. Obsługa progressu</span>
+  <span class="type">var</span> progress = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">WorkStatus</span>&gt;(status =>
+  {
+  Console.WriteLine(<span class="string">$"[RAPORT] {status.ItemName}: {(status.IsSuccess ? "OK" : "BŁĄD")}"</span>);
+  });
+
+  <span class="keyword">try</span>
+  {
+  <span class="comment">// 3. Start procesu</span>
+  <span class="keyword">await</span> PrzetwarzajRownolegleStream(GenerujDane(cts.Token), progress, cts.Token);
+  }
+  <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
+  {
+  Console.WriteLine(<span class="string">"TIMEOUT! Proces trwał zbyt długo i został przerwany."</span>);
+  }
+  }
+
+  <span class="comment">// Metoda główna</span>
+  <span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajRownolegleStream(
+  <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; sourceStream,
+  <span class="type">IProgress</span>&lt;<span class="type">WorkStatus</span>&gt; progress,
+  <span class="type">CancellationToken</span> token)
+  {
+  <span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
+  {
+  MaxDegreeOfParallelism = 3,
+  CancellationToken = token <span class="comment">// Przekazanie tokena do zarządcy pętli</span>
+  };
+
+  <span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(sourceStream, options, <span class="keyword">async</span> (item, ct) =>
+  {
+  <span class="comment">// ct to token połączony z głównym tokenem + zarządzany przez pętlę</span>
+
+  <span class="comment">// Symulacja pracy</span>
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(1000, ct);
+
+  <span class="comment">// Raportowanie postępu obiektem złożonym</span>
+  progress.Report(<span class="keyword">new</span> <span class="type">WorkStatus</span>(item, <span class="keyword">true</span>));
+  });
+  }
+
+  <span class="comment">// Generator danych</span>
+  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; GenerujDane([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
+  {
+  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 20; i++)
+  {
+  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
+  <span class="keyword">yield return</span> <span class="string">$"Plik_{i}.txt"</span>;
+  }
+  }
 </div>
 
 </body>
 </html>
-
-
