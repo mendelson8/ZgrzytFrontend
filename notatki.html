@@ -35,23 +35,26 @@
           margin-bottom: 15px;
           text-align: justify;
       }
-      .code-block {
+
+      /* STYL DLA BLOKÓW KODU - Używamy <pre> */
+      pre.code-block {
           background-color: #1e1e1e;
           color: #d4d4d4;
           padding: 15px;
           border-radius: 5px;
-          overflow-x: auto;
+          overflow-x: auto; /* Pasek przewijania dla długich linii */
           font-family: 'Consolas', 'Monaco', monospace;
           font-size: 14px;
           border: 1px solid #444;
           margin-bottom: 20px;
-          white-space: pre;
+          tab-size: 4; /* Tabulator = 4 spacje */
       }
-      .keyword { color: #569cd6; }
+
+      /* Kolorowanie składni (symulacja) */
+      .keyword { color: #569cd6; font-weight: bold; }
       .type { color: #4ec9b0; }
       .string { color: #ce9178; }
-      .comment { color: #6a9955; }
-      .method { color: #dcdcaa; }
+      .comment { color: #6a9955; font-style: italic; }
 
       .alert {
           background-color: #fff3cd;
@@ -67,111 +70,109 @@
           border-radius: 5px;
           font-weight: bold;
           color: #383d41;
+          font-family: monospace;
       }
   </style>
 </head>
 <body>
 
 <h1>Asynchroniczność, Równoległość i Anulowanie w C#</h1>
-<p>Poniższy dokument szczegółowo omawia mechanizmy niezbędne do tworzenia wydajnych i responsywnych aplikacji, które przetwarzają dane równolegle, raportują postęp i mogą być bezpiecznie anulowane (np. przez timeout).</p>
+<p>Poniższy dokument szczegółowo omawia mechanizmy niezbędne do tworzenia wydajnych i responsywnych aplikacji w .NET 6/8.</p>
 
 <h2>1. Asynchroniczne Sekwencje i Metody Iterujące (IAsyncEnumerable)</h2>
 <p>
-  <strong>Wyjaśnienie:</strong> Tradycyjna kolekcja (<code>List&lt;T&gt;</code>) wymaga pobrania wszystkich danych do pamięci, zanim zaczniesz je przetwarzać. To blokuje aplikację przy dużych zbiorach.
-  <br><br>
+  <strong>Wyjaśnienie:</strong> Tradycyjna kolekcja (<code>List&lt;T&gt;</code>) wymaga pobrania wszystkich danych do pamięci, zanim zaczniesz je przetwarzać.
   <strong>Asynchroniczne strumienie (Async Streams)</strong> używające <code>IAsyncEnumerable&lt;T&gt;</code> pozwalają na zwracanie elementów "jeden po drugim" w momencie, gdy są gotowe (np. pobrane z bazy), używając słowa kluczowego <code>yield return</code> w połączeniu z <code>await</code>.
 </p>
 
 <h3>Przykład 1: Generator liczb z opóźnieniem</h3>
-<div class="code-block">
-  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">int</span>&gt; GenerujLiczbyAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> token)
-  {
-  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 10; i++)
-  {
-  <span class="comment">// Symulacja pobierania danych (np. z sieci)</span>
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(500, token);
+<pre class="code-block">
+<span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">int</span>&gt; GenerujLiczbyAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> token)
+{
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 10; i++)
+    {
+        <span class="comment">// Symulacja pobierania danych (np. z sieci)</span>
+        <span class="keyword">await</span> <span class="type">Task</span>.Delay(500, token);
 
-  <span class="comment">// Zwracamy element natychmiast po jego uzyskaniu</span>
-  <span class="keyword">yield return</span> i;
-  }
-  }
+        <span class="comment">// Zwracamy element natychmiast po jego uzyskaniu</span>
+        <span class="keyword">yield return</span> i;
+    }
+}
 
-  <span class="comment">// Użycie:</span>
-  <span class="keyword">await foreach</span> (<span class="type">var</span> liczba <span class="keyword">in</span> GenerujLiczbyAsync(CancellationToken.None))
-  {
-  Console.WriteLine(<span class="string">$"Otrzymano: {liczba}"</span>);
-  }
-</div>
+<span class="comment">// Użycie:</span>
+<span class="keyword">await foreach</span> (<span class="type">var</span> liczba <span class="keyword">in</span> GenerujLiczbyAsync(CancellationToken.None))
+{
+    Console.WriteLine(<span class="string">$"Otrzymano: {liczba}"</span>);
+}
+</pre>
 
 <h3>Przykład 2: Symulacja stronicowanego API</h3>
-<div class="code-block">
-  <span class="keyword">public record</span> <span class="type">User</span>(<span class="type">string</span> Name);
+<pre class="code-block">
+<span class="keyword">public record</span> <span class="type">User</span>(<span class="type">string</span> Name);
 
-  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">User</span>&gt; PobierzWszystkichUzytkownikowAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
-  {
-  <span class="keyword">int</span> page = 0;
-  <span class="keyword">while</span> (<span class="keyword">true</span>)
-  {
-  ct.ThrowIfCancellationRequested(); <span class="comment">// Bezpiecznik</span>
+<span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">User</span>&gt; PobierzWszystkichUzytkownikowAsync([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
+{
+    <span class="keyword">int</span> page = 0;
+    <span class="keyword">while</span> (<span class="keyword">true</span>)
+    {
+        ct.ThrowIfCancellationRequested(); <span class="comment">// Bezpiecznik</span>
 
-  <span class="type">var</span> users = <span class="keyword">await</span> PobierzStroneZApi(page, ct); <span class="comment">// Metoda zmyślona</span>
-  <span class="keyword">if</span> (users.Count == 0) <span class="keyword">break</span>;
+        <span class="type">var</span> users = <span class="keyword">await</span> PobierzStroneZApi(page, ct); <span class="comment">// Metoda zmyślona</span>
+        <span class="keyword">if</span> (users.Count == 0) <span class="keyword">break</span>;
 
-  <span class="keyword">foreach</span> (<span class="type">var</span> u <span class="keyword">in</span> users)
-  {
-  <span class="keyword">yield return</span> u;
-  }
-  page++;
-  }
-  }
-</div>
+        <span class="keyword">foreach</span> (<span class="type">var</span> u <span class="keyword">in</span> users)
+        {
+            <span class="keyword">yield return</span> u;
+        }
+        page++;
+    }
+}
+</pre>
 
 <h2>2. Anulowanie (CancellationToken) i Timeout</h2>
 <p>
-  <strong>Wyjaśnienie:</strong> W .NET nie "zabijamy" wątków siłowo. Stosujemy <strong>anulowanie kooperacyjne</strong>. Przekazujemy "żeton" (Token) do metody. Metoda musi co jakiś czas sprawdzać: <em>"Czy mam przerwać pracę?"</em>.
-  <br><br>
-  Jeśli ustawimy Timeout w <code>CancellationTokenSource</code>, po upływie czasu token zmieni stan na "Anulowany". Próba wykonania operacji na takim tokenie (lub wywołanie <code>token.ThrowIfCancellationRequested()</code>) rzuci wyjątkiem <code>OperationCanceledException</code> (lub <code>TaskCanceledException</code>).
+  <strong>Wyjaśnienie:</strong> W .NET stosujemy <strong>anulowanie kooperacyjne</strong>. Przekazujemy "żeton" (Token) do metody. Metoda musi co jakiś czas sprawdzać: <em>"Czy mam przerwać pracę?"</em>.
+  Jeśli ustawimy Timeout, token zmieni stan na "Anulowany" automatycznie.
 </p>
 
 <h3>Przykład 1: Timeout (Automatyczne anulowanie)</h3>
-<div class="code-block">
-  <span class="keyword">public async</span> <span class="type">Task</span> WykonajZTimeoutem()
-  {
-  <span class="comment">// Ustawiamy timeout na 2 sekundy</span>
-  <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(2));
+<pre class="code-block">
+<span class="keyword">public async</span> <span class="type">Task</span> WykonajZTimeoutem()
+{
+    <span class="comment">// Ustawiamy timeout na 2 sekundy</span>
+    <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(2));
 
-  <span class="keyword">try</span>
-  {
-  <span class="comment">// Przekazujemy Token do metody, która trwa długo (5 sekund)</span>
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(5000, cts.Token);
-  }
-  <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
-  {
-  Console.WriteLine(<span class="string">"Operacja przerwana przez TIMEOUT!"</span>);
-  }
-  }
-</div>
+    <span class="keyword">try</span>
+    {
+        <span class="comment">// Przekazujemy Token do metody, która trwa długo (5 sekund)</span>
+        <span class="keyword">await</span> <span class="type">Task</span>.Delay(5000, cts.Token);
+    }
+    <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
+    {
+        Console.WriteLine(<span class="string">"Operacja przerwana przez TIMEOUT!"</span>);
+    }
+}
+</pre>
 
 <h3>Przykład 2: Ręczne sprawdzanie tokena w pętli</h3>
-<div class="code-block">
-  <span class="keyword">public void</span> ObliczeniaNaProcesorze(<span class="type">CancellationToken</span> token)
-  {
-  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 1_000_000; i++)
-  {
-  <span class="comment">// Sprawdź, czy naciśnięto "Anuluj" - jeśli tak, rzuć wyjątek</span>
-  token.ThrowIfCancellationRequested();
+<pre class="code-block">
+<span class="keyword">public void</span> ObliczeniaNaProcesorze(<span class="type">CancellationToken</span> token)
+{
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 1_000_000; i++)
+    {
+        <span class="comment">// Sprawdź, czy naciśnięto "Anuluj" - jeśli tak, rzuć wyjątek</span>
+        token.ThrowIfCancellationRequested();
 
-  <span class="comment">// ... skomplikowana matematyka ...</span>
-  Math.Sqrt(i);
-  }
-  }
-</div>
+        <span class="comment">// ... skomplikowana matematyka ...</span>
+        Math.Sqrt(i);
+    }
+}
+</pre>
 
 <h2>3. Raportowanie Postępu (IProgress i Obiekt Złożony)</h2>
 <p>
-  <strong>Wyjaśnienie:</strong> Do raportowania postępu (np. paska ładowania) używamy interfejsu <code>IProgress&lt;T&gt;</code>. Jest on bezpieczny dla wątków (thread-safe). Implementacja <code>Progress&lt;T&gt;</code> automatycznie dba o to, by wynik trafił do odpowiedniego kontekstu (np. na wątek UI w WPF/WinForms), więc nie musisz używać <code>Invoke</code>.
-  <br><br>
-  Zamiast przesyłać tylko liczbę (int), często przesyłamy <strong>obiekt złożony</strong> (rekord), aby podać więcej detali (np. nazwę pliku, status, procent).
+  <strong>Wyjaśnienie:</strong> Do raportowania postępu używamy interfejsu <code>IProgress&lt;T&gt;</code>. Jest bezpieczny dla wątków (nie wymaga Invoke w UI).
+  Przesyłamy obiekt złożony (rekord), aby podać więcej detali.
 </p>
 
 <div class="complex-object">
@@ -180,128 +181,122 @@
 </div>
 
 <h3>Przykład 1: Konfiguracja Progressu</h3>
-<div class="code-block">
-  <span class="comment">// Definiujemy, co ma się stać, gdy przyjdzie raport (np. wypisz w konsoli)</span>
-  <span class="type">var</span> progressHandler = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">ProgressInfo</span>&gt;(info =>
-  {
-  Console.WriteLine(<span class="string">$"[{info.Percentage}%] ID: {info.Id} - {info.Message}"</span>);
-  });
+<pre class="code-block">
+<span class="comment">// Definiujemy, co ma się stać, gdy przyjdzie raport (np. wypisz w konsoli)</span>
+<span class="type">var</span> progressHandler = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">ProgressInfo</span>&gt;(info =>
+{
+    Console.WriteLine(<span class="string">$"[{info.Percentage}%] ID: {info.Id} - {info.Message}"</span>);
+});
 
-  <span class="comment">// Przekazujemy to jako interfejs do metody roboczej</span>
-  <span class="keyword">await</span> PrzetwarzajDane(progressHandler);
-</div>
+<span class="comment">// Przekazujemy to jako interfejs do metody roboczej</span>
+<span class="keyword">await</span> PrzetwarzajDane(progressHandler);
+</pre>
 
 <h3>Przykład 2: Zgłaszanie postępu wewnątrz metody</h3>
-<div class="code-block">
-  <span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajDane(<span class="type">IProgress</span>&lt;<span class="type">ProgressInfo</span>&gt; progress)
-  {
-  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i <= 100; i += 10)
-  {
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100); <span class="comment">// Praca</span>
+<pre class="code-block">
+<span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajDane(<span class="type">IProgress</span>&lt;<span class="type">ProgressInfo</span>&gt; progress)
+{
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i <= 100; i += 10)
+    {
+        <span class="keyword">await</span> <span class="type">Task</span>.Delay(100); <span class="comment">// Praca</span>
 
-  <span class="comment">// Tworzymy obiekt złożony i zgłaszamy</span>
-  <span class="type">var</span> raport = <span class="keyword">new</span> <span class="type">ProgressInfo</span>(Id: i, Message: <span class="string">"Przetwarzanie..."</span>, Percentage: i);
+        <span class="comment">// Tworzymy obiekt złożony i zgłaszamy</span>
+        <span class="type">var</span> raport = <span class="keyword">new</span> <span class="type">ProgressInfo</span>(Id: i, Message: <span class="string">"Przetwarzanie..."</span>, Percentage: i);
 
-  <span class="comment">// To wywoła lambdę z Przykładu 1</span>
-  progress?.Report(raport);
-  }
-  }
-</div>
+        <span class="comment">// To wywoła lambdę z Przykładu 1</span>
+        progress?.Report(raport);
+    }
+}
+</pre>
 
 <h2>4. Parallel.ForEachAsync + IAsyncEnumerable + Token (Integracja)</h2>
 <p>
-  <strong>Wyjaśnienie:</strong> To jest najważniejsza część. Tradycyjny <code>Parallel.For</code> jest blokujący i słabo współpracuje z <code>await</code>.
-  W nowoczesnym .NET używamy <strong><code>Parallel.ForEachAsync</code></strong>.
-  Pozwala on na:
-<ul>
-  <li>Równoległe przetwarzanie asynchronicznego strumienia (lub listy).</li>
-  <li>Ograniczenie liczby wątków (<code>MaxDegreeOfParallelism</code>).</li>
-  <li>Obsługę <code>CancellationToken</code> (natychmiastowe przerwanie pętli).</li>
-</ul>
+  <strong>Wyjaśnienie:</strong> To jest najważniejsza część. Tradycyjny <code>Parallel.For</code> jest blokujący. W nowoczesnym .NET używamy <strong><code>Parallel.ForEachAsync</code></strong>.
+  Pozwala on na równoległe przetwarzanie strumienia z obsługą <code>await</code> i <code>CancellationToken</code>.
 </p>
 
 <h3>Przykład 1: Prosta pętla równoległa z limitem wątków</h3>
-<div class="code-block">
-  <span class="keyword">var</span> numbers = <span class="type">Enumerable</span>.Range(1, 100);
+<pre class="code-block">
+<span class="keyword">var</span> numbers = <span class="type">Enumerable</span>.Range(1, 100);
 
-  <span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
-  {
-  MaxDegreeOfParallelism = 4, <span class="comment">// Max 4 zadania naraz</span>
-  CancellationToken = CancellationToken.None
-  };
+<span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
+{
+    MaxDegreeOfParallelism = 4, <span class="comment">// Max 4 zadania naraz</span>
+    CancellationToken = CancellationToken.None
+};
 
-  <span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(numbers, options, <span class="keyword">async</span> (number, ct) =>
-  {
-  <span class="comment">// To dzieje się równolegle</span>
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
-  Console.WriteLine(<span class="string">$"Przetworzono: {number}"</span>);
-  });
-</div>
+<span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(numbers, options, <span class="keyword">async</span> (number, ct) =>
+{
+    <span class="comment">// To dzieje się równolegle</span>
+    <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
+    Console.WriteLine(<span class="string">$"Przetworzono: {number}"</span>);
+});
+</pre>
 
-<h3>Przykład 2: KOMPLETNE ROZWIĄZANIE (Streams + Token + Progress + Parallel)</h3>
+<h3>Przykład 2: KOMPLETNE ROZWIĄZANIE</h3>
 <div class="alert">
-  Ten przykład łączy wszystkie wymagania: pobiera dane strumieniem, przetwarza je równolegle, raportuje stan obiektem złożonym i reaguje na Timeout.
+  Ten przykład łączy: IAsyncEnumerable, Parallel, Progress (obiekt złożony) i Timeout.
 </div>
 
-<div class="code-block">
-  <span class="keyword">public record</span> <span class="type">WorkStatus</span>(<span class="type">string</span> ItemName, <span class="type">bool</span> IsSuccess);
+<pre class="code-block">
+<span class="keyword">public record</span> <span class="type">WorkStatus</span>(<span class="type">string</span> ItemName, <span class="type">bool</span> IsSuccess);
 
-  <span class="keyword">public async</span> <span class="type">Task</span> UruchomProcesGiant()
-  {
-  <span class="comment">// 1. Timeout 10 sekund na całość</span>
-  <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(10));
+<span class="keyword">public async</span> <span class="type">Task</span> UruchomProcesGiant()
+{
+    <span class="comment">// 1. Timeout 10 sekund na całość</span>
+    <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(<span class="type">TimeSpan</span>.FromSeconds(10));
 
-  <span class="comment">// 2. Obsługa progressu</span>
-  <span class="type">var</span> progress = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">WorkStatus</span>&gt;(status =>
-  {
-  Console.WriteLine(<span class="string">$"[RAPORT] {status.ItemName}: {(status.IsSuccess ? "OK" : "BŁĄD")}"</span>);
-  });
+    <span class="comment">// 2. Obsługa progressu</span>
+    <span class="type">var</span> progress = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">WorkStatus</span>&gt;(status =>
+    {
+        Console.WriteLine(<span class="string">$"[RAPORT] {status.ItemName}: {(status.IsSuccess ? "OK" : "BŁĄD")}"</span>);
+    });
 
-  <span class="keyword">try</span>
-  {
-  <span class="comment">// 3. Start procesu</span>
-  <span class="keyword">await</span> PrzetwarzajRownolegleStream(GenerujDane(cts.Token), progress, cts.Token);
-  }
-  <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
-  {
-  Console.WriteLine(<span class="string">"TIMEOUT! Proces trwał zbyt długo i został przerwany."</span>);
-  }
-  }
+    <span class="keyword">try</span>
+    {
+        <span class="comment">// 3. Start procesu</span>
+        <span class="keyword">await</span> PrzetwarzajRownolegleStream(GenerujDane(cts.Token), progress, cts.Token);
+    }
+    <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
+    {
+        Console.WriteLine(<span class="string">"TIMEOUT! Proces trwał zbyt długo i został przerwany."</span>);
+    }
+}
 
-  <span class="comment">// Metoda główna</span>
-  <span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajRownolegleStream(
-  <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; sourceStream,
-  <span class="type">IProgress</span>&lt;<span class="type">WorkStatus</span>&gt; progress,
-  <span class="type">CancellationToken</span> token)
-  {
-  <span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
-  {
-  MaxDegreeOfParallelism = 3,
-  CancellationToken = token <span class="comment">// Przekazanie tokena do zarządcy pętli</span>
-  };
+<span class="comment">// Metoda główna</span>
+<span class="keyword">public async</span> <span class="type">Task</span> PrzetwarzajRownolegleStream(
+    <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; sourceStream,
+    <span class="type">IProgress</span>&lt;<span class="type">WorkStatus</span>&gt; progress,
+    <span class="type">CancellationToken</span> token)
+{
+    <span class="type">var</span> options = <span class="keyword">new</span> <span class="type">ParallelOptions</span>
+    {
+        MaxDegreeOfParallelism = 3,
+        CancellationToken = token <span class="comment">// Przekazanie tokena do zarządcy pętli</span>
+    };
 
-  <span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(sourceStream, options, <span class="keyword">async</span> (item, ct) =>
-  {
-  <span class="comment">// ct to token połączony z głównym tokenem + zarządzany przez pętlę</span>
+    <span class="keyword">await</span> <span class="type">Parallel</span>.ForEachAsync(sourceStream, options, <span class="keyword">async</span> (item, ct) =>
+    {
+        <span class="comment">// ct to token połączony z głównym tokenem + zarządzany przez pętlę</span>
 
-  <span class="comment">// Symulacja pracy</span>
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(1000, ct);
+        <span class="comment">// Symulacja pracy</span>
+        <span class="keyword">await</span> <span class="type">Task</span>.Delay(1000, ct);
 
-  <span class="comment">// Raportowanie postępu obiektem złożonym</span>
-  progress.Report(<span class="keyword">new</span> <span class="type">WorkStatus</span>(item, <span class="keyword">true</span>));
-  });
-  }
+        <span class="comment">// Raportowanie postępu obiektem złożonym</span>
+        progress.Report(<span class="keyword">new</span> <span class="type">WorkStatus</span>(item, <span class="keyword">true</span>));
+    });
+}
 
-  <span class="comment">// Generator danych</span>
-  <span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; GenerujDane([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
-  {
-  <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 20; i++)
-  {
-  <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
-  <span class="keyword">yield return</span> <span class="string">$"Plik_{i}.txt"</span>;
-  }
-  }
-</div>
+<span class="comment">// Generator danych</span>
+<span class="keyword">public async</span> <span class="type">IAsyncEnumerable</span>&lt;<span class="type">string</span>&gt; GenerujDane([<span class="type">EnumeratorCancellation</span>] <span class="type">CancellationToken</span> ct)
+{
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < 20; i++)
+    {
+        <span class="keyword">await</span> <span class="type">Task</span>.Delay(100, ct);
+        <span class="keyword">yield return</span> <span class="string">$"Plik_{i}.txt"</span>;
+    }
+}
+</pre>
 
 </body>
 </html>
