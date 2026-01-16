@@ -3,745 +3,261 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ściąga - NetworkStreams Chat (C#)</title>
+  <title>Programowanie Sieciowe w C# - Notatki na Laboratoria</title>
   <style>
-      * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
+      :root {
+          --primary-color: #0056b3;
+          --bg-color: #f4f4f9;
+          --text-color: #333;
+          --code-bg: #2d2d2d;
+          --code-text: #f8f8f2;
+          --accent-color: #d63384;
+          --warning-bg: #fff3cd;
+          --warning-text: #856404;
       }
 
       body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 20px;
           line-height: 1.6;
+          color: var(--text-color);
+          background-color: var(--bg-color);
+          margin: 0;
+          padding: 20px;
       }
 
       .container {
-          max-width: 1200px;
+          max-width: 900px;
           margin: 0 auto;
           background: white;
-          border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-          padding: 30px;
+          padding: 40px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       }
 
       h1 {
-          color: #333;
-          text-align: center;
-          margin-bottom: 10px;
-          font-size: 2.5em;
-          border-bottom: 3px solid #667eea;
-          padding-bottom: 15px;
-      }
-
-      .subtitle {
-          text-align: center;
-          color: #666;
-          margin-bottom: 30px;
-          font-style: italic;
+          color: var(--primary-color);
+          border-bottom: 2px solid var(--primary-color);
+          padding-bottom: 10px;
       }
 
       h2 {
-          color: #667eea;
-          margin-top: 25px;
-          margin-bottom: 15px;
-          font-size: 1.8em;
-          border-left: 5px solid #667eea;
-          padding-left: 15px;
+          color: var(--primary-color);
+          margin-top: 40px;
       }
 
       h3 {
-          color: #764ba2;
-          margin-top: 20px;
-          margin-bottom: 10px;
-          font-size: 1.3em;
+          color: #444;
+          margin-top: 25px;
       }
 
-      .section {
-          margin-bottom: 30px;
-          padding: 20px;
-          background: #f8f9fa;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
-      }
-
-      .code-block {
-          background: #2d2d2d;
-          color: #f8f8f2;
-          padding: 15px;
-          border-radius: 5px;
-          overflow-x: auto;
-          margin: 10px 0;
-          font-family: 'Courier New', Courier, monospace;
-          font-size: 0.9em;
-          line-height: 1.5;
-      }
-
-      .keyword {
-          color: #66d9ef;
-      }
-
-      .string {
-          color: #e6db74;
-      }
-
-      .comment {
-          color: #75715e;
-      }
-
-      .type {
-          color: #a6e22e;
-      }
-
-      ul, ol {
-          margin-left: 25px;
+      p {
           margin-bottom: 15px;
+      }
+
+      code {
+          font-family: 'Consolas', 'Monaco', monospace;
+          background-color: #e9ecef;
+          padding: 2px 4px;
+          border-radius: 4px;
+          color: var(--accent-color);
+      }
+
+      pre {
+          background-color: var(--code-bg);
+          color: var(--code-text);
+          padding: 15px;
+          border-radius: 8px;
+          overflow-x: auto;
+          border-left: 5px solid var(--accent-color);
+      }
+
+      .note {
+          background-color: #e7f5ff;
+          border-left: 5px solid #0056b3;
+          padding: 15px;
+          margin: 20px 0;
+      }
+
+      .warning {
+          background-color: var(--warning-bg);
+          border-left: 5px solid #ffc107;
+          padding: 15px;
+          color: var(--warning-text);
+          margin: 20px 0;
+      }
+
+      .diagram {
+          font-family: 'Courier New', monospace;
+          white-space: pre;
+          background: #fff;
+          border: 1px dashed #aaa;
+          padding: 10px;
+          margin: 20px 0;
+          text-align: center;
+          font-weight: bold;
+      }
+
+      ul {
+          padding-left: 20px;
       }
 
       li {
           margin-bottom: 8px;
       }
-
-      .important {
-          background: #fff3cd;
-          border-left: 4px solid #ffc107;
-          padding: 15px;
-          margin: 15px 0;
-          border-radius: 4px;
-      }
-
-      .warning {
-          background: #f8d7da;
-          border-left: 4px solid #dc3545;
-          padding: 15px;
-          margin: 15px 0;
-          border-radius: 4px;
-      }
-
-      .tip {
-          background: #d1ecf1;
-          border-left: 4px solid #17a2b8;
-          padding: 15px;
-          margin: 15px 0;
-          border-radius: 4px;
-      }
-
-      .grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin: 20px 0;
-      }
-
-      .card {
-          background: white;
-          padding: 15px;
-          border-radius: 5px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      }
-
-      table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 15px 0;
-      }
-
-      th, td {
-          border: 1px solid #ddd;
-          padding: 12px;
-          text-align: left;
-      }
-
-      th {
-          background-color: #667eea;
-          color: white;
-          font-weight: bold;
-      }
-
-      tr:nth-child(even) {
-          background-color: #f2f2f2;
-      }
-
-      .inline-code {
-          background: #e8e8e8;
-          padding: 2px 6px;
-          border-radius: 3px;
-          font-family: 'Courier New', Courier, monospace;
-          color: #d63384;
-      }
-
-      @media print {
-          body {
-              background: white;
-              padding: 0;
-          }
-
-          .container {
-              box-shadow: none;
-              padding: 10px;
-          }
-
-          .code-block {
-              page-break-inside: avoid;
-          }
-      }
   </style>
 </head>
 <body>
+
 <div class="container">
-  <h1>🌐 Ściąga - NetworkStreams Chat</h1>
-  <div class="subtitle">Aplikacja czatu peer-to-peer z użyciem TCP w C# (.NET 9.0)</div>
 
-  <!-- ARCHITEKTURA PROJEKTU -->
-  <div class="section">
-    <h2>📁 Architektura Projektu</h2>
-    <table>
-      <tr>
-        <th>Projekt</th>
-        <th>Opis</th>
-        <th>Główne pliki</th>
-      </tr>
-      <tr>
-        <td><strong>Chat.Common</strong></td>
-        <td>Biblioteka wspólna dla serwera i klienta</td>
-        <td>MessageDTO.cs, MessageReader.cs, MessageWriter.cs, MessageHandler.cs</td>
-      </tr>
-      <tr>
-        <td><strong>ChatServer</strong></td>
-        <td>Aplikacja serwerowa - pośredniczy między klientami</td>
-        <td>Program.cs, ChatServer.cs</td>
-      </tr>
-      <tr>
-        <td><strong>ChatClient</strong></td>
-        <td>Aplikacja kliencka - czat użytkownika</td>
-        <td>Program.cs</td>
-      </tr>
-    </table>
+  <h1>Programowanie Sieciowe w C# (TCP/IP)</h1>
+  <p>Kompendium wiedzy oparte na analizie kodu klienta/serwera czatu. Kluczowe zagadnienia: strumienie, framing wiadomości, asynchroniczność.</p>
+
+  <h2>1. Protokół Binarny i "Framing" Wiadomości</h2>
+
+  <div class="note">
+    <strong>Dlaczego to robimy?</strong> TCP to strumień (stream), a nie paczki. Jeśli wyślesz "ABC" i "DEF", odbiorca może dostać "ABCDEF", "A", "BCDEF" lub dowolną inną kombinację.
+    <br>Aby wiedzieć, gdzie kończy się jedna wiadomość, a zaczyna druga, stosujemy <strong>Length-Prefixing</strong> (nagłówek długości).
   </div>
 
-  <!-- KLUCZOWE KONCEPCJE -->
-  <div class="section">
-    <h2>🔑 Kluczowe Koncepcje</h2>
-
-    <h3>1. TcpListener i TcpClient</h3>
-    <div class="code-block">
-      <span class="comment">// Serwer - nasłuchiwanie połączeń</span>
-      <span class="keyword">var</span> listener = <span class="keyword">new</span> <span class="type">TcpListener</span>(IPAddress.Any, port);
-      listener.Start();
-      <span class="keyword">var</span> client = <span class="keyword">await</span> listener.AcceptTcpClientAsync(ct);
-
-      <span class="comment">// Klient - łączenie się z serwerem</span>
-      <span class="keyword">var</span> client = <span class="keyword">new</span> <span class="type">TcpClient</span>();
-      <span class="keyword">await</span> client.ConnectAsync(host, port, ct);
-    </div>
-
-    <h3>2. NetworkStream</h3>
-    <p>Stream TCP służący do komunikacji - zarówno odczytu, jak i zapisu danych.</p>
-    <div class="code-block">
-      <span class="type">NetworkStream</span> stream = client.GetStream();
-      <span class="keyword">await</span> stream.WriteAsync(buffer, ct);
-      <span class="keyword">await</span> stream.ReadAsync(buffer, offset, count, ct);
-    </div>
-
-    <h3>3. CancellationToken</h3>
-    <p>Mechanizm pozwalający na bezpieczne anulowanie operacji asynchronicznych.</p>
-    <div class="code-block">
-      <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>();
-      <span class="keyword">var</span> ct = cts.Token;
-
-      <span class="comment">// Anulowanie</span>
-      <span class="keyword">await</span> cts.CancelAsync();
-
-      <span class="comment">// Sprawdzanie</span>
-      <span class="keyword">if</span> (ct.IsCancellationRequested) { <span class="comment">/* ... */</span> }
-    </div>
+  <div class="diagram">
+    [ NAGŁÓWEK (4 bajty) ] + [ PAYLOAD (N bajtów) ]<br>
+    | 00 | 00 | 00 | 15 | -> | { "User": "Jan", ... } |
   </div>
 
-  <!-- PROTOKÓŁ KOMUNIKACJI -->
-  <div class="section">
-    <h2>📡 Protokół Komunikacji</h2>
+  <h3>Wysyłanie (MessageWriter)</h3>
+  <ol>
+    <li>Zserializuj obiekt do JSON (string).</li>
+    <li>Zamień string na bajty (UTF-8).</li>
+    <li>Oblicz długość tablicy bajtów.</li>
+    <li>Utwórz nagłówek (4 bajty int) w formacie <strong>BigEndian</strong>.</li>
+    <li>Wyślij nagłówek, potem dane, potem zrób <code>Flush()</code>.</li>
+  </ol>
 
-    <div class="important">
-      <strong>⚠️ Ważne!</strong> Wiadomości są przesyłane w formacie binarnym z nagłówkiem długości.
-    </div>
+  <pre><code>// Kluczowy fragment zapisu
+var header = new byte[4];
+BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
 
-    <h3>Format wiadomości:</h3>
-    <ol>
-      <li><strong>Nagłówek (4 bajty):</strong> Długość payloadu w formacie Big-Endian (int32)</li>
-      <li><strong>Payload (zmienna długość):</strong> JSON z obiektem MessageDTO w UTF-8</li>
-    </ol>
+await stream.WriteAsync(header, ct);  // Krok 1: Długość
+await stream.WriteAsync(payload, ct); // Krok 2: Treść
+await stream.FlushAsync(ct);          // Krok 3: Wypchnięcie</code></pre>
 
-    <h3>MessageDTO - struktura wiadomości:</h3>
-    <div class="code-block">
-      <span class="keyword">public sealed record</span> <span class="type">MessageDTO</span>
-      {
-      <span class="keyword">public</span> <span class="type">string</span> Content { <span class="keyword">get</span>; <span class="keyword">init</span>; } = string.Empty;
-      <span class="keyword">public</span> <span class="type">string</span> Sender { <span class="keyword">get</span>; <span class="keyword">init</span>; } = string.Empty;
-      <span class="keyword">public</span> <span class="type">DateTime</span> Time { <span class="keyword">get</span>; <span class="keyword">init</span>; } = DateTime.UtcNow;
-      }
-    </div>
+  <h3>Odbieranie (MessageReader)</h3>
+  <p>Odbieranie jest trudniejsze, bo dane mogą przychodzić w kawałkach. Musimy użyć pętli.</p>
 
-    <h3>Wysyłanie wiadomości (MessageWriter):</h3>
-    <div class="code-block">
-      <span class="keyword">public async</span> <span class="type">Task</span> WriteMessage(<span class="type">MessageDTO</span> message, <span class="type">CancellationToken</span> ct)
-      {
-      <span class="comment">// 1. Serializuj do JSON</span>
-      <span class="type">string</span> json = JsonConvert.SerializeObject(message);
-      <span class="type">byte</span>[] payload = Encoding.UTF8.GetBytes(json);
-
-      <span class="comment">// 2. Sprawdź długość (max 10KB)</span>
-      <span class="keyword">if</span> (payload.Length > MaxMessageLen)
-      <span class="keyword">throw new</span> <span class="type">TooLongMessageException</span>(<span class="string">$"Too long: {payload.Length}"</span>);
-
-      <span class="comment">// 3. Utwórz nagłówek (4 bajty Big-Endian)</span>
-      <span class="keyword">var</span> header = <span class="keyword">new byte</span>[4];
-      BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
-
-      <span class="comment">// 4. Wyślij nagłówek + payload</span>
-      <span class="keyword">await</span> stream.WriteAsync(header, ct);
-      <span class="keyword">await</span> stream.WriteAsync(payload, ct);
-      <span class="keyword">await</span> stream.FlushAsync(ct);
-      }
-    </div>
-
-    <h3>Odbieranie wiadomości (MessageReader):</h3>
-    <div class="code-block">
-      <span class="keyword">public async</span> <span class="type">Task</span>&lt;<span class="type">MessageDTO</span>?&gt; ReadMessage(<span class="type">CancellationToken</span> ct)
-      {
-      <span class="comment">// 1. Odczytaj nagłówek (4 bajty)</span>
-      <span class="keyword">var</span> headerBuffer = <span class="keyword">new byte</span>[4];
-      <span class="type">int</span> bytesRead = <span class="keyword">await</span> ReadToBuffer(headerBuffer, ct);
-      <span class="keyword">if</span> (bytesRead < 4) <span class="keyword">return null</span>; <span class="comment">// Rozłączenie</span>
-
-      <span class="comment">// 2. Parsuj długość payloadu</span>
-      <span class="type">int</span> payloadLen = BinaryPrimitives.ReadInt32BigEndian(headerBuffer);
-      <span class="keyword">if</span> (payloadLen > MaxMessageLen)
-      <span class="keyword">throw new</span> <span class="type">TooLongMessageException</span>(<span class="string">$"Too long: {payloadLen}"</span>);
-
-      <span class="comment">// 3. Odczytaj payload</span>
-      <span class="keyword">var</span> payloadBuffer = <span class="keyword">new byte</span>[payloadLen];
-      bytesRead = <span class="keyword">await</span> ReadToBuffer(payloadBuffer, ct);
-      <span class="keyword">if</span> (bytesRead < payloadLen) <span class="keyword">return null</span>; <span class="comment">// Rozłączenie</span>
-
-      <span class="comment">// 4. Deserializuj JSON</span>
-      <span class="type">string</span> json = Encoding.UTF8.GetString(payloadBuffer);
-      <span class="keyword">return</span> JsonConvert.DeserializeObject&lt;<span class="type">MessageDTO</span>&gt;(json);
-      }
-    </div>
-
-    <div class="tip">
-      <strong>💡 Tip:</strong> <span class="inline-code">ReadToBuffer()</span> czyta w pętli, bo <span class="inline-code">ReadAsync</span> może nie odczytać wszystkich bajtów za jednym razem!
-    </div>
+  <div class="warning">
+    <strong>Pamiętaj na laboratoria!</strong> Nigdy nie zakładaj, że <code>stream.ReadAsync()</code> zwróci tyle bajtów, o ile prosiłeś. Zawsze sprawdzaj wartość zwracaną (liczbę faktycznie odczytanych bajtów).
   </div>
 
-  <!-- ARCHITEKTURA SERWERA -->
-  <div class="section">
-    <h2>🖥️ Architektura Serwera</h2>
+  <pre><code>// Poprawna pętla czytająca do pełnego bufora
+private async Task&lt;int&gt; ReadToBuffer(byte[] buffer, CancellationToken ct)
+{
+    int bytesRead = 0;
 
-    <h3>Główna pętla serwera:</h3>
-    <div class="code-block">
-      <span class="keyword">public async</span> <span class="type">Task</span> Run(<span class="type">CancellationToken</span> ct)
-      {
-      <span class="keyword">while</span> (!ct.IsCancellationRequested)
-      {
-      <span class="keyword">using var</span> listener = <span class="keyword">new</span> <span class="type">TcpListener</span>(address, port);
-      listener.Start();
+    // Czytaj dopóki nie zapełnisz bufora
+    while (bytesRead < buffer.Length)
+    {
+        int chunk = await stream.ReadAsync(buffer, bytesRead,
+                                           buffer.Length - bytesRead, ct);
+        if (chunk == 0) return bytesRead; // Zerwanie połączenia
+        bytesRead += chunk;
+    }
+    return bytesRead;
+}</code></pre>
 
-      <span class="comment">// Czekaj na dwóch klientów</span>
-      <span class="keyword">using var</span> client1 = <span class="keyword">await</span> listener.AcceptTcpClientAsync(ct);
-      <span class="keyword">using var</span> client2 = <span class="keyword">await</span> listener.AcceptTcpClientAsync(ct);
+  <hr>
 
-      <span class="comment">// Obsługuj parę klientów</span>
-      <span class="keyword">await</span> HandleClientsAsync(client1, client2, ct);
-      }
-      }
-    </div>
+  <h2>2. Big Endian vs Little Endian</h2>
+  <p>W sieciach standardem jest <strong>Big Endian</strong> (Network Byte Order). Systemy Windows (Intel/AMD) używają zazwyczaj <strong>Little Endian</strong>.</p>
+  <ul>
+    <li><code>BinaryPrimitives.WriteInt32BigEndian</code> - bezpieczny sposób na konwersję niezależnie od procesora.</li>
+    <li>Jeśli wyślesz długość w złej kolejności bajtów, odbiorca odczyta np. zamiast liczby <code>21</code> liczbę <code>352321536</code> i spróbuje zaalokować gigantyczną ilość pamięci -> <strong>Out Of Memory Exception</strong>.</li>
+  </ul>
 
-    <h3>Obsługa pary klientów:</h3>
-    <ol>
-      <li>Pobierz <span class="inline-code">NetworkStream</span> dla obu klientów</li>
-      <li>Utwórz <span class="inline-code">MessageReader</span> i <span class="inline-code">MessageWriter</span> dla każdego klienta</li>
-      <li>Uruchom dwa zadania asynchroniczne do przekazywania wiadomości:
-        <ul>
-          <li>Klient1 → Klient2</li>
-          <li>Klient2 → Klient1</li>
-        </ul>
-      </li>
-      <li>Czekaj na zakończenie któregokolwiek zadania (<span class="inline-code">Task.WhenAny</span>)</li>
-      <li>Wyślij powiadomienie do pozostałego klienta</li>
-    </ol>
+  <hr>
 
-    <div class="code-block">
-      <span class="keyword">static async</span> <span class="type">Task</span> HandleClientsAsync(<span class="type">TcpClient</span> client1, <span class="type">TcpClient</span> client2, <span class="type">CancellationToken</span> ct)
-      {
-      <span class="keyword">await using var</span> stream1 = client1.GetStream();
-      <span class="keyword">await using var</span> stream2 = client2.GetStream();
+  <h2>3. Nawiązywanie połączenia z Timeoutem</h2>
+  <p>Domyślny <code>ConnectAsync</code> w starszych wersjach .NET lub niektórych przeciążeniach nie obsługuje <code>CancellationToken</code>. Aby nie "wisieć" w nieskończoność, stosujemy trik.</p>
 
-      <span class="keyword">using var</span> messageForwardCts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>();
+  <h3>Wzorzec implementacji:</h3>
+  <pre><code>using var cts = new CancellationTokenSource(5000); // 5 sekund timeout
+try {
+    // Przekazujemy token z naszego źródła czasu
+    await client.ConnectAsync(host, port, cts.Token);
+}
+catch (OperationCanceledException) {
+    // Złapane! Minęło 5 sekund.
+    Console.WriteLine("Timeout!");
+}</code></pre>
 
-      <span class="keyword">using var</span> readerFromClient1 = <span class="keyword">new</span> <span class="type">MessageReader</span>(stream1);
-      <span class="keyword">using var</span> readerFromClient2 = <span class="keyword">new</span> <span class="type">MessageReader</span>(stream2);
-      <span class="keyword">using var</span> writerToClient1 = <span class="keyword">new</span> <span class="type">MessageWriter</span>(stream1);
-      <span class="keyword">using var</span> writerToClient2 = <span class="keyword">new</span> <span class="type">MessageWriter</span>(stream2);
+  <hr>
 
-      <span class="comment">// Uruchom przekazywanie wiadomości</span>
-      <span class="keyword">var</span> t1 = ForwardMessagesAsync(readerFromClient1, writerToClient2, messageForwardCts.Token);
-      <span class="keyword">var</span> t2 = ForwardMessagesAsync(readerFromClient2, writerToClient1, messageForwardCts.Token);
-      <span class="keyword">var</span> cancellationTask = Task.Delay(-1, ct);
+  <h2>4. Architektura Serwera (TCP Listener)</h2>
+  <p>Przeanalizowany kod serwera implementuje model <strong>sekwencyjnego parowania</strong>.</p>
 
-      <span class="comment">// Czekaj na pierwsze zakończenie</span>
-      <span class="keyword">var</span> finishedTask = <span class="keyword">await</span> Task.WhenAny(t1, t2, cancellationTask);
-
-      <span class="comment">// Wyślij powiadomienia</span>
-      <span class="keyword">if</span> (finishedTask == cancellationTask)
-      {
-      <span class="keyword">await</span> SendCancellationNotification(writerToClient1);
-      <span class="keyword">await</span> SendCancellationNotification(writerToClient2);
-      }
-      <span class="keyword">else</span>
-      {
-      <span class="keyword">var</span> remainingClientWriter = finishedTask == t1 ? writerToClient2 : writerToClient1;
-      <span class="keyword">await</span> SendPeerDisconnectedNotification(remainingClientWriter, ct);
-      }
-
-      <span class="keyword">await</span> messageForwardCts.CancelAsync();
-      <span class="keyword">await</span> Task.WhenAll(t1, t2);
-      }
-    </div>
-
-    <h3>Przekazywanie wiadomości:</h3>
-    <div class="code-block">
-      <span class="keyword">static async</span> <span class="type">Task</span> ForwardMessagesAsync(<span class="type">MessageReader</span> reader, <span class="type">MessageWriter</span> writer, <span class="type">CancellationToken</span> ct)
-      {
-      <span class="keyword">try</span>
-      {
-      <span class="keyword">while</span> (!ct.IsCancellationRequested)
-      {
-      <span class="keyword">var</span> msg = <span class="keyword">await</span> reader.ReadMessage(ct);
-      <span class="keyword">if</span> (msg == <span class="keyword">null</span>) <span class="comment">// Klient się rozłączył</span>
-      <span class="keyword">break</span>;
-
-      Console.WriteLine(<span class="string">$"{msg.Sender}: {msg.Content}"</span>);
-      <span class="keyword">await</span> writer.WriteMessage(msg, ct);
-      }
-      }
-      <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>) { }
-      <span class="keyword">catch</span> (<span class="type">IOException</span>) { }
-      }
-    </div>
+  <div class="diagram">
+    Start -> Czekaj na Klienta 1 -> Czekaj na Klienta 2 -> <br>
+    [Połącz ich i blokuj pętlę] -> Koniec rozmowy -> Wróć do startu
   </div>
 
-  <!-- ARCHITEKTURA KLIENTA -->
-  <div class="section">
-    <h2>💻 Architektura Klienta</h2>
+  <ul>
+    <li><code>TcpListener</code> - nasłuchuje na porcie ("otwiera drzwi").</li>
+    <li><code>AcceptTcpClientAsync</code> - czeka i zwraca obiekt <code>TcpClient</code> dla konkretnego połączenia.</li>
+    <li><code>using</code> - bardzo ważne przy <code>TcpClient</code>. Połączenia to niezarządzane zasoby (file handles). Muszą być zwalniane (Dispose).</li>
+  </ul>
 
-    <h3>Główny przepływ:</h3>
-    <ol>
-      <li>Połącz się z serwerem (<span class="inline-code">TcpClient.ConnectAsync</span>)</li>
-      <li>Pobierz <span class="inline-code">NetworkStream</span></li>
-      <li>Uruchom asynchroniczny wątek odbiorczy (<span class="inline-code">MessageReceiver</span>)</li>
-      <li>W głównej pętli czytaj od użytkownika i wysyłaj wiadomości</li>
-      <li>Po wpisaniu "exit" - zakończ</li>
-    </ol>
+  <hr>
 
-    <h3>Łączenie z timeoutem:</h3>
-    <div class="code-block">
-      <span class="keyword">static async</span> <span class="type">Task</span>&lt;<span class="type">TcpClient</span>?&gt; Connect(<span class="type">string</span> host, <span class="type">int</span> port, <span class="type">IProgress</span>&lt;<span class="type">string</span>&gt; progress)
-      {
-      <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(3000); <span class="comment">// 3s timeout</span>
-      <span class="keyword">var</span> client = <span class="keyword">new</span> <span class="type">TcpClient</span>();
+  <h2>5. Protokół Tekstowy (StreamReader/Writer)</h2>
+  <p>Alternatywa dla protokołu binarnego. Łatwiejsza do debugowania (można użyć Telneta), ale wolniejsza i mniej elastyczna przy przesyłaniu plików/obrazków.</p>
 
-      <span class="keyword">try</span> {
-      <span class="keyword">await</span> client.ConnectAsync(host, port, cts.Token);
-      progress.Report(<span class="string">"Connected to server"</span>);
-      <span class="keyword">return</span> client;
-      }
-      <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>)
-      {
-      progress.Report(<span class="string">"[TIMEOUT] Failed to connect"</span>);
-      <span class="keyword">return null</span>;
-      }
-      }
-    </div>
+  <ul>
+    <li><strong>Separator:</strong> Znak nowej linii (<code>\n</code>).</li>
+    <li><strong>Narzędzia:</strong> <code>StreamReader.ReadLineAsync()</code> oraz <code>StreamWriter.WriteLineAsync()</code>.</li>
+  </ul>
 
-    <h3>Odbieranie wiadomości (osobny wątek):</h3>
-    <div class="code-block">
-      <span class="keyword">static async</span> <span class="type">Task</span> MessageReceiver(<span class="type">NetworkStream</span> stream, <span class="type">IProgress</span>&lt;<span class="type">string</span>&gt; progress, <span class="type">CancellationTokenSource</span> cts)
-      {
-      <span class="keyword">var</span> ct = cts.Token;
-      <span class="keyword">using var</span> reader = <span class="keyword">new</span> <span class="type">MessageReader</span>(stream);
-
-      <span class="keyword">try</span> {
-      <span class="keyword">while</span> (!ct.IsCancellationRequested)
-      {
-      <span class="type">MessageDTO</span>? msg = <span class="keyword">await</span> reader.ReadMessage(ct);
-      <span class="keyword">if</span> (msg == <span class="keyword">null</span>) {
-      progress.Report(<span class="string">"[System] Your peer disconnected."</span>);
-      cts.Cancel(); <span class="comment">// Anuluj wszystko</span>
-      <span class="keyword">break</span>;
-      }
-
-      Console.WriteLine(<span class="string">$"[{msg.Time:u}] {msg.Sender}: {msg.Content}"</span>);
-      }
-      }
-      <span class="keyword">catch</span> (<span class="type">OperationCanceledException</span>) { }
-      <span class="keyword">catch</span> (<span class="type">Exception</span> e) {
-      progress.Report(<span class="string">$"[Error]: {e.Message}"</span>);
-      }
-      }
-    </div>
-
-    <h3>Wysyłanie wiadomości (główna pętla):</h3>
-    <div class="code-block">
-      <span class="keyword">using var</span> sender = <span class="keyword">new</span> <span class="type">MessageWriter</span>(stream);
-
-      <span class="keyword">while</span> (<span class="keyword">true</span>)
-      {
-      <span class="type">string</span>? msg = Console.ReadLine();
-      <span class="keyword">if</span> (msg == <span class="keyword">null</span> || msg.Equals(<span class="string">"exit"</span>, StringComparison.OrdinalIgnoreCase))
-      <span class="keyword">break</span>;
-
-      <span class="keyword">var</span> dto = <span class="keyword">new</span> <span class="type">MessageDTO</span>
-      {
-      Content = msg,
-      Sender = name,
-      Time = DateTime.UtcNow
-      };
-
-      <span class="keyword">try</span> {
-      <span class="keyword">await</span> sender.WriteMessage(dto, cts.Token);
-      }
-      <span class="keyword">catch</span> (<span class="type">TooLongMessageException</span>) {
-      progress.Report(<span class="string">"[ERROR] Message was too long."</span>);
-      }
-      }
-    </div>
+  <div class="warning">
+    <strong>Pułapka Flush:</strong> <code>StreamWriter</code> buforuje dane. Jeśli napiszesz <code>WriteLineAsync()</code> i nie zrobisz <code>FlushAsync()</code>, wiadomość może nie wyjść z Twojego komputera, dopóki bufor się nie przepełni (np. 4KB). Zawsze rób <strong>Flush</strong>!
   </div>
 
-  <!-- OBSŁUGA BŁĘDÓW -->
-  <div class="section">
-    <h2>⚠️ Obsługa Błędów i Wyjątków</h2>
+  <hr>
 
-    <table>
-      <tr>
-        <th>Wyjątek</th>
-        <th>Kiedy występuje</th>
-        <th>Jak obsłużyć</th>
-      </tr>
-      <tr>
-        <td><strong>OperationCanceledException</strong></td>
-        <td>Operacja została anulowana przez CancellationToken</td>
-        <td>Normalny shutdown - można zignorować lub logować</td>
-      </tr>
-      <tr>
-        <td><strong>IOException</strong></td>
-        <td>Błąd podczas komunikacji sieciowej</td>
-        <td>Oznacza rozłączenie - zakończ obsługę klienta</td>
-      </tr>
-      <tr>
-        <td><strong>TooLongMessageException</strong></td>
-        <td>Wiadomość przekracza 10KB</td>
-        <td>Poinformuj użytkownika, nie wysyłaj</td>
-      </tr>
-      <tr>
-        <td><strong>InvalidMessageException</strong></td>
-        <td>Błąd deserializacji JSON</td>
-        <td>Zaloguj błąd, możesz kontynuować lub zamknąć połączenie</td>
-      </tr>
-    </table>
+  <h2>6. Ściąga na Laborki - Najczęstsze Błędy</h2>
 
-    <div class="warning">
-      <strong>🚨 Ważne:</strong> Zawsze używaj <span class="inline-code">using</span> dla zasobów sieciowych (<span class="inline-code">TcpClient</span>, <span class="inline-code">NetworkStream</span>, <span class="inline-code">MessageReader/Writer</span>) aby zapewnić ich poprawne zwolnienie!
-    </div>
-  </div>
+  <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse: collapse; margin-top: 10px;">
+    <tr style="background-color: #f2f2f2;">
+      <th>Objaw</th>
+      <th>Prawdopodobna Przyczyna</th>
+      <th>Rozwiązanie</th>
+    </tr>
+    <tr>
+      <td>Wiadomość nie dociera, program "wisi"</td>
+      <td>Brak <code>FlushAsync()</code> po zapisie.</td>
+      <td>Dodaj <code>writer.FlushAsync()</code> lub <code>stream.FlushAsync()</code>.</td>
+    </tr>
+    <tr>
+      <td>Odbieram "śmieci" lub błąd pamięci</td>
+      <td>Błędna kolejność bajtów (Endianness).</td>
+      <td>Używaj <code>BinaryPrimitives...BigEndian</code> po obu stronach.</td>
+    </tr>
+    <tr>
+      <td>Serwer działa tylko dla jednej osoby</td>
+      <td>Blokowanie w pętli głównej bez <code>Task.Run</code>.</td>
+      <td>Jeśli serwer ma obsługiwać wielu na raz, obsługa klienta musi być w osobnym Tasku.</td>
+    </tr>
+    <tr>
+      <td>JSON deserializuje się jako null</td>
+      <td>Błędy kodowania tekstu.</td>
+      <td>Upewnij się, że używasz <code>Encoding.UTF8</code> po obu stronach.</td>
+    </tr>
+    <tr>
+      <td>Wyjątek <code>DisposedObjectException</code></td>
+      <td>Próba zapisu do strumienia po wyjściu z bloku <code>using</code>.</td>
+      <td>Sprawdź zakresy zmiennych i kiedy zamykasz połączenie.</td>
+    </tr>
+  </table>
 
-  <!-- WZORCE ASYNC/AWAIT -->
-  <div class="section">
-    <h2>⚡ Wzorce Async/Await</h2>
-
-    <h3>1. Task.WhenAny - czekanie na pierwsze zakończenie:</h3>
-    <div class="code-block">
-      <span class="keyword">var</span> t1 = TaskA();
-      <span class="keyword">var</span> t2 = TaskB();
-      <span class="keyword">var</span> finishedTask = <span class="keyword">await</span> Task.WhenAny(t1, t2);
-
-      <span class="keyword">if</span> (finishedTask == t1)
-      Console.WriteLine(<span class="string">"Task A finished first"</span>);
-    </div>
-
-    <h3>2. Task.WhenAll - czekanie na wszystkie:</h3>
-    <div class="code-block">
-      <span class="keyword">var</span> t1 = TaskA();
-      <span class="keyword">var</span> t2 = TaskB();
-      <span class="keyword">await</span> Task.WhenAll(t1, t2); <span class="comment">// Czeka aż obie się zakończą</span>
-    </div>
-
-    <h3>3. Task.Delay z CancellationToken:</h3>
-    <div class="code-block">
-      <span class="comment">// Nieskończone opóźnienie (do momentu anulowania)</span>
-      <span class="keyword">var</span> cancellationTask = Task.Delay(-1, ct);
-
-      <span class="comment">// Timeout</span>
-      <span class="keyword">using var</span> cts = <span class="keyword">new</span> <span class="type">CancellationTokenSource</span>(3000); <span class="comment">// 3 sekundy</span>
-    </div>
-
-    <h3>4. IProgress&lt;T&gt; - raportowanie postępu:</h3>
-    <div class="code-block">
-      <span class="type">IProgress</span>&lt;<span class="type">string</span>&gt; progress = <span class="keyword">new</span> <span class="type">Progress</span>&lt;<span class="type">string</span>&gt;(Console.WriteLine);
-      progress.Report(<span class="string">"Connected to server"</span>);
-    </div>
-
-    <div class="tip">
-      <strong>💡 Tip:</strong> Używaj <span class="inline-code">await using</span> dla obiektów implementujących <span class="inline-code">IAsyncDisposable</span> (np. streams).
-    </div>
-  </div>
-
-  <!-- URUCHAMIANIE -->
-  <div class="section">
-    <h2>🚀 Uruchamianie Aplikacji</h2>
-
-    <h3>1. Kompilacja projektu:</h3>
-    <div class="code-block">
-      <span class="comment"># W głównym katalogu projektu</span>
-      dotnet build
-    </div>
-
-    <h3>2. Uruchomienie serwera:</h3>
-    <div class="code-block">
-      <span class="comment"># Terminal 1</span>
-      cd ChatServer
-      dotnet run
-      <span class="comment"># Nasłuchuje na porcie 5000</span>
-    </div>
-
-    <h3>3. Uruchomienie klientów:</h3>
-    <div class="code-block">
-      <span class="comment"># Terminal 2 - Klient 1</span>
-      cd ChatClient
-      dotnet run
-      <span class="comment"># lub: dotnet run localhost 5000</span>
-
-      <span class="comment"># Terminal 3 - Klient 2</span>
-      cd ChatClient
-      dotnet run
-    </div>
-
-    <h3>4. Zatrzymanie serwera:</h3>
-    <p>Naciśnij <kbd>Ctrl+C</kbd> w terminalu z serwerem - graceful shutdown dzięki <span class="inline-code">Console.CancelKeyPress</span>.</p>
-  </div>
-
-  <!-- WSKAZÓWKI NA EGZAMIN -->
-  <div class="section">
-    <h2>📝 Wskazówki na Egzamin/Lab</h2>
-
-    <div class="grid-2">
-      <div class="card">
-        <h3>✅ Zapamiętaj:</h3>
-        <ul>
-          <li>Protokół: 4-byte header (Big-Endian) + JSON payload</li>
-          <li>Max rozmiar wiadomości: 10KB (10240 bajtów)</li>
-          <li>Port domyślny: 5000</li>
-          <li>Encoding: UTF-8</li>
-          <li>Serializacja: Newtonsoft.Json</li>
-          <li><span class="inline-code">ReadAsync</span> może nie odczytać wszystkich bajtów!</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🎯 Częste błędy:</h3>
-        <ul>
-          <li>Brak obsługi częściowego odczytu</li>
-          <li>Zapomnienie o <span class="inline-code">FlushAsync()</span></li>
-          <li>Niewłaściwa kolejność bajtów (Little vs Big-Endian)</li>
-          <li>Niezwolnione zasoby (brak <span class="inline-code">using</span>)</li>
-          <li>Brak obsługi <span class="inline-code">null</span> przy rozłączeniu</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="important">
-      <strong>📌 Kluczowe punkty do zrozumienia:</strong>
-      <ol>
-        <li><strong>Dlaczego Big-Endian?</strong> Standard sieciowy (network byte order)</li>
-        <li><strong>Dlaczego header z długością?</strong> TCP jest strumieniem - nie wiesz gdzie kończy się wiadomość</li>
-        <li><strong>Dlaczego pętla w ReadToBuffer?</strong> TCP może dostarczać dane w kawałkach</li>
-        <li><strong>Dlaczego CancellationToken?</strong> Graceful shutdown i cooperative cancellation</li>
-        <li><strong>Dlaczego Task.WhenAny?</strong> Reagowanie na pierwsze zdarzenie (rozłączenie lub shutdown)</li>
-      </ol>
-    </div>
-  </div>
-
-  <!-- ROZSZERZENIA -->
-  <div class="section">
-    <h2>🔧 Możliwe Rozszerzenia</h2>
-
-    <ul>
-      <li>✨ <strong>Chat grupowy:</strong> Więcej niż 2 klientów</li>
-      <li>🔐 <strong>Szyfrowanie:</strong> SSL/TLS z <span class="inline-code">SslStream</span></li>
-      <li>👤 <strong>Autoryzacja:</strong> Login/hasło przed czatem</li>
-      <li>📁 <strong>Transfer plików:</strong> Rozszerzenie protokołu o typ wiadomości</li>
-      <li>💾 <strong>Historia:</strong> Zapisywanie wiadomości do bazy danych</li>
-      <li>🎨 <strong>GUI:</strong> WPF/WinForms/Avalonia zamiast konsoli</li>
-      <li>🌍 <strong>Web:</strong> SignalR dla klientów webowych</li>
-    </ul>
-  </div>
-
-  <!-- PRZYDATNE KLASY -->
-  <div class="section">
-    <h2>📚 Przydatne klasy .NET</h2>
-
-    <table>
-      <tr>
-        <th>Klasa</th>
-        <th>Namespace</th>
-        <th>Do czego służy</th>
-      </tr>
-      <tr>
-        <td><strong>TcpListener</strong></td>
-        <td>System.Net.Sockets</td>
-        <td>Nasłuchiwanie połączeń TCP</td>
-      </tr>
-      <tr>
-        <td><strong>TcpClient</strong></td>
-        <td>System.Net.Sockets</td>
-        <td>Klient TCP</td>
-      </tr>
-      <tr>
-        <td><strong>NetworkStream</strong></td>
-        <td>System.Net.Sockets</td>
-        <td>Stream do komunikacji TCP</td>
-      </tr>
-      <tr>
-        <td><strong>BinaryPrimitives</strong></td>
-        <td>System.Buffers.Binary</td>
-        <td>Operacje na bajtach (endianness)</td>
-      </tr>
-      <tr>
-        <td><strong>Encoding</strong></td>
-        <td>System.Text</td>
-        <td>Konwersja string ↔ byte[]</td>
-      </tr>
-      <tr>
-        <td><strong>JsonConvert</strong></td>
-        <td>Newtonsoft.Json</td>
-        <td>Serializacja/deserializacja JSON</td>
-      </tr>
-      <tr>
-        <td><strong>CancellationTokenSource</strong></td>
-        <td>System.Threading</td>
-        <td>Anulowanie operacji async</td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- FOOTER -->
-  <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #667eea; color: #666;">
-    <p><strong>NetworkStreams Chat - Ściąga</strong></p>
-    <p>C# | .NET 9.0 | TCP Networking | Async/Await</p>
-    <p style="font-size: 0.9em; margin-top: 10px;">Powodzenia na labach! 🚀</p>
-  </div>
 </div>
+
 </body>
 </html>
