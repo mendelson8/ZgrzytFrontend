@@ -428,5 +428,89 @@ SetTextColor(dc, RGB(0, 0, 0));
 <span class="comment">// Rysujemy tekst wyśrodkowany w pionie i poziomie [cite: 903]</span>
 DrawTextW(dc, napis.c_str(), -1, &amp;poleKafelka, DT_CENTER | DT_VCENTER | DT_SINGLELINE);</code></pre>
 
+
+<hr>
+
+<h2 id="lab1-okna">11. Pierwsze Laby: Wiele okien i relacje</h2>
+<p>Zadanie laboratoryjne wymaga dwóch okien. Aby drugie okno (tzw. Popup) zachowywało się poprawnie i nie śmieciło na pasku zadań systemu Windows, musi mieć właściciela (owner) [cite: 211-214].</p>
+
+<h3>Tworzenie okna-dziecka (Popup)</h3>
+<pre><code><span class="comment">// 1. Styl dla okna pop-up (brak minimalizacji i menu systemowego) [cite: 247]</span>
+DWORD popup_style = WS_OVERLAPPED | WS_CAPTION;
+
+<span class="comment">// 2. Tworzenie okna pop-up z przekazaniem uchwytu okna głównego (m_main) jako rodzica [cite: 254-255]</span>
+HWND m_popup = CreateWindowExW(
+    WS_EX_LAYERED, <span class="comment">// Extended style (potrzebny później do przezroczystości) [cite: 501]</span>
+    L"2048 Window", L"2048", popup_style,
+    CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
+    m_main, <span class="comment">// &lt;-- TUTAJ PODAJESZ OKNO GŁÓWNE JAKO WŁAŚCICIELA [cite: 255]</span>
+    nullptr, m_instance, this
+);
+
+<span class="comment">// 3. Wyświetlanie drugiego okna BEZ kradzieży focusu (SW_SHOWNA) [cite: 258]</span>
+ShowWindow(m_popup, SW_SHOWNA); <span class="comment">// [cite: 261]</span></code></pre>
+
+<hr>
+
+<h2 id="lab1-kontrolki">12. Pierwsze Laby: Kontrolki STATIC i Kolorowanie</h2>
+<p>Na pierwszych laboratoriach kafelki gry nie są rysowane ręcznie, ale są gotowymi systemowymi oknami typu <code>STATIC</code> (służącymi do wyświetlania tekstu/tła) .</p>
+
+<h3>Tworzenie kafelka (kontrolki) wewnątrz okna</h3>
+<pre><code><span class="comment">// Tworzymy dziecko (WS_CHILD) wewnątrz okna głównego [cite: 346]</span>
+HWND kafelek = CreateWindowExW(
+    0, L"STATIC", nullptr,
+    WS_CHILD | WS_VISIBLE | SS_CENTER, <span class="comment">// [cite: 346]</span>
+    x, y, szerokosc, wysokosc, <span class="comment">// Pozycja i wymiary względem lewego górnego rogu okna [cite: 347-350]</span>
+    okno_rodzic, <span class="comment">// Uchwyt okna, w którym kontrolka ma siedzieć [cite: 352]</span>
+    nullptr, m_instance, nullptr
+);</code></pre>
+
+<h3>Kolorowanie kontrolek (WM_CTLCOLORSTATIC)</h3>
+<p>Kontrolki same z siebie są szare. Aby zmienić ich kolor, okno-rodzic musi nasłuchiwać komunikatu <code>WM_CTLCOLORSTATIC</code> i podawać im odpowiedni pędzel (HBRUSH) [cite: 378-380].</p>
+<pre><code><span class="comment">// W procedurze okna (window_proc):</span>
+case WM_CTLCOLORSTATIC:
+{
+    <span class="comment">// Zwracamy uchwyt do pędzla stworzonego wcześniej (np. w konstruktorze) [cite: 394]</span>
+    <span class="comment">// HBRUSH m_field_brush = CreateSolidBrush(RGB(204, 192, 174)); [cite: 390]</span>
+    return reinterpret_cast&lt;INT_PTR&gt;(m_field_brush); <span class="comment">// [cite: 403]</span>
+}</code></pre>
+
+<hr>
+
+<h2 id="lab1-geometria">13. Pierwsze Laby: Geometria i Ekran</h2>
+<p>Funkcje matematyczno-systemowe niezbędne do pozycjonowania symetrycznego i wykrywania kolizji okien [cite: 405-408, 516].</p>
+
+<h3>Pobieranie rozdzielczości ekranu</h3>
+<pre><code><span class="comment">// Zwraca szerokość (SM_CXSCREEN) i wysokość (SM_CYSCREEN) głównego monitora w pikselach [cite: 414]</span>
+int ekranX = GetSystemMetrics(SM_CXSCREEN); <span class="comment">// [cite: 419]</span>
+int ekranY = GetSystemMetrics(SM_CYSCREEN); <span class="comment">// [cite: 419]</span></code></pre>
+
+<h3>Sprawdzanie czy okna na siebie nachodzą (IntersectRect)</h3>
+<p>Do zmiany przezroczystości (wymóg: gdy dwa okna się nałożą, jedno staje się półprzezroczyste)[cite: 34].</p>
+<pre><code>RECT rect1, rect2, czescWspolna;
+GetWindowRect(m_main, &amp;rect1); <span class="comment">// [cite: 521]</span>
+GetWindowRect(m_popup, &amp;rect2); <span class="comment">// [cite: 522]</span>
+
+<span class="comment">// Funkcja ładuje do 'czescWspolna' obszar nałożenia. </span>
+IntersectRect(&amp;czescWspolna, &amp;rect1, &amp;rect2); <span class="comment">// [cite: 523]</span>
+
+<span class="comment">// IsRectEmpty zwraca true, jeśli prostokąty się NIE dotykają [cite: 524]</span>
+if (!IsRectEmpty(&amp;czescWspolna)) {
+    <span class="comment">// Okna się dotykają! Ustaw przezroczystość na 50%</span>
+    SetLayeredWindowAttributes(m_popup, 0, 255 * 50 / 100, LWA_ALPHA); <span class="comment">// [cite: 524-525]</span>
+}</code></pre>
+
+<hr>
+
+<h2 id="lab1-ikona">14. Pierwsze Laby: Ikona Programu</h2>
+<p>Wczytywanie ikony wkompilowanej w plik .exe jako zasób (Resource) [cite: 551-552].</p>
+<pre><code><span class="comment">// Podczas rejestrowania okna (WNDCLASSEXW), pole .hIcon: </span>
+desc.hIcon = static_cast&lt;HICON&gt;(LoadImageW(
+    m_instance,
+    MAKEINTRESOURCEW(ID_APPICON), <span class="comment">// ID_APPICON to nazwa z pliku resource.h [cite: 583]</span>
+    IMAGE_ICON, <span class="comment">// [cite: 584]</span>
+    0, 0, <span class="comment">// 0, 0 oznacza pobranie domyślnego rozmiaru ikony [cite: 585, 597]</span>
+    LR_SHARED | LR_DEFAULTSIZE <span class="comment">// [cite: 586]</span>
+));</code></pre>
 </body>
 </html>
