@@ -817,5 +817,64 @@ desc = {
         return 0;
     }</code></pre>
 
+
+<hr>
+
+<h2 id="ruch-gdi">19. Płynny ruch obiektu (Podejście GDI - Rectangle)</h2>
+<p>To jest docelowy i najbardziej profesjonalny sposób tworzenia gier w WinAPI. Zamiast używać ciężkich okien-dzieci, traktujemy nasze główne okno jak czystą kartkę i w każdej klatce rysujemy obiekt w nowym miejscu.</p>
+
+
+
+<div class="note">
+  <strong>Uwaga na odwróconą oś Y!</strong> W matematyce punkt (0,0) jest na dole. W WinAPI (i grafice komputerowej) punkt (0,0) znajduje się w <strong>lewym górnym rogu</strong> ekranu. Oś X rośnie w prawo, a oś Y rośnie w <strong>dół</strong>. Dlatego ruch w górę oznacza <em>zmniejszanie</em> wartości Y.
+</div>
+
+<h3>Krok 1: Pamięć o stanie gracza (Plik nagłówkowy .h)</h3>
+<pre><code>private:
+    <span class="comment">// Pozycja i rozmiar naszego "pionka"</span>
+    int m_graczX = 100;
+    int m_graczY = 100;
+    int m_rozmiar = 50;</code></pre>
+
+<h3>Krok 2: Sterowanie i wymuszenie nowej klatki (WM_KEYDOWN)</h3>
+<p>Gdy użytkownik wciska klawisz, my tylko zmieniamy liczby w pamięci, a potem rozkazujemy systemowi przerysować okno (<code>InvalidateRect</code>).</p>
+<pre><code>    case WM_KEYDOWN:
+    {
+        int predkosc = 10; <span class="comment">// O ile pikseli przesuwamy się co wciśnięcie</span>
+
+        switch (wparam) {
+            case 'W': m_graczY -= predkosc; break; <span class="comment">// W górę (Y maleje)</span>
+            case 'S': m_graczY += predkosc; break; <span class="comment">// W dół (Y rośnie)</span>
+            case 'A': m_graczX -= predkosc; break; <span class="comment">// W lewo (X maleje)</span>
+            case 'D': m_graczX += predkosc; break; <span class="comment">// W prawo (X rośnie)</span>
+        }
+
+        <span class="comment">// TRUE oznacza: Zanim narysujesz nową klatkę, zmaż starą (użyj pędzla tła)</span>
+        InvalidateRect(window, nullptr, TRUE);
+        return 0;
+    }</code></pre>
+
+<h3>Krok 3: Rysowanie w nowym miejscu (WM_PAINT)</h3>
+<p>Nasz malarz (Device Context) nie wie nic o klawiaturze. Po prostu bierze aktualne współrzędne <code>X</code> i <code>Y</code> z pamięci i maluje tam prostokąt.</p>
+<pre><code>    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC dc = BeginPaint(window, &amp;ps);
+
+        <span class="comment">// Tworzymy i wciskamy malarzowi do ręki pędzel gracza (np. niebieski)</span>
+        HBRUSH pedzelGracza = CreateSolidBrush(RGB(100, 150, 255));
+        HBRUSH staryPedzel = (HBRUSH)SelectObject(dc, pedzelGracza);
+
+        <span class="comment">// Rysujemy gracza! (LewyX, GórnyY, PrawyX, DolnyY)</span>
+        Rectangle(dc, m_graczX, m_graczY, m_graczX + m_rozmiar, m_graczY + m_rozmiar);
+
+        <span class="comment">// Odkładamy pędzle na miejsce</span>
+        SelectObject(dc, staryPedzel);
+        DeleteObject(pedzelGracza);
+        EndPaint(window, &amp;ps);
+        return 0;
+    }</code></pre>
+
+
 </body>
 </html>
