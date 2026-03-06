@@ -279,6 +279,64 @@ HWND okno = CreateWindowExW(
     <td>Wywoływane po ruchu gracza, żeby zaktualizować grafikę na ekranie.</td>
   </tr>
 </table>
+<hr>
+
+<h2 id="zarzadzanie-oknem">6. Zarządzanie Oknem (Wymiary, Pozycja, Tytuł)</h2>
+<p>W trakcie działania programu (np. gry) często musisz zmienić rozmiar okna, przesunąć je na środek ekranu lub zaktualizować wynik na pasku tytułu.</p>
+
+<h3>Zmiana Tytułu Okna (W locie)</h3>
+<pre><code><span class="comment">// Przydatne np. do pokazywania czasu gry lub wyniku na pasku.</span>
+std::wstring nowyTytul = L"2048 - Wynik: " + std::to_wstring(punkty);
+SetWindowTextW(window, nowyTytul.c_str());</code></pre>
+
+<h3>Zmiana Rozmiaru i Pozycji (SetWindowPos)</h3>
+<p>To potężna funkcja. Używasz specjalnych flag (zaczynających się od <code>SWP_</code>), aby powiedzieć systemowi, które wartości ma zignorować, a które zmienić.</p>
+<pre><code><span class="comment">// Składnia: SetWindowPos(uchwyt, Z-order, X, Y, Szerokość, Wysokość, Flagi)</span>
+
+<span class="comment">// Przykład 1: Zmień TYLKO ROZMIAR na 800x600 (ignoruj podane pozycje X i Y)</span>
+SetWindowPos(window, nullptr, 0, 0, 800, 600, SWP_NOMOVE | SWP_NOZORDER);
+
+<span class="comment">// Przykład 2: Zmień TYLKO POZYCJĘ na X=100, Y=100 (ignoruj podany rozmiar)</span>
+SetWindowPos(window, nullptr, 100, 100, 0, 0, SWP_NOSIZE | SWP_NOZORDER);</code></pre>
+
+<h3>Pobieranie Wymiarów Okna</h3>
+<div class="note">
+  <strong>Pamiętaj o różnicy między obszarami!</strong>
+  <ul>
+    <li><code>GetClientRect(window, &amp;rect)</code> - Zwraca rozmiar <strong>samego "płótna"</strong> w środku okna (obszaru klienta, po którym rysujesz). X i Y są tu zawsze równe 0.</li>
+    <li><code>GetWindowRect(window, &amp;rect)</code> - Zwraca pozycję i wymiary <strong>całego okna</strong> (razem z ramkami i paskiem) względem monitora.</li>
+    <li><code>DwmGetWindowAttribute(...)</code> - Bardziej zaawansowana wersja <code>GetWindowRect</code>. W nowym Windowsie ramki mają niewidzialne cienie (drop shadow), które zaburzają zwykłe obliczenia. Funkcja DWM pobiera idealnie dokładne granice "widzialnej" ramki.</li>
+  </ul>
+</div>
+
+<h3>Idealne dopasowanie okna do planszy gry (AdjustWindowRectEx)</h3>
+<p>Jeśli wiesz, że Twoja plansza do gry ma wymiary 400x400 pikseli, nie możesz wywołać <code>CreateWindowExW</code> z rozmiarem 400x400, bo wtedy grube ramki i pasek tytułu "zjedzą" część Twojej planszy. Ta funkcja rozwiązuje ten problem.</p>
+<pre><code><span class="comment">// 1. Zapisujemy pożądany rozmiar SAMEJ PLANSZY (obszaru klienta)</span>
+RECT rozmiar = { 0, 0, 400, 400 };
+
+<span class="comment">// 2. Zapisujemy styl okna (musi być taki sam jak w CreateWindowExW!)</span>
+DWORD styl = WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX;
+
+<span class="comment">// 3. Magia: System przelicza i POWIĘKSZA 'rozmiar' o grubość ramek i paska</span>
+AdjustWindowRectEx(&amp;rozmiar, styl, FALSE, 0);
+
+<span class="comment">// 4. Wyciągamy rzeczywistą szerokość i wysokość całego okna do CreateWindowExW</span>
+int gotowaSzerokosc = rozmiar.right - rozmiar.left;
+int gotowaWysokosc = rozmiar.bottom - rozmiar.top;</code></pre>
+
+<h3>Reagowanie na ruch i zmianę rozmiaru</h3>
+<p>Gdy użytkownik chwyci za pasek tytułu i przesunie okno, system wyśle Ci odpowiednią wiadomość. Przydatne do synchronizacji ruchu dwóch okien.</p>
+<pre><code>case WM_WINDOWPOSCHANGED:
+{
+    <span class="comment">// lparam kryje w sobie wskaźnik do struktury WINDOWPOS z nowymi współrzędnymi</span>
+    auto noweDane = reinterpret_cast&lt;LPWINDOWPOS&gt;(lparam);
+
+    <span class="comment">// Możesz teraz odczytać nowe wartości:</span>
+    <span class="comment">// int noweX = noweDane-&gt;x;</span>
+    <span class="comment">// int noweY = noweDane-&gt;y;</span>
+
+    return 0;
+}</code></pre>
 
 <div class="success">
   <strong>Dobra Praktyka:</strong> Cokolwiek robisz w WinAPI, jeśli funkcja wymaga zrobienia czegoś po zakończeniu (np. <code>BeginPaint</code> -> <code>EndPaint</code>), napisz od razu obie linijki jedna pod drugą, a dopiero potem dopisuj kod pomiędzy nimi. Dzięki temu nigdy nie zapomnisz zamknąć zasobów!
