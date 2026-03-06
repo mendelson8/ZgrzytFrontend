@@ -675,5 +675,100 @@ desc.hIcon = static_cast&lt;HICON&gt;(LoadImageW(
     0, 0, <span class="comment">// 0, 0 oznacza pobranie domyślnego rozmiaru ikony [cite: 585, 597]</span>
     LR_SHARED | LR_DEFAULTSIZE <span class="comment">// [cite: 586]</span>
 ));</code></pre>
+
+<hr>
+
+<h2 id="dynamiczne-kontrolki">16. Ekstra: Dynamiczne tworzenie i poruszanie oknem-dzieckiem</h2>
+<p>Świetny mechanizm do tworzenia własnych "pionków", przycisków czy prostych gier. Zamiast rysować po płótnie (GDI), powołujemy do życia systemową kontrolkę (np. <code>STATIC</code>), którą możemy dowolnie skalować i przesuwać za pomocą klawiatury.</p>
+
+<h3>Krok 1: Zmienne w pliku nagłówkowym (.h)</h3>
+<pre><code>private:
+    <span class="comment">// Pamięć do rysowania myszką</span>
+    POINT m_klikStart{};
+
+    <span class="comment">// Pamięć o naszym dynamicznym obiekcie</span>
+    int m_obiektX = 0;
+    int m_obiektY = 0;
+    HWND m_uchwytDziecka = nullptr; <span class="comment">// Na starcie puste</span></code></pre>
+
+<h3>Krok 2: Rysowanie myszką (Powołanie obiektu do życia)</h3>
+<p>Wciskając lewy przycisk, zapisujemy punkt startowy. Puszczając, liczymy szerokość i wysokość. Następnie tworzymy okno-dziecko, a jeśli już istnieje – tylko aktualizujemy jego rozmiar.</p>
+<pre><code>    case WM_LBUTTONDOWN:
+    {
+        m_klikStart.x = LOWORD(lparam);
+        m_klikStart.y = HIWORD(lparam);
+        return 0;
+    }
+
+    case WM_LBUTTONUP:
+    {
+        int koniecX = LOWORD(lparam);
+        int koniecY = HIWORD(lparam);
+
+        <span class="comment">// Zabezpieczenie: szukamy lewego górnego rogu (zawsze mniejsza wartość)</span>
+        m_obiektX = std::min(m_klikStart.x, koniecX);
+        m_obiektY = std::min(m_klikStart.y, koniecY);
+
+        <span class="comment">// Różnica bezwzględna daje nam wymiary</span>
+        int szerokosc = std::abs(koniecX - m_klikStart.x);
+        int wysokosc = std::abs(koniecY - m_klikStart.y);
+
+        <span class="comment">// Tworzymy kontrolkę (jeśli to pierwszy raz)</span>
+        if (m_uchwytDziecka == nullptr) {
+            m_uchwytDziecka = CreateWindowExW(
+                0, L"STATIC", nullptr,
+                WS_CHILD | WS_VISIBLE,
+                m_obiektX, m_obiektY, szerokosc, wysokosc,
+                window, <span class="comment">// Okno rodzic</span>
+                nullptr, m_instance, nullptr
+            );
+        }
+        <span class="comment">// Lub zmieniamy jej wymiary (jeśli już istnieje)</span>
+        else {
+            SetWindowPos(m_uchwytDziecka, nullptr,
+                m_obiektX, m_obiektY, szerokosc, wysokosc,
+                SWP_NOZORDER);
+        }
+
+        return 0;
+    }</code></pre>
+
+<h3>Krok 3: Poruszanie obiektem z klawiatury</h3>
+<p>Używamy funkcji <code>SetWindowPos</code> z flagą <code>SWP_NOSIZE</code>, która każe systemowi zignorować szerokość i wysokość, a zmienić tylko pozycję X i Y.</p>
+<pre><code>    case WM_KEYDOWN:
+    {
+        <span class="comment">// Blokujemy ruch, jeśli użytkownik jeszcze nie narysował obiektu</span>
+        if (m_uchwytDziecka != nullptr) {
+            int predkosc = 10;
+
+            switch (wparam) {
+                case 'W': m_obiektY -= predkosc; break;
+                case 'S': m_obiektY += predkosc; break;
+                case 'A': m_obiektX -= predkosc; break;
+                case 'D': m_obiektX += predkosc; break;
+            }
+
+            <span class="comment">// Przesuwamy okno-dziecko w nowe miejsce (ignorujemy zera, bo jest flaga NOSIZE)</span>
+            SetWindowPos(m_uchwytDziecka, nullptr,
+                m_obiektX, m_obiektY, 0, 0,
+                SWP_NOSIZE | SWP_NOZORDER);
+        }
+        return 0;
+    }</code></pre>
+
+<h3>Krok 4: Kolorowanie kontrolki (Opcjonalne)</h3>
+<p>Aby pozbyć się nudnego, szarego koloru systemu, nasłuchujemy zapytania o kolor.</p>
+<pre><code>    case WM_CTLCOLORSTATIC:
+    {
+        <span class="comment">// Upewniamy się, że system pyta o NASZ konkretny obiekt</span>
+        if (reinterpret_cast&lt;HWND&gt;(lparam) == m_uchwytDziecka) {
+            <span class="comment">// W profesjonalnym kodzie pędzel tworzymy raz w konstruktorze</span>
+            static HBRUSH kolorPedzla = CreateSolidBrush(RGB(100, 200, 255));
+            return reinterpret_cast&lt;INT_PTR&gt;(kolorPedzla);
+        }
+        break;
+    }</code></pre>
+
+
 </body>
 </html>
