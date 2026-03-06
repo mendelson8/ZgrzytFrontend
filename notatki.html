@@ -55,6 +55,169 @@
 <h1>📚 Wielkie Notatki WinAPI (C++)</h1>
 <p>Ten dokument to ściągawka zbierająca najważniejsze funkcje, mechanizmy i pułapki systemu Windows API. Używaj jej jako bazy do kopiowania szablonów podczas tworzenia nowych projektów.</p>
 
+<hr>
+
+<h2 id="baza-kodu">15. Pełny Kod Bazowy (Koniec etapu 3.2)</h2>
+<p>Gotowe pliki startowe tworzące fundamentalną strukturę obiektową aplikacji WinAPI z jednym oknem [cite: 62-65, 206-208].</p>
+
+<h3>Plik: <code>app_2048.h</code></h3>
+<pre><code>#pragma once
+#include &lt;windows.h&gt;
+#include &lt;string&gt;
+
+<span class="comment">// Deklaracja klasy reprezentującej naszą aplikację [cite: 72-93]</span>
+class app_2048
+{
+private:
+    bool register_class();
+    static std::wstring const s_class_name;
+
+    <span class="comment">// Statyczna funkcja odbierająca komunikaty od systemu Windows</span>
+    static LRESULT CALLBACK window_proc_static(
+        HWND window, UINT message,
+        WPARAM wparam, LPARAM lparam);
+
+    <span class="comment">// Właściwa funkcja obsługująca komunikaty dla konkretnego obiektu</span>
+    LRESULT window_proc(
+        HWND window, UINT message,
+        WPARAM wparam, LPARAM lparam);
+
+    HWND create_window();
+
+    HINSTANCE m_instance;
+    HWND m_main;
+
+public:
+    app_2048(HINSTANCE instance);
+    int run(int show_command);
+};</code></pre>
+
+<h3>Plik: <code>main.cpp</code></h3>
+<pre><code>#include &lt;windows.h&gt;
+#include "app_2048.h"
+
+<span class="comment">// Główny punkt wejścia dla aplikacji okienkowych Windows [cite: 53-56]</span>
+int WINAPI wWinMain(HINSTANCE instance,
+    HINSTANCE /*prevInstance*/,
+    LPWSTR /*command_line*/,
+    int show_command)
+{
+    <span class="comment">// Tworzymy obiekt naszej aplikacji i uruchamiamy pętlę [cite: 203-205]</span>
+    app_2048 app{ instance };
+    return app.run(show_command);
+}</code></pre>
+
+<h3>Plik: <code>app_2048.cpp</code></h3>
+<pre><code>#include "app_2048.h"
+#include &lt;stdexcept&gt;
+
+<span class="comment">// Inicjalizacja stałej nazwy klasy okna [cite: 95-96]</span>
+std::wstring const app_2048::s_class_name{ L"2048 Window" };
+
+<span class="comment">// Rejestracja "przepisu" na okno w systemie [cite: 97-112]</span>
+bool app_2048::register_class()
+{
+    WNDCLASSEXW desc{};
+    if (GetClassInfoExW(m_instance, s_class_name.c_str(), &amp;desc) != 0)
+        return true;
+
+    desc = {
+        .cbSize = sizeof(WNDCLASSEXW),
+        .lpfnWndProc = window_proc_static,
+        .hInstance = m_instance,
+        .hCursor = LoadCursorW(nullptr, L"IDC_ARROW"),
+        .lpszClassName = s_class_name.c_str()
+    };
+
+    return RegisterClassExW(&amp;desc) != 0;
+}
+
+<span class="comment">// Budowa fizycznego okna [cite: 113-129]</span>
+HWND app_2048::create_window()
+{
+    return CreateWindowExW(
+        0, <span class="comment">/*empty extended styles*/</span>
+        s_class_name.c_str(),
+        L"2048",
+        WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_BORDER | WS_MINIMIZEBOX,
+        CW_USEDEFAULT, 0, <span class="comment">/*default position*/</span>
+        CW_USEDEFAULT, 0, <span class="comment">/*default size*/</span>
+        nullptr,
+        nullptr,
+        m_instance,
+        this <span class="comment">// &lt;-- Przekazanie wskaźnika obiektu do okna</span>
+    );
+}
+
+<span class="comment">// "Recepcjonistka": Przechwycenie wskaźnika this i delegacja komunikatów [cite: 131-161]</span>
+LRESULT app_2048::window_proc_static(
+    HWND window, UINT message,
+    WPARAM wparam, LPARAM lparam)
+{
+    app_2048 *app = nullptr;
+    if (message == WM_NCCREATE)
+    {
+        auto p = reinterpret_cast&lt;LPCREATESTRUCTW&gt;(lparam);
+        app = static_cast&lt;app_2048 *&gt;(p-&gt;lpCreateParams);
+        SetWindowLongPtrW(window, GWLP_USERDATA,
+            reinterpret_cast&lt;LONG_PTR&gt;(app));
+    }
+    else
+    {
+        app = reinterpret_cast&lt;app_2048 *&gt;(
+            GetWindowLongPtrW(window, GWLP_USERDATA));
+    }
+
+    if (app != nullptr)
+    {
+        return app-&gt;window_proc(window, message, wparam, lparam);
+    }
+    return DefWindowProcW(window, message, wparam, lparam);
+}
+
+<span class="comment">// "Szef": Faktyczna obsługa zdarzeń okna [cite: 162-179]</span>
+LRESULT app_2048::window_proc(
+    HWND window, UINT message,
+    WPARAM wparam, LPARAM lparam)
+{
+    switch (message) {
+    case WM_CLOSE:
+        DestroyWindow(window);
+        return 0;
+    case WM_DESTROY:
+        if (window == m_main)
+            PostQuitMessage(EXIT_SUCCESS);
+        return 0;
+    }
+    return DefWindowProcW(window, message, wparam, lparam);
+}
+
+<span class="comment">// Konstruktor aplikacji [cite: 180-187]</span>
+app_2048::app_2048(HINSTANCE instance)
+    : m_instance{ instance }, m_main{}
+{
+    register_class();
+    m_main = create_window();
+}
+
+<span class="comment">// Pętla komunikatów utrzymująca program przy życiu [cite: 188-202]</span>
+int app_2048::run(int show_command)
+{
+    ShowWindow(m_main, show_command);
+    MSG msg{};
+    BOOL result = TRUE;
+
+    while ((result = GetMessageW(&amp;msg, nullptr, 0, 0)) != 0)
+    {
+        if (result == -1)
+            return EXIT_FAILURE;
+
+        TranslateMessage(&amp;msg);
+        DispatchMessageW(&amp;msg);
+    }
+    return EXIT_SUCCESS;
+}</code></pre>
+
 <div class="note">
   <strong>Spis Treści:</strong>
   <ol>
