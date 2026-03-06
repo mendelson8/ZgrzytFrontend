@@ -768,7 +768,54 @@ desc.hIcon = static_cast&lt;HICON&gt;(LoadImageW(
         }
         break;
     }</code></pre>
+<hr>
 
+<h2 id="tlo-okna">17. Zmiana Koloru Tła Okna</h2>
+<p>Tło głównego okna w WinAPI jest definiowane przez pędzel (Brush) przypisany do całej klasy okna (tzw. przepisu). Możemy ten pędzel ustawić raz na początku, albo podmieniać go w trakcie działania programu.</p>
+
+<h3>Sposób 1: Na stałe (Statycznie podczas rejestracji)</h3>
+<p>Najlepsza metoda, jeśli okno ma mieć jeden konkretny kolor przez całe swoje życie. Dodajemy pędzel do struktury <code>WNDCLASSEXW</code> w funkcji rejestrującej okno.</p>
+<pre><code><span class="comment">// Wypełnianie struktury (np. w funkcji register_class)</span>
+desc = {
+    .cbSize = sizeof(WNDCLASSEXW),
+    .lpfnWndProc = window_proc_static,
+    .hInstance = m_instance,
+    <span class="comment">// ... inne pola ...</span>
+
+    <span class="comment">// Tworzymy i przypisujemy nowy pędzel (np. kremowy kolor gry 2048)</span>
+    .hbrBackground = CreateSolidBrush(RGB(250, 248, 239)),
+
+    .lpszClassName = s_class_name.c_str()
+};</code></pre>
+
+<h3>Sposób 2: W locie (Dynamicznie np. po kliknięciu myszą)</h3>
+<p>Jeśli chcemy zmienić kolor tła w trakcie działania programu (np. po kliknięciu prawym przyciskiem myszy), musimy podmienić pędzel w pamięci klasy okna za pomocą <code>SetClassLongPtrW</code>.</p>
+
+<div class="warning">
+  <strong>PAMIĘTAJ O SPRZĄTANIU!</strong> Zanim wstawisz nowy pędzel do klasy okna, musisz wyciągnąć stary i go zniszczyć (<code>DeleteObject</code>). Inaczej przy każdym kliknięciu będziesz pożerać pamięć RAM (wyciek pamięci)!
+</div>
+
+<pre><code>    case WM_RBUTTONDOWN:
+    {
+        <span class="comment">// 1. Tworzymy nowy pędzel z nowym kolorem (np. jasny zielony)</span>
+        HBRUSH nowyPedzel = CreateSolidBrush(RGB(150, 255, 150));
+
+        <span class="comment">// 2. Wyciągamy stary pędzel z "szufladki" tła (GCLP_HBRBACKGROUND)</span>
+        HBRUSH staryPedzel = reinterpret_cast&lt;HBRUSH&gt;(GetClassLongPtrW(window, GCLP_HBRBACKGROUND));
+
+        <span class="comment">// 3. Niszczymy stary pędzel, zwalniając pamięć</span>
+        if (staryPedzel != nullptr) {
+            DeleteObject(staryPedzel);
+        }
+
+        <span class="comment">// 4. Wrzucamy nasz nowy pędzel na miejsce starego</span>
+        SetClassLongPtrW(window, GCLP_HBRBACKGROUND, reinterpret_cast&lt;LONG_PTR&gt;(nowyPedzel));
+
+        <span class="comment">// 5. Wymuszamy przerysowanie okna (TRUE oznacza "zmaż stare tło nowym pędzlem")</span>
+        InvalidateRect(window, nullptr, TRUE);
+
+        return 0;
+    }</code></pre>
 
 </body>
 </html>
