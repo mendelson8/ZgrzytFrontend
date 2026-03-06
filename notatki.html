@@ -875,7 +875,77 @@ desc = {
         return 0;
     }</code></pre>
 <hr>
+<hr>
 
+<h2 id="slownik-flag">22. Słownik Podstawowych Stylów Okna (Window Styles)</h2>
+<p>Trzeci argument w funkcji <code>CreateWindowExW</code> (lub czwarty w <code>CreateWindow</code>) definiuje wygląd i zachowanie okna. Style łączymy ze sobą za pomocą operatora bitowego OR (<code>|</code>). Oto najważniejsze flagi z dokumentacji WinAPI:</p>
+
+<table>
+  <tr>
+    <th>Flaga (Styl)</th>
+    <th>Co dokładnie robi?</th>
+  </tr>
+  <tr>
+    <td><code>WS_OVERLAPPED</code></td>
+    <td>Tworzy standardowe okno główne aplikacji (zazwyczaj ma pasek tytułu i ramkę). Podstawowa flaga na start.</td>
+  </tr>
+  <tr>
+    <td><code>WS_POPUP</code></td>
+    <td>Tworzy okno typu pop-up. Nie można go łączyć ze stylem WS_CHILD. Często używane do okienek dialogowych.</td>
+  </tr>
+  <tr>
+    <td><code>WS_CHILD</code></td>
+    <td>Tworzy okno-dziecko (np. przycisk lub pole tekstowe). Musi mieć przypisane okno-rodzica. Nie ma paska menu.</td>
+  </tr>
+  <tr>
+    <td><code>WS_VISIBLE</code></td>
+    <td>Okno jest domyślnie widoczne zaraz po utworzeniu (nie trzeba wywoływać <code>ShowWindow</code>).</td>
+  </tr>
+  <tr>
+    <td><code>WS_CAPTION</code></td>
+    <td>Dodaje oknu pasek tytułu (pozwala to na chwytanie i przesuwanie okna myszką).</td>
+  </tr>
+  <tr>
+    <td><code>WS_SYSMENU</code></td>
+    <td>Dodaje menu systemowe w lewym górnym rogu oraz ikonę zamknięcia ("X") w prawym górnym rogu (wymaga użycia z <code>WS_CAPTION</code>).</td>
+  </tr>
+  <tr>
+    <td><code>WS_MINIMIZEBOX</code></td>
+    <td>Dodaje przycisk minimalizacji do paska tytułu (wymaga <code>WS_SYSMENU</code>).</td>
+  </tr>
+  <tr>
+    <td><code>WS_MAXIMIZEBOX</code></td>
+    <td>Dodaje przycisk maksymalizacji do paska tytułu (wymaga <code>WS_SYSMENU</code>).</td>
+  </tr>
+  <tr>
+    <td><code>WS_THICKFRAME</code></td>
+    <td>Dodaje grubą ramkę wokół okna. To właśnie ta flaga <strong>pozwala użytkownikowi na swobodne rozciąganie okna</strong> za pomocą myszy.</td>
+  </tr>
+  <tr>
+    <td><code>WS_BORDER</code></td>
+    <td>Dodaje cienką ramkę do okna (nie da się za nią rozciągać).</td>
+  </tr>
+  <tr>
+    <td><code>WS_CLIPCHILDREN</code></td>
+    <td>Optymalizacja rysowania. Mówi oknu głównemu: "Kiedy się odświeżasz, omijaj miejsca, w których leżą twoje okna-dzieci". Zapobiega to migotaniu (flickering).</td>
+  </tr>
+  <tr>
+    <td><code>WS_VSCROLL</code> / <code>WS_HSCROLL</code></td>
+    <td>Dodaje do okna odpowiednio pionowy i poziomy pasek przewijania.</td>
+  </tr>
+</table>
+
+<h3>Style złożone (Makra)</h3>
+<p>Programiści Windowsa przygotowali gotowe zbitki najczęściej używanych flag:</p>
+<ul>
+  <li><code>WS_OVERLAPPEDWINDOW</code> - Równowartość połączenia: <code>WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX</code>. Tworzy klasyczne, w pełni funkcjonalne okno, które można dowolnie rozciągać.</li>
+  <li><code>WS_POPUPWINDOW</code> - Równowartość połączenia: <code>WS_POPUP | WS_BORDER | WS_SYSMENU</code>.</li>
+</ul>
+
+<div class="note">
+  <strong>Jak stworzyć okno o stałym rozmiarze?</strong><br>
+  Aby stworzyć okno, którego nie da się rozciągnąć, po prostu złóż własny zestaw flag oparty na <code>WS_OVERLAPPEDWINDOW</code>, ale <strong>pomiń w nim</strong> <code>WS_THICKFRAME</code> oraz <code>WS_MAXIMIZEBOX</code>. System zablokuje wtedy możliwość zmiany wymiarów.
+</div>
 <h2 id="wiele-okien">20. Zaawansowane: Zarządzanie wieloma oknami-dziećmi (Klon mechaniki zaznaczania)</h2>
 <p>Czasami nie chcemy (lub nie możemy) używać <code>WM_PAINT</code> do rysowania setek elementów. Zamiast tego możemy dynamicznie tworzyć prawdziwe okna-dzieci (kontrolki <code>STATIC</code>), przechowywać je w pamięci, dynamicznie zmieniać ich rozmiar myszką i usuwać na żądanie. To świetny fundament pod tworzenie własnych narzędzi typu "Edytor UI" czy "Kreator Widgetów".</p>
 
