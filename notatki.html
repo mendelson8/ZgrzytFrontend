@@ -342,5 +342,91 @@ int gotowaWysokosc = rozmiar.bottom - rozmiar.top;</code></pre>
   <strong>Dobra Praktyka:</strong> Cokolwiek robisz w WinAPI, jeśli funkcja wymaga zrobienia czegoś po zakończeniu (np. <code>BeginPaint</code> -> <code>EndPaint</code>), napisz od razu obie linijki jedna pod drugą, a dopiero potem dopisuj kod pomiędzy nimi. Dzięki temu nigdy nie zapomnisz zamknąć zasobów!
 </div>
 
+<hr>
+
+<h2 id="zegary">7. Zegary i Animacje (Timers)</h2>
+<p>Zegary pozwalają na wywoływanie kodu w regularnych odstępach czasu (np. co 1 sekundę albo co 16 milisekund dla 60 FPS). Idealne do animacji lub odliczania czasu [cite: 603-608].</p>
+
+<h3>Tworzenie i niszczenie zegara</h3>
+<pre><code><span class="comment">// Uruchom zegar o ID = 1, który "tyka" co 1000 ms (1 sekunda)</span>
+SetTimer(window, 1, 1000, nullptr);
+
+<span class="comment">// Kiedy zegar nie jest już potrzebny, ZAWSZE go zabijaj:</span>
+KillTimer(window, 1);</code></pre>
+
+<h3>Odbieranie "tyknięć" zegara</h3>
+<pre><code>case WM_TIMER:
+{
+    <span class="comment">// wparam przechowuje ID zegara, który właśnie tyknął</span>
+    if (wparam == 1) {
+        <span class="comment">// Zaktualizuj czas gry, przesuń animację itp.</span>
+        <span class="comment">// InvalidateRect(window, nullptr, FALSE); // Wymuś odświeżenie ekranu, jeśli coś animujesz</span>
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="menu">8. Obsługa Menu (WM_COMMAND)</h2>
+<p>Jeśli dodasz do okna klasyczne menu u góry (Plik, Edycja, Nowa Gra), system będzie wysyłał komunikat <code>WM_COMMAND</code> za każdym razem, gdy użytkownik coś w nim kliknie[cite: 657, 699].</p>
+
+<pre><code>case WM_COMMAND:
+{
+    <span class="comment">// LOWORD z wparam zawiera ID klikniętego elementu menu (np. ID_NEWGAME z pliku resource.h)</span>
+    int menuId = LOWORD(wparam);
+
+    switch (menuId) {
+        case ID_NEWGAME: <span class="comment">// Załóżmy, że zdefiniowałeś to w zasobach programu [cite: 670, 700-701]</span>
+            <span class="comment">// Kod resetujący planszę 2048</span>
+            break;
+        case ID_EXIT:
+            DestroyWindow(window);
+            break;
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="zapis">9. Zapis i Odczyt Stanu Gry (Pliki .ini)</h2>
+<p>Prosty sposób na zapamiętanie wyniku i ułożenia klocków po zamknięciu programu. WinAPI używa do tego funkcji, które operują na plikach konfiguracyjnych (tzw. plikach profilowych) [cite: 891-892, 899-900].</p>
+
+<h3>Zapisywanie wartości (WritePrivateProfileStringW)</h3>
+<pre><code><span class="comment">// Składnia: Sekcja, Klucz, Wartość (jako tekst), Ścieżka do pliku</span>
+std::wstring wynikStr = std::to_wstring(wynikGracza);
+
+<span class="comment">// Zapisuje: [Save] -> Score = 1500 do pliku "save.ini" w folderze gry</span>
+WritePrivateProfileStringW(L"Save", L"Score", wynikStr.c_str(), L".\\save.ini");</code></pre>
+
+<h3>Odczytywanie wartości (GetPrivateProfileIntW / StringW)</h3>
+<pre><code><span class="comment">// Składnia: Sekcja, Klucz, Wartość Domyślna (jeśli plik nie istnieje), Ścieżka</span>
+
+<span class="comment">// Pobiera liczbę (zwróci 0, jeśli gracz odpala grę pierwszy raz i nie ma pliku)</span>
+int wczytanyWynik = GetPrivateProfileIntW(L"Save", L"Score", 0, L".\\save.ini");</code></pre>
+
+<hr>
+
+<h2 id="tekst-przezroczystosc">10. Rysowanie Tekstu i Przezroczystość</h2>
+<p>Oprócz malowania kwadratów (GDI), musisz na nich rysować cyfry (2, 4, 8, 2048)[cite: 851, 903]. Dodatkowo okno "popup" lub ekrany wygranej mogą być półprzezroczyste[cite: 488, 885].</p>
+
+<h3>Przezroczyste Okno (Layered Window)</h3>
+<pre><code><span class="comment">// 1. Przy tworzeniu okna (CreateWindowExW) musisz dodać na początku styl WS_EX_LAYERED [cite: 487, 501]</span>
+<span class="comment">// 2. Następnie wywołujesz tę funkcję, by ustawić poziomzezroczystości (0 = niewidzialne, 255 = pełne)</span>
+SetLayeredWindowAttributes(window, 0, 128, LWA_ALPHA); <span class="comment">// 128 to 50% przezroczystości [cite: 502, 524-525]</span></code></pre>
+
+<h3>Rysowanie wyśrodkowanego tekstu (DrawText) w WM_PAINT</h3>
+<pre><code><span class="comment">// Ten kod umieszczamy wewnątrz WM_PAINT, mając już HDC dc [cite: 768, 772]</span>
+
+std::wstring napis = L"2048";
+RECT poleKafelka = { 10, 10, 70, 70 }; <span class="comment">// Gdzie ma być narysowany tekst</span>
+
+<span class="comment">// Ustawiamy tło tekstu na przezroczyste, żeby nie nadpisywało koloru naszego klocka</span>
+SetBkMode(dc, TRANSPARENT);
+<span class="comment">// Ustawiamy kolor czcionki na czarny</span>
+SetTextColor(dc, RGB(0, 0, 0));
+
+<span class="comment">// Rysujemy tekst wyśrodkowany w pionie i poziomie [cite: 903]</span>
+DrawTextW(dc, napis.c_str(), -1, &amp;poleKafelka, DT_CENTER | DT_VCENTER | DT_SINGLELINE);</code></pre>
+
 </body>
 </html>
