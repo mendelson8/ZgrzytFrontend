@@ -3,260 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Programowanie Sieciowe w C# - Notatki na Laboratoria</title>
+  <title>Kompendium WinAPI dla Opornych</title>
   <style>
       :root {
-          --primary-color: #0056b3;
-          --bg-color: #f4f4f9;
+          --bg-color: #f9f9f9;
           --text-color: #333;
-          --code-bg: #2d2d2d;
-          --code-text: #f8f8f2;
-          --accent-color: #d63384;
-          --warning-bg: #fff3cd;
-          --warning-text: #856404;
+          --header-color: #0056b3;
+          --code-bg: #f4f4f4;
+          --code-border: #ddd;
       }
-
       body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
-          color: var(--text-color);
-          background-color: var(--bg-color);
-          margin: 0;
-          padding: 20px;
-      }
-
-      .container {
-          max-width: 900px;
+          max-width: 1100px;
           margin: 0 auto;
-          background: white;
-          padding: 40px;
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          padding: 20px;
+          background-color: var(--bg-color);
+          color: var(--text-color);
       }
-
-      h1 {
-          color: var(--primary-color);
-          border-bottom: 2px solid var(--primary-color);
-          padding-bottom: 10px;
-      }
-
-      h2 {
-          color: var(--primary-color);
-          margin-top: 40px;
-      }
-
-      h3 {
-          color: #444;
-          margin-top: 25px;
-      }
-
-      p {
-          margin-bottom: 15px;
-      }
-
-      code {
-          font-family: 'Consolas', 'Monaco', monospace;
-          background-color: #e9ecef;
-          padding: 2px 4px;
-          border-radius: 4px;
-          color: var(--accent-color);
-      }
-
+      h1 { color: var(--header-color); text-align: center; border-bottom: 2px solid var(--header-color); padding-bottom: 10px; }
+      h2 { color: var(--header-color); margin-top: 40px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+      h3 { color: #0078d7; margin-top: 25px; }
+      p { margin-bottom: 15px; }
       pre {
-          background-color: var(--code-bg);
-          color: var(--code-text);
+          background: var(--code-bg);
           padding: 15px;
-          border-radius: 8px;
+          border-radius: 6px;
           overflow-x: auto;
-          border-left: 5px solid var(--accent-color);
+          border: 1px solid var(--code-border);
+          font-size: 14px;
       }
+      code { font-family: 'Consolas', 'Courier New', monospace; color: #c7254e; background-color: #f9f2f4; padding: 2px 4px; border-radius: 4px; }
+      pre code { color: #333; background-color: transparent; padding: 0; }
 
-      .note {
-          background-color: #e7f5ff;
-          border-left: 5px solid #0056b3;
-          padding: 15px;
-          margin: 20px 0;
-      }
+      table { border-collapse: collapse; width: 100%; margin: 20px 0; background-color: white; }
+      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+      th { background-color: #eef5ff; color: #0056b3; font-weight: bold; }
+      tr:nth-child(even) { background-color: #fcfcfc; }
 
-      .warning {
-          background-color: var(--warning-bg);
-          border-left: 5px solid #ffc107;
-          padding: 15px;
-          color: var(--warning-text);
-          margin: 20px 0;
-      }
+      .note { background-color: #e7f3fe; border-left: 6px solid #2196F3; margin: 20px 0; padding: 15px; border-radius: 4px; }
+      .warning { background-color: #fff4f4; border-left: 6px solid #f44336; margin: 20px 0; padding: 15px; border-radius: 4px; }
+      .success { background-color: #f4fff4; border-left: 6px solid #4caf50; margin: 20px 0; padding: 15px; border-radius: 4px; }
 
-      .diagram {
-          font-family: 'Courier New', monospace;
-          white-space: pre;
-          background: #fff;
-          border: 1px dashed #aaa;
-          padding: 10px;
-          margin: 20px 0;
-          text-align: center;
-          font-weight: bold;
-      }
-
-      ul {
-          padding-left: 20px;
-      }
-
-      li {
-          margin-bottom: 8px;
-      }
+      .keyword { color: #0000ff; }
+      .string { color: #a31515; }
+      .comment { color: #008000; }
   </style>
 </head>
 <body>
 
-<div class="container">
+<h1>📚 Wielkie Notatki WinAPI (C++)</h1>
+<p>Ten dokument to ściągawka zbierająca najważniejsze funkcje, mechanizmy i pułapki systemu Windows API. Używaj jej jako bazy do kopiowania szablonów podczas tworzenia nowych projektów.</p>
 
-  <h1>Programowanie Sieciowe w C# (TCP/IP)</h1>
-  <p>Kompendium wiedzy oparte na analizie kodu klienta/serwera czatu. Kluczowe zagadnienia: strumienie, framing wiadomości, asynchroniczność.</p>
-
-  <h2>1. Protokół Binarny i "Framing" Wiadomości</h2>
-
-  <div class="note">
-    <strong>Dlaczego to robimy?</strong> TCP to strumień (stream), a nie paczki. Jeśli wyślesz "ABC" i "DEF", odbiorca może dostać "ABCDEF", "A", "BCDEF" lub dowolną inną kombinację.
-    <br>Aby wiedzieć, gdzie kończy się jedna wiadomość, a zaczyna druga, stosujemy <strong>Length-Prefixing</strong> (nagłówek długości).
-  </div>
-
-  <div class="diagram">
-    [ NAGŁÓWEK (4 bajty) ] + [ PAYLOAD (N bajtów) ]<br>
-    | 00 | 00 | 00 | 15 | -> | { "User": "Jan", ... } |
-  </div>
-
-  <h3>Wysyłanie (MessageWriter)</h3>
+<div class="note">
+  <strong>Spis Treści:</strong>
   <ol>
-    <li>Zserializuj obiekt do JSON (string).</li>
-    <li>Zamień string na bajty (UTF-8).</li>
-    <li>Oblicz długość tablicy bajtów.</li>
-    <li>Utwórz nagłówek (4 bajty int) w formacie <strong>BigEndian</strong>.</li>
-    <li>Wyślij nagłówek, potem dane, potem zrób <code>Flush()</code>.</li>
+    <li><a href="#setup">Setup Projektu i Pułapki C++</a></li>
+    <li><a href="#cykl">Cykl Życia Okna (Szablon)</a></li>
+    <li><a href="#input">Obsługa Klawiatury i Myszki</a></li>
+    <li><a href="#gdi">Rysowanie (GDI)</a></li>
+    <li><a href="#slownik">Słownik Najważniejszych Funkcji WinAPI</a></li>
   </ol>
+</div>
 
-  <pre><code>// Kluczowy fragment zapisu
-var header = new byte[4];
-BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
+<hr>
 
-await stream.WriteAsync(header, ct);  // Krok 1: Długość
-await stream.WriteAsync(payload, ct); // Krok 2: Treść
-await stream.FlushAsync(ct);          // Krok 3: Wypchnięcie</code></pre>
+<h2 id="setup">1. Setup Projektu i Pułapki C++</h2>
 
-  <h3>Odbieranie (MessageReader)</h3>
-  <p>Odbieranie jest trudniejsze, bo dane mogą przychodzić w kawałkach. Musimy użyć pętli.</p>
+<h3>Magiczne makra (Preprocesor)</h3>
+<p>Aby kod działał szybko i nie gryzł się ze standardową biblioteką C++, dodajemy we Właściwościach Projektu -> C/C++ -> Preprocesor następujące definicje:</p>
+<ul>
+  <li><code>WIN32_LEAN_AND_MEAN</code> – Wyklucza rzadko używane części nagłówka &lt;windows.h&gt;, przyspieszając kompilację.</li>
+  <li><code>NOMINMAX</code> – Wyłącza systemowe makra min/max, które psują funkcje z <code>&lt;algorithm&gt;</code> w C++.</li>
+</ul>
 
-  <div class="warning">
-    <strong>Pamiętaj na laboratoria!</strong> Nigdy nie zakładaj, że <code>stream.ReadAsync()</code> zwróci tyle bajtów, o ile prosiłeś. Zawsze sprawdzaj wartość zwracaną (liczbę faktycznie odczytanych bajtów).
-  </div>
+<h3>Zabawy z Tekstem (Bolączka C++)</h3>
+<div class="warning">
+  <strong>ZŁOTA ZASADA:</strong> W nowoczesnym WinAPI wszystkie funkcje kończące się na literę <strong>W</strong> (np. <code>SetWindowTextW</code>) wymagają <strong>Szerokich Znaków (Wide Characters)</strong>.
+</div>
 
-  <pre><code>// Poprawna pętla czytająca do pełnego bufora
-private async Task&lt;int&gt; ReadToBuffer(byte[] buffer, CancellationToken ct)
-{
-    int bytesRead = 0;
+<table>
+  <tr>
+    <th>Co chcesz zrobić?</th>
+    <th>Jak to napisać w kodzie?</th>
+  </tr>
+  <tr>
+    <td>Wpisać zwykły tekst w cudzysłowach</td>
+    <td><code><span class="keyword">L</span><span class="string">"Mój tekst"</span></code> (Zawsze dodawaj L z przodu!)</td>
+  </tr>
+  <tr>
+    <td>Stworzyć zmienną tekstową</td>
+    <td><code>std::wstring tekst = <span class="keyword">L</span><span class="string">"Tytuł"</span>;</code> (Używamy wstring, nie string)</td>
+  </tr>
+  <tr>
+    <td>Zamienić liczbę na tekst</td>
+    <td><code>std::to_wstring(liczba);</code></td>
+  </tr>
+  <tr>
+    <td>Przekazać wstring do funkcji WinAPI</td>
+    <td><code>SetWindowTextW(okno, tekst<strong>.c_str()</strong>);</code> (Funkcja c_str() wyciąga czysty wskaźnik LPCWSTR)</td>
+  </tr>
+</table>
 
-    // Czytaj dopóki nie zapełnisz bufora
-    while (bytesRead < buffer.Length)
-    {
-        int chunk = await stream.ReadAsync(buffer, bytesRead,
-                                           buffer.Length - bytesRead, ct);
-        if (chunk == 0) return bytesRead; // Zerwanie połączenia
-        bytesRead += chunk;
+<hr>
+
+<h2 id="cykl">2. Cykl Życia Okna (Szablon Omijający C)</h2>
+<p>Najlepszą praktyką jest "zamknięcie" okna wewnątrz obiektu klasy C++. Wymaga to sztuczki ze wskaźnikiem <code>this</code>.</p>
+
+<h3>Krok 1: Tworzenie Okna z ładunkiem</h3>
+<pre><code><span class="comment">// Fragment funkcji tworzącej okno</span>
+HWND okno = CreateWindowExW(
+    0,
+    L"NazwaKlasy",
+    L"Tytuł Okna",
+    WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX, <span class="comment">// Style okna</span>
+    CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, <span class="comment">// Pozycja i rozmiar (domyślne)</span>
+    nullptr, nullptr, m_instance,
+    <strong>this</strong> <span class="comment">// &lt;-- NAJWAŻNIEJSZE: Przekazujemy wskaźnik na nasz obiekt!</span>
+);</code></pre>
+
+<h3>Krok 2: Recepcjonistka (Procedura Statyczna)</h3>
+<pre><code>LRESULT CALLBACK window_proc_static(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
+    app* moj_obiekt = nullptr;
+
+    if (message == WM_NCCREATE) {
+        <span class="comment">// 1. Złap ładunek (this) przy tworzeniu okna</span>
+        auto p = reinterpret_cast&lt;LPCREATESTRUCTW&gt;(lparam);
+        moj_obiekt = static_cast&lt;app*&gt;(p-&gt;lpCreateParams);
+        <span class="comment">// 2. Schowaj go głęboko w pamięci okna</span>
+        SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast&lt;LONG_PTR&gt;(moj_obiekt));
+    } else {
+        <span class="comment">// 3. Przy każdym innym kliknięciu/ruchu, wyciągnij obiekt z pamięci okna</span>
+        moj_obiekt = reinterpret_cast&lt;app*&gt;(GetWindowLongPtrW(window, GWLP_USERDATA));
     }
-    return bytesRead;
+
+    <span class="comment">// 4. Przekaż robotę do właściwej metody wewnątrz obiektu</span>
+    if (moj_obiekt != nullptr) {
+        return moj_obiekt-&gt;window_proc(window, message, wparam, lparam);
+    }
+    return DefWindowProcW(window, message, wparam, lparam);
 }</code></pre>
 
-  <hr>
+<hr>
 
-  <h2>2. Big Endian vs Little Endian</h2>
-  <p>W sieciach standardem jest <strong>Big Endian</strong> (Network Byte Order). Systemy Windows (Intel/AMD) używają zazwyczaj <strong>Little Endian</strong>.</p>
-  <ul>
-    <li><code>BinaryPrimitives.WriteInt32BigEndian</code> - bezpieczny sposób na konwersję niezależnie od procesora.</li>
-    <li>Jeśli wyślesz długość w złej kolejności bajtów, odbiorca odczyta np. zamiast liczby <code>21</code> liczbę <code>352321536</code> i spróbuje zaalokować gigantyczną ilość pamięci -> <strong>Out Of Memory Exception</strong>.</li>
-  </ul>
+<h2 id="input">3. Obsługa Klawiatury i Myszki (Procedura Klasowa)</h2>
+<p>To tutaj lądują zdarzenia. Pamiętaj o dodawaniu klamerek <code>{ }</code> dla każdego przypadku <code>case</code>, jeśli tworzysz w nim nowe zmienne!</p>
 
-  <hr>
+<pre><code>LRESULT app::window_proc(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
+    switch (message) {
 
-  <h2>3. Nawiązywanie połączenia z Timeoutem</h2>
-  <p>Domyślny <code>ConnectAsync</code> w starszych wersjach .NET lub niektórych przeciążeniach nie obsługuje <code>CancellationToken</code>. Aby nie "wisieć" w nieskończoność, stosujemy trik.</p>
+        <span class="comment">// --- ZAMYKANIE APLIKACJI ---</span>
+        case WM_CLOSE:
+            DestroyWindow(window);
+            return 0;
 
-  <h3>Wzorzec implementacji:</h3>
-  <pre><code>using var cts = new CancellationTokenSource(5000); // 5 sekund timeout
-try {
-    // Przekazujemy token z naszego źródła czasu
-    await client.ConnectAsync(host, port, cts.Token);
-}
-catch (OperationCanceledException) {
-    // Złapane! Minęło 5 sekund.
-    Console.WriteLine("Timeout!");
+        case WM_DESTROY:
+            PostQuitMessage(EXIT_SUCCESS);
+            return 0;
+
+        <span class="comment">// --- MYSZKA: KLIKNIĘCIE ---</span>
+        case WM_LBUTTONDOWN:
+        {
+            <span class="comment">// LOWORD wyciąga dół (X), HIWORD wyciąga górę (Y) z lparam</span>
+            int x = LOWORD(lparam);
+            int y = HIWORD(lparam);
+
+            std::wstring tekst = L"Klik: X=" + std::to_wstring(x) + L", Y=" + std::to_wstring(y);
+            SetWindowTextW(window, tekst.c_str());
+            return 0;
+        }
+
+        <span class="comment">// --- KLAWIATURA: KOD KLAWISZA (np. strzałki, WASD) ---</span>
+        case WM_KEYDOWN:
+        {
+            <span class="comment">// Przydatne stałe: VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_ESCAPE</span>
+            if (wparam == VK_ESCAPE) {
+                DestroyWindow(window); // Wyjdź z gry po wciśnięciu ESC
+            }
+            return 0;
+        }
+
+        <span class="comment">// --- KLAWIATURA: WŁAŚCIWY ZNAK (uwzględnia Shift/Alt) ---</span>
+        case WM_CHAR:
+        {
+            std::wstring tekst = L"Wpisano znak: ";
+            tekst += static_cast&lt;wchar_t&gt;(wparam); <span class="comment">// Używamy += aby bezpiecznie dokleić</span>
+            SetWindowTextW(window, tekst.c_str());
+            return 0;
+        }
+    }
+    return DefWindowProcW(window, message, wparam, lparam);
 }</code></pre>
 
-  <hr>
+<hr>
 
-  <h2>4. Architektura Serwera (TCP Listener)</h2>
-  <p>Przeanalizowany kod serwera implementuje model <strong>sekwencyjnego parowania</strong>.</p>
+<h2 id="gdi">4. Rysowanie (GDI - Graphics Device Interface)</h2>
+<div class="warning">
+  <strong>UWAGA NA WYCIEKI PAMIĘCI!</strong> GDI ma ograniczoną pulę zasobów w Windowsie. Jeśli tworzysz pędzel (Brush) lub pióro (Pen), <strong>MUSISZ</strong> je potem usunąć za pomocą <code>DeleteObject</code>, w przeciwnym razie zawiesisz aplikację (lub cały system).
+</div>
 
-  <div class="diagram">
-    Start -> Czekaj na Klienta 1 -> Czekaj na Klienta 2 -> <br>
-    [Połącz ich i blokuj pętlę] -> Koniec rozmowy -> Wróć do startu
-  </div>
+<pre><code>case WM_PAINT:
+{
+    PAINTSTRUCT ps;
+    <span class="comment">// 1. Otwieramy płótno (Pobieramy Device Context - HDC)</span>
+    HDC dc = BeginPaint(window, &amp;ps);
 
-  <ul>
-    <li><code>TcpListener</code> - nasłuchuje na porcie ("otwiera drzwi").</li>
-    <li><code>AcceptTcpClientAsync</code> - czeka i zwraca obiekt <code>TcpClient</code> dla konkretnego połączenia.</li>
-    <li><code>using</code> - bardzo ważne przy <code>TcpClient</code>. Połączenia to niezarządzane zasoby (file handles). Muszą być zwalniane (Dispose).</li>
-  </ul>
+    <span class="comment">// 2. Tworzymy pędzel (wnętrze) i pióro (ramka)</span>
+    HBRUSH mojPedzel = CreateSolidBrush(RGB(250, 192, 174));
+    HPEN mojePioro = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
 
-  <hr>
+    <span class="comment">// 3. Wybieramy nasze narzędzia do ręki (i zapisujemy te, które tam były)</span>
+    HBRUSH staryPedzel = (HBRUSH)SelectObject(dc, mojPedzel);
+    HPEN starePioro = (HPEN)SelectObject(dc, mojePioro);
 
-  <h2>5. Protokół Tekstowy (StreamReader/Writer)</h2>
-  <p>Alternatywa dla protokołu binarnego. Łatwiejsza do debugowania (można użyć Telneta), ale wolniejsza i mniej elastyczna przy przesyłaniu plików/obrazków.</p>
+    <span class="comment">// 4. RYSOWANIE</span>
+    <span class="comment">// Narysuj prostokąt z zaokrąglonymi rogami</span>
+    RoundRect(dc, 50, 50, 150, 150, 11, 11);
 
-  <ul>
-    <li><strong>Separator:</strong> Znak nowej linii (<code>\n</code>).</li>
-    <li><strong>Narzędzia:</strong> <code>StreamReader.ReadLineAsync()</code> oraz <code>StreamWriter.WriteLineAsync()</code>.</li>
-  </ul>
+    <span class="comment">// 5. Sprzątanie: Odkładamy stare narzędzia na miejsce</span>
+    SelectObject(dc, staryPedzel);
+    SelectObject(dc, starePioro);
 
-  <div class="warning">
-    <strong>Pułapka Flush:</strong> <code>StreamWriter</code> buforuje dane. Jeśli napiszesz <code>WriteLineAsync()</code> i nie zrobisz <code>FlushAsync()</code>, wiadomość może nie wyjść z Twojego komputera, dopóki bufor się nie przepełni (np. 4KB). Zawsze rób <strong>Flush</strong>!
-  </div>
+    <span class="comment">// 6. Niszczymy NASZE narzędzia, zwalniając pamięć</span>
+    DeleteObject(mojPedzel);
+    DeleteObject(mojePioro);
 
-  <hr>
+    <span class="comment">// 7. Zamykamy płótno</span>
+    EndPaint(window, &amp;ps);
+    return 0;
+}</code></pre>
 
-  <h2>6. Ściąga na Laborki - Najczęstsze Błędy</h2>
+<hr>
 
-  <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse: collapse; margin-top: 10px;">
-    <tr style="background-color: #f2f2f2;">
-      <th>Objaw</th>
-      <th>Prawdopodobna Przyczyna</th>
-      <th>Rozwiązanie</th>
-    </tr>
-    <tr>
-      <td>Wiadomość nie dociera, program "wisi"</td>
-      <td>Brak <code>FlushAsync()</code> po zapisie.</td>
-      <td>Dodaj <code>writer.FlushAsync()</code> lub <code>stream.FlushAsync()</code>.</td>
-    </tr>
-    <tr>
-      <td>Odbieram "śmieci" lub błąd pamięci</td>
-      <td>Błędna kolejność bajtów (Endianness).</td>
-      <td>Używaj <code>BinaryPrimitives...BigEndian</code> po obu stronach.</td>
-    </tr>
-    <tr>
-      <td>Serwer działa tylko dla jednej osoby</td>
-      <td>Blokowanie w pętli głównej bez <code>Task.Run</code>.</td>
-      <td>Jeśli serwer ma obsługiwać wielu na raz, obsługa klienta musi być w osobnym Tasku.</td>
-    </tr>
-    <tr>
-      <td>JSON deserializuje się jako null</td>
-      <td>Błędy kodowania tekstu.</td>
-      <td>Upewnij się, że używasz <code>Encoding.UTF8</code> po obu stronach.</td>
-    </tr>
-    <tr>
-      <td>Wyjątek <code>DisposedObjectException</code></td>
-      <td>Próba zapisu do strumienia po wyjściu z bloku <code>using</code>.</td>
-      <td>Sprawdź zakresy zmiennych i kiedy zamykasz połączenie.</td>
-    </tr>
-  </table>
+<h2 id="slownik">5. Słownik Najważniejszych Funkcji WinAPI</h2>
 
+<table>
+  <tr>
+    <th>Funkcja</th>
+    <th>Co robi?</th>
+    <th>Częste Zastosowanie</th>
+  </tr>
+  <tr>
+    <td><code>RegisterClassExW</code></td>
+    <td>Wysyła "przepis" na wygląd okna do systemu Windows.</td>
+    <td>Używana tylko raz na starcie aplikacji.</td>
+  </tr>
+  <tr>
+    <td><code>CreateWindowExW</code></td>
+    <td>Fizycznie tworzy okno z gotowego przepisu. Zwraca uchwyt okna (<code>HWND</code>).</td>
+    <td>Inicjalizacja głównego UI.</td>
+  </tr>
+  <tr>
+    <td><code>ShowWindow</code></td>
+    <td>Sprawia, że niewidzialne okno z pamięci RAM pojawia się na monitorze.</td>
+    <td>Zaraz po utworzeniu okna głównego.</td>
+  </tr>
+  <tr>
+    <td><code>GetMessageW</code></td>
+    <td>Usypia program do czasu, aż użytkownik coś zrobi (ruszy myszką, kliknie).</td>
+    <td>Serce pętli głównej (pętli komunikatów).</td>
+  </tr>
+  <tr>
+    <td><code>SetTimer</code></td>
+    <td>Tworzy budzik, który będzie wysyłał komunikat <code>WM_TIMER</code> co X milisekund.</td>
+    <td>Zegary, proste animacje, odświeżanie gry.</td>
+  </tr>
+  <tr>
+    <td><code>AdjustWindowRectEx</code></td>
+    <td>Oblicza, jak duże musi być całe okno (razem z ramką), żeby obszar roboczy w środku miał konkretne rozmiary.</td>
+    <td>Przydatne do sztywnego ustalenia wymiarów planszy (np. 4x4 kafelki) przed wywołaniem CreateWindowExW.</td>
+  </tr>
+  <tr>
+    <td><code>InvalidateRect</code></td>
+    <td>Mówi systemowi: "Ekran jest nieaktualny, wymuś natychmiastowe przemalowanie (wyślij <code>WM_PAINT</code>)".</td>
+    <td>Wywoływane po ruchu gracza, żeby zaktualizować grafikę na ekranie.</td>
+  </tr>
+</table>
+
+<div class="success">
+  <strong>Dobra Praktyka:</strong> Cokolwiek robisz w WinAPI, jeśli funkcja wymaga zrobienia czegoś po zakończeniu (np. <code>BeginPaint</code> -> <code>EndPaint</code>), napisz od razu obie linijki jedna pod drugą, a dopiero potem dopisuj kod pomiędzy nimi. Dzięki temu nigdy nie zapomnisz zamknąć zasobów!
 </div>
 
 </body>
