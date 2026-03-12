@@ -942,6 +942,593 @@ desc = {
   <li><code>WS_POPUPWINDOW</code> - Równowartość połączenia: <code>WS_POPUP | WS_BORDER | WS_SYSMENU</code>.</li>
 </ul>
 
+<hr>
+
+<h2 id="plywajacy-przybornik">24. Zaawansowane: Pływający Przybornik (Niemodalny Dialog i Menu)</h2>
+<p>To zadanie to ogromny przeskok inżynieryjny. Łączy rysowanie z nowoczesnym interfejsem. Wprowadza górne menu oraz okno dialogowe, które "żyje własnym życiem" obok okna głównego (nie blokuje go).</p>
+
+<h3>1. Tworzenie Górnego Menu (Z kodu)</h3>
+<p>Zamiast pliku zasobów, menu możemy zbudować programistycznie podczas inicjalizacji okna głównego (np. w komunikacie <code>WM_CREATE</code> lub zaraz po <code>CreateWindowExW</code>).</p>
+<pre><code><span class="comment">// 1. Tworzymy puste szkielety menu</span>
+HMENU hMenuGlowne = CreateMenu();
+HMENU hMenuNarzedzia = CreatePopupMenu();
+
+<span class="comment">// 2. Dodajemy opcję do rozwijanej listy z unikalnym ID (np. 1001)</span>
+AppendMenuW(hMenuNarzedzia, MF_STRING, 1001, L"Pokaż Przybornik");
+
+<span class="comment">// 3. Przypinamy listę "Narzędzia" do głównego paska</span>
+AppendMenuW(hMenuGlowne, MF_POPUP, (UINT_PTR)hMenuNarzedzia, L"Narzędzia");
+
+<span class="comment">// 4. Osadzamy całe menu w naszym oknie głównym</span>
+SetMenu(window, hMenuGlowne);</code></pre>
+
+<h3>2. Niemodalne Okno Dialogowe (Modeless Dialog)</h3>
+<p>W <code>WM_COMMAND</code> okna głównego łapiemy kliknięcie w menu i tworzymy okno używając <code>CreateDialogW</code>. Wymaga to globalnego lub uwiązanego w klasie wskaźnika <code>HWND g_hPrzybornik = nullptr;</code>.</p>
+<pre><code>case WM_COMMAND:
+{
+    int idCzegoKliknieto = LOWORD(wparam);
+
+    <span class="comment">// Jeśli kliknięto w "Pokaż Przybornik" (nasze ID 1001)</span>
+    if (idCzegoKliknieto == 1001) {
+        <span class="comment">// Jeśli okno jeszcze nie istnieje, tworzymy je!</span>
+        if (g_hPrzybornik == nullptr) {
+            <span class="comment">// IDD_PRZYBORNIK to nazwa okna zdefiniowana w pliku zasobów (.rc)</span>
+            g_hPrzybornik = CreateDialogW(m_instance, MAKEINTRESOURCEW(IDD_PRZYBORNIK), window, PrzybornikDialogProc);
+
+            <span class="comment">// Okna niemodalne trzeba ręcznie pokazać systemowi</span>
+            ShowWindow(g_hPrzybornik, SW_SHOW);
+        }
+    }
+    return 0;
+}</code></pre>
+
+<div class="warning">
+  <strong>PUŁAPKA PĘTLI KOMUNIKATÓW!</strong>
+  Niemodalny dialog zamrozi działanie klawisza TAB i strzałek, jeśli nie zmodyfikujesz głównej pętli <code>while(GetMessage...)</code> w funkcji <code>WinMain</code>.
+</div>
+
+<pre><code><span class="comment">// Nowa, bezpieczna pętla w WinMain:</span>
+MSG msg = {};
+while (GetMessage(&amp;msg, nullptr, 0, 0))
+{
+    <span class="comment">// Sprawdzamy, czy komunikat NIE JEST przeznaczony dla naszego dialogu</span>
+    if (g_hPrzybornik == nullptr || !IsDialogMessage(g_hPrzybornik, &amp;msg))
+    {
+        TranslateMessage(&amp;msg);
+        DispatchMessage(&amp;msg);
+    }
+}</code></pre>
+
+<h3>3. Procedura Dialogu (DialogProc)</h3>
+<p>Dialog ma swoją własną, uproszczoną procedurę. <strong>Nie używa</strong> <code>DefWindowProc</code> na końcu, lecz zwraca <code>TRUE</code> (komunikat obsłużony) lub <code>FALSE</code> (systemie, zajmij się tym).</p>
+<pre><code>INT_PTR CALLBACK PrzybornikDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            <span class="comment">// Odpala się raz na start. Ustawiamy domyślny kolor (Radio Button).</span>
+            CheckRadioButton(hwndDlg, IDC_RADIO_CZERWONY, IDC_RADIO_NIEBIESKI, IDC_RADIO_CZERWONY);
+            return TRUE;
+
+        case WM_COMMAND:
+            <span class="comment">// Logika przycisków wewnątrz dialogu</span>
+            if (LOWORD(wParam) == IDCANCEL || LOWORD(wParam) == IDOK) { <span class="comment">// Przycisk "X" lub wyjście</span>
+                DestroyWindow(hwndDlg);  <span class="comment">// Zbijamy okno systemowe</span>
+                g_hPrzybornik = nullptr; <span class="comment">// Ważne: resetujemy nasz wskaźnik!</span>
+            }
+            return TRUE;
+    }
+    return FALSE;
+}</code></pre>
+
+<h3>4. Jak główne okno dowiaduje się o wybranym kolorze? (Ciągnięcie danych)</h3>
+<p>Zamiast zapisywać kolor do brzydkiej zmiennej globalnej, główne okno podczas rysowania w <code>WM_CTLCOLORSTATIC</code> na bieżąco pyta okno dialogowe, co jest wciśnięte, używając funkcji <code>IsDlgButtonChecked</code>.</p>
+<pre><code>case WM_CTLCOLORSTATIC:
+{
+    <span class="comment">// Pędzle trzymane w pamięci statycznej</span>
+    static HBRUSH czerwony = CreateSolidBrush(RGB(200, 50, 50));
+    static HBRUSH zielony = CreateSolidBrush(RGB(50, 200, 50));
+    static HBRUSH niebieski = CreateSolidBrush(RGB(50, 50, 200));
+
+    <span class="comment">// Domyślny kolor na wypadek zamkniętego przybornika</span>
+    HBRUSH wybrany = czerwony;
+
+    <span class="comment">// Jeśli przybornik jest włączony, sprawdzamy stan Radio Buttonów</span>
+    if (g_hPrzybornik != nullptr) {
+        if (IsDlgButtonChecked(g_hPrzybornik, IDC_RADIO_ZIELONY) == BST_CHECKED) wybrany = zielony;
+        else if (IsDlgButtonChecked(g_hPrzybornik, IDC_RADIO_NIEBIESKI) == BST_CHECKED) wybrany = niebieski;
+    }
+
+    return reinterpret_cast&lt;INT_PTR&gt;(wybrany);
+}</code></pre>
+
+<hr>
+
+<h2 id="modalny-konfigurator">25. Zaawansowane: Modalny Konfigurator (Przekazywanie Danych i Parsowanie)</h2>
+<p>Zadanie polega na otwarciu blokującego (modalnego) okna dialogowego, wpisaniu tam nowych wymiarów i zmianie rozmiaru okna głównego. Największym błędem jest robienie tego na zmiennych globalnych. Profesjonalne rozwiązanie wymaga stworzenia własnej struktury i przekazania jej przez wskaźnik (tzw. <code>LPARAM</code>).</p>
+
+<h3>1. Struktura Danych (Fundament)</h3>
+<p>Na samej górze pliku (np. przed procedurami okien) definiujemy strukturę, która będzie naszym "kurierem" przewożącym dane w obie strony.</p>
+<pre><code><span class="comment">// Nasz kurier z danymi</span>
+struct WymiaryOkna {
+    int szerokosc;
+    int wysokosc;
+};</code></pre>
+
+<h3>2. Wywołanie Dialogu (Wewnątrz głównego WindowProc)</h3>
+<p>Gdy użytkownik klika w menu "Zmień Rozmiar", pakujemy aktualne wymiary do struktury i wysyłamy je do okna dialogowego używając <code>DialogBoxParamW</code>.</p>
+<pre><code>case WM_COMMAND:
+{
+    int idKliknietego = LOWORD(wparam);
+
+    <span class="comment">// Jeśli kliknięto "Ustawienia -> Zmień Rozmiar" (np. ID 1002)</span>
+    if (idKliknietego == 1002) {
+
+        <span class="comment">// 1. Pobieramy aktualne wymiary okna głównego (żeby wpisać je do dialogu na start)</span>
+        RECT rect;
+        GetWindowRect(window, &amp;rect);
+
+        <span class="comment">// 2. Pakujemy je do naszej paczki</span>
+        WymiaryOkna paczka;
+        paczka.szerokosc = rect.right - rect.left;
+        paczka.wysokosc = rect.bottom - rect.top;
+
+        <span class="comment">// 3. Otwieramy MODALNY dialog. Ostatni argument to ADRES naszej paczki!</span>
+        <span class="comment">// Program ZATRZYMA SIĘ w tym miejscu, aż użytkownik nie zamknie dialogu.</span>
+        INT_PTR wynik = DialogBoxParamW(
+            m_instance,
+            MAKEINTRESOURCEW(IDD_KONFIGURATOR),
+            window,
+            KonfiguratorDialogProc,
+            (LPARAM)&amp;paczka  <span class="comment">// &lt;-- Przekazanie wskaźnika jako LPARAM</span>
+        );
+
+        <span class="comment">// 4. Gdy dialog się zamknie, sprawdzamy czy użytkownik kliknął Zapisz (IDOK)</span>
+        if (wynik == IDOK) {
+            <span class="comment">// Zmieniamy rozmiar okna używając danych, które dialog odesłał w naszej paczce!</span>
+            SetWindowPos(window, nullptr, 0, 0, paczka.szerokosc, paczka.wysokosc, SWP_NOMOVE | SWP_NOZORDER);
+
+            <span class="comment">// Wymuszamy odświeżenie (aby np. zaktualizować tekst na środku okna)</span>
+            InvalidateRect(window, nullptr, TRUE);
+        }
+    }
+    return 0;
+}</code></pre>
+
+<h3>3. Obsługa wewnątrz Dialogu (DialogProc)</h3>
+<p>To tutaj dzieje się cała inżynieria. Okno dialogowe musi odebrać paczkę przy starcie (<code>WM_INITDIALOG</code>), schować ją do swojej wewnętrznej "szufladki" pamięci, a potem uzupełnić ją nowymi liczbami przed zamknięciem.</p>
+
+<div class="warning">
+  <strong>Pamiętaj!</strong> Okno modalne zamykamy TYLKO i WYŁĄCZNIE funkcją <code>EndDialog(hwndDlg, wynik);</code>. Funkcja <code>DestroyWindow</code> jest tu zabroniona!
+</div>
+
+<pre><code>INT_PTR CALLBACK KonfiguratorDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            <span class="comment">// 1. Odbieramy adres paczki (lParam z DialogBoxParamW)</span>
+            WymiaryOkna* adresPaczki = (WymiaryOkna*)lParam;
+
+            <span class="comment">// 2. Zapisujemy ten wskaźnik w prywatnej pamięci tego okna dialogowego (DWLP_USER)</span>
+            <span class="comment">// Dzięki temu będziemy mieli do niego dostęp później, jak użytkownik kliknie Zapisz.</span>
+            SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)adresPaczki);
+
+            <span class="comment">// 3. Wrzucamy liczby do pół tekstowych (EDIT). FALSE oznacza, że są to liczby bez znaku (dodatnie)</span>
+            SetDlgItemInt(hwndDlg, IDC_EDIT_SZEROKOSC, adresPaczki-&gt;szerokosc, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WYSOKOSC, adresPaczki-&gt;wysokosc, FALSE);
+
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+        {
+            int idAkcji = LOWORD(wParam);
+
+            <span class="comment">// Jeśli kliknięto "Zapisz" (domyślny przycisk OK)</span>
+            if (idAkcji == IDOK) {
+
+                <span class="comment">// 1. Wyciągamy nasz wskaźnik z pamięci okna</span>
+                WymiaryOkna* adresPaczki = (WymiaryOkna*)GetWindowLongPtrW(hwndDlg, DWLP_USER);
+
+                if (adresPaczki != nullptr) {
+                    <span class="comment">// 2. Pobieramy liczby z pół EDIT i zapisujemy prosto do naszej paczki!</span>
+                    <span class="comment">// GetDlgItemInt samo zamienia tekst ze stringa na czystego inta.</span>
+                    adresPaczki-&gt;szerokosc = GetDlgItemInt(hwndDlg, IDC_EDIT_SZEROKOSC, nullptr, FALSE);
+                    adresPaczki-&gt;wysokosc = GetDlgItemInt(hwndDlg, IDC_EDIT_WYSOKOSC, nullptr, FALSE);
+                }
+
+                <span class="comment">// 3. Zamykamy dialog zwracając IDOK</span>
+                EndDialog(hwndDlg, IDOK);
+                return TRUE;
+            }
+
+            <span class="comment">// Jeśli kliknięto "Anuluj" (lub "X" w prawym górnym rogu)</span>
+            else if (idAkcji == IDCANCEL) {
+                <span class="comment">// Zamykamy dialog, nic nie zapisując do paczki</span>
+                EndDialog(hwndDlg, IDCANCEL);
+                return TRUE;
+            }
+            break;
+        }
+    }
+    return FALSE;
+}</code></pre>
+
+<hr>
+
+<h2 id="dynamiczna-lista">26. Zaawansowane: Kontrolki, ListBox i Menu Kontekstowe (Prawy Przycisk)</h2>
+<p>Zadanie uczy zarządzania wbudowanymi kontrolkami Windowsa (Pola tekstowe, Przyciski, Listy) oraz tworzenia pływających menu (Popup Menu) dokładnie w miejscu kursora myszy. To fundament każdej profesjonalnej aplikacji okienkowej.</p>
+
+<h3>1. Identyfikatory Kontrolek (Plik .h lub początek .cpp)</h3>
+<p>Każde okienko-dziecko musi mieć swój unikalny numer ID (zamiast rzucać wskaźnikami, system woli komunikować się przez numery). Definiujemy je na górze pliku:</p>
+<pre><code>#define IDC_POLE_TEKSTOWE 2001
+#define IDC_PRZYCISK_DODAJ 2002
+#define IDC_LISTA_OBECNOSCI 2003
+
+#define IDM_USUN 3001
+#define IDM_DUPLIKUJ 3002</code></pre>
+
+<h3>2. Tworzenie Kontrolek (WM_CREATE)</h3>
+<p>Kontrolki tworzymy zazwyczaj w komunikacie <code>WM_CREATE</code> głównego okna. Używamy wbudowanych klas: <code>L"EDIT"</code>, <code>L"BUTTON"</code>, <code>L"LISTBOX"</code>.</p>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// Pole tekstowe z ramką (WS_EX_CLIENTEDGE jako pierwszy argument w Ex)</span>
+    CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+        20, 20, 200, 25, window, (HMENU)IDC_POLE_TEKSTOWE, m_instance, nullptr);
+
+    <span class="comment">// Przycisk</span>
+    CreateWindowExW(0, L"BUTTON", L"Dodaj",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        230, 20, 100, 25, window, (HMENU)IDC_PRZYCISK_DODAJ, m_instance, nullptr);
+
+    <span class="comment">// Lista (LBS_NOTIFY jest kluczowe, żeby lista wysyłała kliknięcia do rodzica!)</span>
+    CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", nullptr,
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        20, 60, 310, 400, window, (HMENU)IDC_LISTA_OBECNOSCI, m_instance, nullptr);
+
+    return 0;
+}</code></pre>
+
+<h3>3. Obsługa Przycisku "Dodaj" (WM_COMMAND)</h3>
+<p>Gdy użytkownik kliknie przycisk, wyciągamy tekst z pola <code>EDIT</code> i wysyłamy go komunikatem <code>LB_ADDSTRING</code> do naszej listy.</p>
+<pre><code>case WM_COMMAND:
+{
+    int idKontrolki = LOWORD(wparam);
+
+    <span class="comment">// Jeśli to nasz przycisk Dodaj</span>
+    if (idKontrolki == IDC_PRZYCISK_DODAJ) {
+
+        <span class="comment">// Pobieramy uchwyty do naszych dzieciaków</span>
+        HWND hEdit = GetDlgItem(window, IDC_POLE_TEKSTOWE);
+        HWND hLista = GetDlgItem(window, IDC_LISTA_OBECNOSCI);
+
+        <span class="comment">// Przygotowujemy bufor i pobieramy tekst</span>
+        wchar_t bufor[256];
+        GetWindowTextW(hEdit, bufor, 256);
+
+        <span class="comment">// Zabezpieczenie przed pustymi wpisami</span>
+        if (wcslen(bufor) &gt; 0) {
+            <span class="comment">// Magiczna wiadomość: "Hej ListBox, dodaj ten napis!"</span>
+            SendMessageW(hLista, LB_ADDSTRING, 0, (LPARAM)bufor);
+
+            <span class="comment">// Czyścimy pole tekstowe</span>
+            SetWindowTextW(hEdit, L"");
+        }
+    }
+    return 0;
+}</code></pre>
+
+<h3>4. Menu Kontekstowe i Prawy Przycisk (WM_CONTEXTMENU)</h3>
+<p>Nie używamy <code>WM_RBUTTONDOWN</code>! WinAPI ma specjalny komunikat <code>WM_CONTEXTMENU</code>, który odpala się nie tylko po kliknięciu prawym przyciskiem, ale też po wciśnięciu klawisza Menu na klawiaturze. Zawsze podaje nam <strong>współrzędne ekranowe</strong>, których wymaga pływające menu.</p>
+
+<div class="note">
+  <strong>Trick Inżynierski: TPM_RETURNCMD</strong><br>
+  Zamiast przechwytywać kliknięcia menu w globalnym <code>WM_COMMAND</code>, flaga <code>TPM_RETURNCMD</code> blokuje program, wyświetla menu i od razu zwraca ID klikniętej opcji jako wynik funkcji. To robi kod 100x czytelniejszym!
+</div>
+
+<pre><code>case WM_CONTEXTMENU:
+{
+    HWND hKliknieteOkno = (HWND)wparam;
+    HWND hLista = GetDlgItem(window, IDC_LISTA_OBECNOSCI);
+
+    <span class="comment">// 1. Sprawdzamy, czy menu wywołano klikając w nasz ListBox</span>
+    if (hKliknieteOkno == hLista) {
+
+        <span class="comment">// Współrzędne z WM_CONTEXTMENU są ekranowe (gotowe pod menu)</span>
+        int ekranX = GET_X_LPARAM(lparam);
+        int ekranY = GET_Y_LPARAM(lparam);
+
+        <span class="comment">// 2. Odpytujemy ListBox: "Który wiersz został kliknięty?"</span>
+        <span class="comment">// Funkcja wymaga współrzędnych relatywnych do okna ListBoxa, więc musimy je przeliczyć:</span>
+        POINT pt = { ekranX, ekranY };
+        ScreenToClient(hLista, &amp;pt);
+
+        <span class="comment">// Wysyłamy zapytanie o indeks wiersza z tych współrzędnych</span>
+        DWORD wynik = SendMessageW(hLista, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+
+        <span class="comment">// HIWORD wynosi 0, jeśli kliknięto w poprawny element (nie w puste tło listy)</span>
+        if (HIWORD(wynik) == 0) {
+
+            int kliknietyIndeks = LOWORD(wynik);
+
+            <span class="comment">// Wymuszamy podświetlenie klikniętego wiersza na niebiesko</span>
+            SendMessageW(hLista, LB_SETCURSEL, kliknietyIndeks, 0);
+
+            <span class="comment">// 3. Tworzymy menu w locie z kodu</span>
+            HMENU hMenu = CreatePopupMenu();
+            AppendMenuW(hMenu, MF_STRING, IDM_USUN, L"Usuń Element");
+            AppendMenuW(hMenu, MF_STRING, IDM_DUPLIKUJ, L"Duplikuj Element");
+
+            <span class="comment">// 4. Wyświetlamy menu na współrzędnych ekranowych. </span>
+            <span class="comment">// TPM_RETURNCMD sprawia, że funkcja czeka i zwraca nam ID klikniętej opcji!</span>
+            int wybranaOpcja = TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD,
+                                              ekranX, ekranY, 0, window, nullptr);
+
+            <span class="comment">// 5. Niszczymy szkielet menu, by nie pożerał pamięci</span>
+            DestroyMenu(hMenu);
+
+            <span class="comment">// 6. Wykonujemy akcję zależnie od tego, co zwrócił TrackPopupMenu</span>
+            if (wybranaOpcja == IDM_USUN) {
+                SendMessageW(hLista, LB_DELETESTRING, kliknietyIndeks, 0);
+            }
+            else if (wybranaOpcja == IDM_DUPLIKUJ) {
+                <span class="comment">// Pobieramy tekst starego elementu i wstawiamy go jako nowy</span>
+                wchar_t bufor[256];
+                SendMessageW(hLista, LB_GETTEXT, kliknietyIndeks, (LPARAM)bufor);
+                SendMessageW(hLista, LB_ADDSTRING, 0, (LPARAM)bufor);
+            }
+        }
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="uciekajacy-przycisk">27. Zaawansowane: Uciekający Przycisk (Timery i Stan Menu)</h2>
+<p>W tym zadaniu ożywiamy interfejs. Poznajemy <code>WM_TIMER</code>, który pozwala na cykliczne wykonywanie kodu (np. animacje, odliczanie) oraz uczymy się modyfikować wygląd paska menu w locie (dodawanie znacznika wyboru - checkmarka).</p>
+
+<h3>1. Definicje i Zmienne Stanu</h3>
+<p>Tradycyjnie zaczynamy od ID dla naszych kontrolek i opcji menu. Musimy też pamiętać obecną prędkość gry i to, czy gra jest aktualnie włączona.</p>
+<pre><code><span class="comment">// Identyfikatory</span>
+#define IDC_ZLAP_MNIE 4001
+#define IDM_START 4002
+#define IDM_STOP 4003
+#define IDM_LATWY 4004
+#define IDM_TRUDNY 4005
+
+<span class="comment">// Pamięć w klasie (sekcja private:)</span>
+int m_predkoscGry = 1000; <span class="comment">// Domyślnie 1 sekunda (1000 ms)</span>
+bool m_graTrwa = false;</code></pre>
+
+<h3>2. Tworzenie Menu ze Znacznikiem (WM_CREATE)</h3>
+<p>Budujemy menu z dwóch zakładek. Kluczową funkcją jest tutaj <code>CheckMenuItem</code>, która pozwala postawić "ptaszka" przy wybranej opcji.</p>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// 1. Tworzymy przycisk (na razie na sztywnych współrzędnych)</span>
+    CreateWindowExW(0, L"BUTTON", L"Złap mnie!",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        100, 100, 100, 50, window, (HMENU)IDC_ZLAP_MNIE, m_instance, nullptr);
+
+    <span class="comment">// 2. Budujemy Menu</span>
+    HMENU hMenuGlowne = CreateMenu();
+
+    HMENU hMenuGra = CreatePopupMenu();
+    AppendMenuW(hMenuGra, MF_STRING, IDM_START, L"Start");
+    AppendMenuW(hMenuGra, MF_STRING, IDM_STOP, L"Stop");
+
+    HMENU hMenuPoziom = CreatePopupMenu();
+    AppendMenuW(hMenuPoziom, MF_STRING, IDM_LATWY, L"Łatwy");
+    AppendMenuW(hMenuPoziom, MF_STRING, IDM_TRUDNY, L"Trudny");
+
+    <span class="comment">// 3. Ustawiamy domyślnego "ptaszka" przy poziomie Łatwym</span>
+    <span class="comment">// MF_BYCOMMAND oznacza, że szukamy opcji po jej ID (IDM_LATWY)</span>
+    CheckMenuItem(hMenuPoziom, IDM_LATWY, MF_BYCOMMAND | MF_CHECKED);
+
+    <span class="comment">// 4. Składamy wszystko w całość</span>
+    AppendMenuW(hMenuGlowne, MF_POPUP, (UINT_PTR)hMenuGra, L"Gra");
+    AppendMenuW(hMenuGlowne, MF_POPUP, (UINT_PTR)hMenuPoziom, L"Poziom");
+    SetMenu(window, hMenuGlowne);
+
+    return 0;
+}</code></pre>
+
+<h3>3. Sterowanie Grą i Menu (WM_COMMAND)</h3>
+<p>W tym miejscu obsługujemy kliknięcia we wszystko: w przycisk na ekranie i w opcje na górnym pasku.</p>
+<pre><code>case WM_COMMAND:
+{
+    int idAkcji = LOWORD(wparam);
+
+    switch (idAkcji) {
+
+        case IDM_START:
+            <span class="comment">// Odpalamy zegar nr 1. Będzie "tykał" co m_predkoscGry milisekund.</span>
+            SetTimer(window, 1, m_predkoscGry, nullptr);
+            m_graTrwa = true;
+            break;
+
+        case IDM_STOP:
+            <span class="comment">// Zabijamy zegar nr 1</span>
+            KillTimer(window, 1);
+            m_graTrwa = false;
+            break;
+
+        case IDM_LATWY:
+        case IDM_TRUDNY:
+        {
+            <span class="comment">// 1. Pobieramy uchwyt do naszego paska menu</span>
+            HMENU hMenu = GetMenu(window);
+
+            <span class="comment">// 2. Przerzucamy "ptaszka" na klikniętą opcję, a z drugiej go zdejmujemy</span>
+            CheckMenuItem(hMenu, IDM_LATWY, MF_BYCOMMAND | (idAkcji == IDM_LATWY ? MF_CHECKED : MF_UNCHECKED));
+            CheckMenuItem(hMenu, IDM_TRUDNY, MF_BYCOMMAND | (idAkcji == IDM_TRUDNY ? MF_CHECKED : MF_UNCHECKED));
+
+            <span class="comment">// 3. Zmieniamy prędkość w pamięci</span>
+            m_predkoscGry = (idAkcji == IDM_LATWY) ? 1000 : 300;
+
+            <span class="comment">// 4. Jeśli gra aktualnie trwa, musimy zrestartować zegar z nową prędkością!</span>
+            if (m_graTrwa) {
+                SetTimer(window, 1, m_predkoscGry, nullptr);
+            }
+            break;
+        }
+
+        case IDC_ZLAP_MNIE:
+            <span class="comment">// Użytkownik trafił w uciekający przycisk!</span>
+            if (m_graTrwa) {
+                KillTimer(window, 1); <span class="comment">// Zatrzymujemy ucieczkę</span>
+                m_graTrwa = false;
+                MessageBoxW(window, L"Gratulacje! Złapałeś przycisk!", L"Wygrana", MB_OK | MB_ICONINFORMATION);
+            }
+            break;
+    }
+    return 0;
+}</code></pre>
+
+<h3>4. Silnik Animacji (WM_TIMER)</h3>
+<p>Kiedy funkcja <code>SetTimer</code> jest aktywna, system co określoną liczbę milisekund wysyła do okna komunikat <code>WM_TIMER</code>. To tutaj losujemy nowe współrzędne dla przycisku.</p>
+<pre><code>case WM_TIMER:
+{
+    <span class="comment">// Sprawdzamy, czy to tyknięcie naszego zegara nr 1</span>
+    if (wparam == 1) {
+
+        <span class="comment">// 1. Pobieramy rozmiar obszaru roboczego okna głównego (żeby przycisk nie wyleciał za ekran)</span>
+        RECT obszarOkna;
+        GetClientRect(window, &amp;obszarOkna);
+
+        <span class="comment">// 2. Obliczamy maksymalne bezpieczne współrzędne (Odejmujemy wymiary przycisku 100x50)</span>
+        int max_X = obszarOkna.right - 100;
+        int max_Y = obszarOkna.bottom - 50;
+
+        <span class="comment">// 3. Losujemy nową pozycję (funkcja rand() z biblioteki &lt;cstdlib&gt;)</span>
+        <span class="comment">// Używamy std::max żeby uniknąć modulo przez 0, gdyby okno było ekstremalnie małe</span>
+        int nowyX = rand() % std::max(1, max_X);
+        int nowyY = rand() % std::max(1, max_Y);
+
+        <span class="comment">// 4. Zdobywamy uchwyt do przycisku i teleportujemy go!</span>
+        <span class="comment">// Flaga SWP_NOSIZE sprawia, że ignorujemy parametry szerokości i wysokości w tej funkcji.</span>
+        HWND hPrzycisk = GetDlgItem(window, IDC_ZLAP_MNIE);
+        SetWindowPos(hPrzycisk, nullptr, nowyX, nowyY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="suwaki-kolorow">28. Zaawansowane: Suwaki (Scrollbars) i GDI w locie</h2>
+<p>Zadanie łączy wbudowane kontrolki z ręcznym rysowaniem (GDI). Suwaki w WinAPI to specyficzne bestie – używają komunikatu <code>WM_HSCROLL</code>, a ich pozycję i zakres trzeba konfigurować dedykowanymi funkcjami.</p>
+
+<h3>1. Identyfikatory i Pamięć (Sekcja private:)</h3>
+<pre><code><span class="comment">// Kontrolki</span>
+#define IDC_SCROLL_R 5001
+#define IDC_SCROLL_G 5002
+#define IDC_SCROLL_B 5003
+#define IDC_TEXT_R 5004
+#define IDC_TEXT_G 5005
+#define IDC_TEXT_B 5006
+
+<span class="comment">// Pamięć kolorów (startujemy od czarnego)</span>
+int m_colorR = 0;
+int m_colorG = 0;
+int m_colorB = 0;</code></pre>
+
+<h3>2. Tworzenie i Konfiguracja Suwaków (WM_CREATE)</h3>
+<p>Po stworzeniu suwaka (klasa <code>L"SCROLLBAR"</code>, styl <code>SBS_HORZ</code>), musimy wymusić na nim zakres od 0 do 255. Bez tego suwak nie będzie wiedział, jak się zachować.</p>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// --- SUWAK RED ---</span>
+    HWND hScrollR = CreateWindowExW(0, L"SCROLLBAR", nullptr,
+        WS_CHILD | WS_VISIBLE | SBS_HORZ,
+        20, 20, 200, 20, window, (HMENU)IDC_SCROLL_R, m_instance, nullptr);
+
+    <span class="comment">// Tekst obok suwaka</span>
+    CreateWindowExW(0, L"STATIC", L"0",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        230, 20, 50, 20, window, (HMENU)IDC_TEXT_R, m_instance, nullptr);
+
+    <span class="comment">// MAGIA: Ustawiamy zakres suwaka od 0 do 255</span>
+    SetScrollRange(hScrollR, SB_CTL, 0, 255, TRUE);
+    SetScrollPos(hScrollR, SB_CTL, 0, TRUE);
+
+    <span class="comment">// (TUTAJ NALEŻY SKOPIOWAĆ POWYŻSZY KOD DLA GREEN i BLUE, </span>
+    <span class="comment">// zmieniając pozycję Y oraz odpowiednie ID)</span>
+
+    return 0;
+}</code></pre>
+
+<h3>3. Obsługa Suwaka (WM_HSCROLL)</h3>
+<p>To najtrudniejszy element. Komunikat <code>WM_HSCROLL</code> podaje nam w <code>lparam</code> uchwyt do przesuwanego suwaka, a w <code>wparam</code> informację o tym, CO DOKŁADNIE robi użytkownik (np. ciągnie za kciuk suwaka).</p>
+<pre><code>case WM_HSCROLL:
+{
+    <span class="comment">// 1. Wyciągamy uchwyt do kontrolki, która wywołała ten komunikat</span>
+    HWND hScroll = (HWND)lparam;
+
+    <span class="comment">// Jeśli to nie suwak wywołał zdarzenie (tylko np. pasek okna), ignorujemy</span>
+    if (hScroll == nullptr) return 0;
+
+    <span class="comment">// 2. Odczytujemy intencję użytkownika i obecną pozycję</span>
+    int akcja = LOWORD(wparam);
+    int obecnaPozycja = GetScrollPos(hScroll, SB_CTL);
+
+    <span class="comment">// 3. Reagujemy na różne akcje myszki na suwaku</span>
+    switch (akcja) {
+        case SB_LINELEFT: obecnaPozycja -= 1; break;  <span class="comment">// Kliknięcie w lewą strzałkę</span>
+        case SB_LINERIGHT: obecnaPozycja += 1; break; <span class="comment">// Kliknięcie w prawą strzałkę</span>
+        case SB_PAGELEFT: obecnaPozycja -= 10; break; <span class="comment">// Kliknięcie w pasek po lewej</span>
+        case SB_PAGERIGHT: obecnaPozycja += 10; break;<span class="comment">// Kliknięcie w pasek po prawej</span>
+        case SB_THUMBTRACK: obecnaPozycja = HIWORD(wparam); break; <span class="comment">// Ciągnięcie za suwak w locie!</span>
+    }
+
+    <span class="comment">// 4. Zabezpieczenie przed wyjściem poza zakres 0-255</span>
+    obecnaPozycja = std::max(0, std::min(255, obecnaPozycja));
+
+    <span class="comment">// 5. Fizycznie przesuwamy "kciuk" suwaka na nową pozycję na ekranie</span>
+    SetScrollPos(hScroll, SB_CTL, obecnaPozycja, TRUE);
+
+    <span class="comment">// 6. Aktualizujemy nasze zmienne w pamięci i teksty zależnie od tego, KTÓRY to suwak</span>
+    int idSuwaka = GetDlgCtrlID(hScroll);
+    if (idSuwaka == IDC_SCROLL_R) {
+        m_colorR = obecnaPozycja;
+        SetDlgItemInt(window, IDC_TEXT_R, m_colorR, FALSE);
+    }
+    else if (idSuwaka == IDC_SCROLL_G) {
+        m_colorG = obecnaPozycja;
+        SetDlgItemInt(window, IDC_TEXT_G, m_colorG, FALSE);
+    }
+    else if (idSuwaka == IDC_SCROLL_B) {
+        m_colorB = obecnaPozycja;
+        SetDlgItemInt(window, IDC_TEXT_B, m_colorB, FALSE);
+    }
+
+    <span class="comment">// 7. Zmuszamy okno do ponownego narysowania prostokąta z nowym kolorem!</span>
+    InvalidateRect(window, nullptr, TRUE);
+
+    return 0;
+}</code></pre>
+
+<h3>4. Rysowanie Podglądu (WM_PAINT)</h3>
+<p>Teraz, gdy suwaki na bieżąco zmieniają zmienne <code>m_colorR, m_colorG, m_colorB</code> i wywołują <code>InvalidateRect</code>, wystarczy w <code>WM_PAINT</code> po prostu stworzyć pędzel z tych zmiennych.</p>
+<pre><code>case WM_PAINT:
+{
+    PAINTSTRUCT ps;
+    HDC dc = BeginPaint(window, &amp;ps);
+
+    <span class="comment">// 1. Tworzymy pędzel na bazie naszych suwaków!</span>
+    HBRUSH pedzelSuwakow = CreateSolidBrush(RGB(m_colorR, m_colorG, m_colorB));
+    HBRUSH staryPedzel = (HBRUSH)SelectObject(dc, pedzelSuwakow);
+
+    <span class="comment">// 2. Rysujemy wielki prostokąt podglądu na środku ekranu</span>
+    Rectangle(dc, 50, 150, 250, 350);
+
+    <span class="comment">// 3. Sprzątanie</span>
+    SelectObject(dc, staryPedzel);
+    DeleteObject(pedzelSuwakow);
+
+    EndPaint(window, &amp;ps);
+    return 0;
+}</code></pre>
 
 </body>
 </html>
