@@ -1698,6 +1698,81 @@ case WM_CREATE:
     return 0;
 }</code></pre>
 
+<hr>
 
+<h2 id="kontrola-totalna">32. Podsumowanie: Kontrolki, Menu i Dialogi (Logika Przepływu)</h2>
+<p>Poniżej znajdziesz esencję implementacji dla trzech najważniejszych elementów interfejsu. Pamiętaj: <strong>Kontrolki</strong> tworzysz w <code>WM_CREATE</code>, <strong>Menu</strong> przypinasz do okna, a <strong>Dialogi</strong> wywołujesz jako osobne byty.</p>
+
+<h3>A. Kontrolki (Przyciski, Listy, Edycja)</h3>
+<p>W WinAPI kontrolki to "okna-dzieci". Komunikują się z rodzicem (Twoim głównym oknem) przez <code>WM_COMMAND</code>.</p>
+<pre><code><span class="comment">// 1. TWORZENIE (w WM_CREATE)</span>
+<span class="comment">// Przycisk</span>
+CreateWindowExW(0, L"BUTTON", L"Dodaj", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                10, 10, 80, 25, hwnd, (HMENU)101, NULL, NULL);
+
+<span class="comment">// Pole tekstowe (Edit)</span>
+CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_CHILD | WS_VISIBLE | WS_BORDER,
+                100, 10, 150, 25, hwnd, (HMENU)102, NULL, NULL);
+
+<span class="comment">// Lista (ListBox)</span>
+CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL,
+                10, 45, 240, 100, hwnd, (HMENU)103, NULL, NULL);
+
+<span class="comment">// 2. OBSŁUGA (w WM_COMMAND)</span>
+case WM_COMMAND: {
+    if(LOWORD(wParam) == 101) { <span class="comment">// Kliknięto przycisk</span>
+        wchar_t bufor[256];
+        GetDlgItemTextW(hwnd, 102, bufor, 256); <span class="comment">// Pobierz z Edita</span>
+        SendMessageW(GetDlgItem(hwnd, 103), LB_ADDSTRING, 0, (LPARAM)bufor); <span class="comment">// Dodaj do Listy</span>
+    }
+    return 0;
+}</code></pre>
+
+<h3>B. Menu Główne i Pop-up (Kontekstowe)</h3>
+<p>Menu definiuje strukturę poleceń. Każda pozycja musi mieć swoje ID, które wpada do <code>WM_COMMAND</code>.</p>
+<pre><code><span class="comment">// 1. TWORZENIE PASKA (np. w WM_CREATE lub WinMain)</span>
+HMENU hPasek = CreateMenu();
+HMENU hPlik = CreatePopupMenu();
+AppendMenuW(hPlik, MF_STRING, 201, L"O programie");
+AppendMenuW(hPlik, MF_SEPARATOR, 0, NULL);
+AppendMenuW(hPlik, MF_STRING, 202, L"Zamknij");
+AppendMenuW(hPasek, MF_POPUP, (UINT_PTR)hPlik, L"Plik");
+SetMenu(hwnd, hPasek);
+
+<span class="comment">// 2. POP-UP (Prawy przycisk - WM_CONTEXTMENU)</span>
+case WM_CONTEXTMENU: {
+    HMENU hPop = CreatePopupMenu();
+    AppendMenuW(hPop, MF_STRING, 301, L"Kopiuj");
+    AppendMenuW(hPop, MF_STRING, 302, L"Wklej");
+    <span class="comment">// TrackPopupMenu używa współrzędnych EKRANOWYCH z lParam</span>
+    TrackPopupMenu(hPop, TPM_RIGHTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, NULL);
+    DestroyMenu(hPop);
+    return 0;
+}</code></pre>
+
+<h3>C. Okna Dialogowe (Modalne)</h3>
+<p>Dialog to osobne okno zdefiniowane w zasobach (.rc). Nie ma własnej pętli komunikatów, używa <code>DialogProc</code>.</p>
+<pre><code><span class="comment">// 1. WYWOŁANIE (np. z menu)</span>
+DialogBox(hInstancja, MAKEINTRESOURCE(IDD_MOJ_DIALOG), hwndRodzic, (DLGPROC)MojDialogProc);
+
+<span class="comment">// 2. PROCEDURA DIALOGU (Osobna funkcja!)</span>
+INT_PTR CALLBACK MojDialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+    switch(msg) {
+        case WM_INITDIALOG:
+            SetDlgItemTextW(hDlg, 105, L"Cześć!"); <span class="comment">// Ustaw tekst na start</span>
+            return TRUE;
+        case WM_COMMAND:
+            if(LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL) {
+                EndDialog(hDlg, LOWORD(wp)); <span class="comment">// ZAMKNIĘCIE DIALOGU</span>
+                return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}</code></pre>
+
+<div class="important">
+  <strong>Pamiętaj o rzutowaniu:</strong> WinAPI jest stare i wybredne. Zawsze rzutuj ID kontrolki na <code>(HMENU)</code> w <code>CreateWindow</code> oraz procedurę dialogu na <code>(DLGPROC)</code> w <code>DialogBox</code>.
+</div>
 </body>
 </html>
