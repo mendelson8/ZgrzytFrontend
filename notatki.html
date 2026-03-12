@@ -1530,5 +1530,174 @@ int m_colorB = 0;</code></pre>
     return 0;
 }</code></pre>
 
+
+<hr>
+
+<h2 id="kontrolki-podstawy">29. Kontrolki dla opornych cz. 1: Przycisk i Pole Tekstowe (EDIT)</h2>
+<p>Najprostsza możliwa interakcja: wpisujesz tekst, klikasz przycisk, program to czyta i coś z tym robi.</p>
+
+<h3>Krok 1: Nadajemy numery ID (Na samej górze pliku)</h3>
+<pre><code><span class="comment">// To są nasze "PESEL-e" dla kontrolek. Muszą być unikalne!</span>
+#define ID_MOJ_PRZYCISK 101
+#define ID_MOJE_POLE 102</code></pre>
+
+<h3>Krok 2: Budujemy je na ekranie (Wewnątrz WM_CREATE)</h3>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// Tworzymy pole do wpisywania (klasa "EDIT")</span>
+    CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"Wpisz coś...",
+        WS_CHILD | WS_VISIBLE | WS_BORDER,
+        20, 20, 200, 25,  <span class="comment">// X: 20, Y: 20, Szerokość: 200, Wysokość: 25</span>
+        hwnd, (HMENU)ID_MOJE_POLE, m_instance, nullptr);
+
+    <span class="comment">// Tworzymy przycisk (klasa "BUTTON")</span>
+    CreateWindowExW(0, L"BUTTON", L"Odczytaj!",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        20, 60, 100, 30,  <span class="comment">// X: 20, Y: 60 (niżej!), Szerokość: 100, Wysokość: 30</span>
+        hwnd, (HMENU)ID_MOJ_PRZYCISK, m_instance, nullptr);
+
+    return 0;
+}</code></pre>
+
+<h3>Krok 3: Ożywiamy przycisk (Wewnątrz WM_COMMAND)</h3>
+<pre><code>case WM_COMMAND:
+{
+    <span class="comment">// Sprawdzamy, JAKIE ID wywołało ten komunikat</span>
+    int idKliknietego = LOWORD(wParam);
+
+    <span class="comment">// Jeśli to nasz przycisk...</span>
+    if (idKliknietego == ID_MOJ_PRZYCISK)
+    {
+        <span class="comment">// 1. Namierzamy nasze pole tekstowe w pamięci</span>
+        HWND hPole = GetDlgItem(hwnd, ID_MOJE_POLE);
+
+        <span class="comment">// 2. Szykujemy pusty pojemnik na tekst (np. 256 znaków)</span>
+        wchar_t bufor[256];
+
+        <span class="comment">// 3. Kopiujemy tekst z okienka do pojemnika</span>
+        GetWindowTextW(hPole, bufor, 256);
+
+        <span class="comment">// 4. Wyświetlamy to co odczytaliśmy w wyskakującym okienku!</span>
+        MessageBoxW(hwnd, bufor, L"Odczytano tekst:", MB_OK);
+
+        <span class="comment">// Opcjonalnie: czyścimy pole tekstowe po kliknięciu</span>
+        SetWindowTextW(hPole, L"");
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="kontrolki-listy">30. Kontrolki dla opornych cz. 2: Magia ListBoxa (Listy)</h2>
+<p>ListBox to kontrolka, która wyświetla listę elementów (jak np. lista plików). Zamiast czytać z niej tekst jak z pola EDIT, wysyłamy do niej specjalne rozkazy za pomocą funkcji <code>SendMessageW</code>.</p>
+
+<h3>Krok 1: ID i Tworzenie (WM_CREATE)</h3>
+<pre><code>#define ID_MOJA_LISTA 201
+#define ID_PRZYCISK_USUN 202
+
+case WM_CREATE:
+{
+    <span class="comment">// Tworzymy ListBox. Flaga LBS_NOTIFY jest kluczowa, żeby klikało się w wiersze!</span>
+    CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", nullptr,
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        20, 20, 200, 150, hwnd, (HMENU)ID_MOJA_LISTA, m_instance, nullptr);
+
+    <span class="comment">// Przycisk pod listą</span>
+    CreateWindowExW(0, L"BUTTON", L"Usuń zaznaczone",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        20, 180, 150, 30, hwnd, (HMENU)ID_PRZYCISK_USUN, m_instance, nullptr);
+
+    <span class="comment">// Dodajemy coś na start, żeby lista nie była pusta (Wysyłamy rozkaz LB_ADDSTRING)</span>
+    HWND hLista = GetDlgItem(hwnd, ID_MOJA_LISTA);
+    SendMessageW(hLista, LB_ADDSTRING, 0, (LPARAM)L"Jabłko");
+    SendMessageW(hLista, LB_ADDSTRING, 0, (LPARAM)L"Banan");
+    SendMessageW(hLista, LB_ADDSTRING, 0, (LPARAM)L"Gruszka");
+
+    return 0;
+}</code></pre>
+
+<h3>Krok 2: Usuwanie wybranego elementu (WM_COMMAND)</h3>
+<p>Lista numeruje wiersze od ZERA. Jabłko to 0, Banan to 1, Gruszka to 2.</p>
+<pre><code>case WM_COMMAND:
+{
+    if (LOWORD(wParam) == ID_PRZYCISK_USUN)
+    {
+        HWND hLista = GetDlgItem(hwnd, ID_MOJA_LISTA);
+
+        <span class="comment">// Pytamy listę: "Który wiersz jest teraz podświetlony?" (LB_GETCURSEL)</span>
+        int zaznaczonyIndeks = SendMessageW(hLista, LB_GETCURSEL, 0, 0);
+
+        <span class="comment">// Jeśli żaden nie jest (zwraca LB_ERR), to nic nie robimy</span>
+        if (zaznaczonyIndeks != LB_ERR)
+        {
+            <span class="comment">// Rozkazujemy liście: "Usuń wiersz o tym numerze!" (LB_DELETESTRING)</span>
+            SendMessageW(hLista, LB_DELETESTRING, zaznaczonyIndeks, 0);
+        }
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="kontrolki-wybor">31. Kontrolki dla opornych cz. 3: Checkboxy i Radio Buttony</h2>
+<p>Służą do wybierania opcji. Checkbox (kwadracik) to wybór Tak/Nie. Radio Button (kółko) to wybór jednej opcji z wielu.</p>
+
+<h3>Krok 1: Tworzenie (WM_CREATE)</h3>
+<pre><code>#define ID_CHECKBOX_ZGODA 301
+#define ID_RADIO_MALE 302
+#define ID_RADIO_DUZE 303
+#define ID_SPRAWDZ 304
+
+case WM_CREATE:
+{
+    <span class="comment">// Zwykły Checkbox (flaga BS_AUTOCHECKBOX sprawia, że sam się zaznacza po kliknięciu)</span>
+    CreateWindowExW(0, L"BUTTON", L"Akceptuję regulamin",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        20, 20, 200, 25, hwnd, (HMENU)ID_CHECKBOX_ZGODA, m_instance, nullptr);
+
+    <span class="comment">// Radio Buttony (flaga BS_AUTORADIOBUTTON)</span>
+    <span class="comment">// Flaga WS_GROUP przy pierwszym z nich mówi: "Tu zaczyna się nowa grupa kółek!"</span>
+    CreateWindowExW(0, L"BUTTON", L"Mała porcja",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
+        20, 60, 150, 25, hwnd, (HMENU)ID_RADIO_MALE, m_instance, nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Duża porcja",
+        WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+        20, 90, 150, 25, hwnd, (HMENU)ID_RADIO_DUZE, m_instance, nullptr);
+
+    <span class="comment">// Przycisk do testu</span>
+    CreateWindowExW(0, L"BUTTON", L"Sprawdź status",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        20, 130, 150, 30, hwnd, (HMENU)ID_SPRAWDZ, m_instance, nullptr);
+
+    return 0;
+}</code></pre>
+
+<h3>Krok 2: Odpytywanie o stan (WM_COMMAND)</h3>
+<p>Do sprawdzania czy "ptaszek" jest zaznaczony służy genialna funkcja <code>IsDlgButtonChecked</code>.</p>
+<pre><code>case WM_COMMAND:
+{
+    if (LOWORD(wParam) == ID_SPRAWDZ)
+    {
+        <span class="comment">// Sprawdzamy Checkbox</span>
+        if (IsDlgButtonChecked(hwnd, ID_CHECKBOX_ZGODA) == BST_CHECKED) {
+            <span class="comment">// Użytkownik zaznaczył regulamin!</span>
+        } else {
+            MessageBoxW(hwnd, L"Musisz zaakceptować regulamin!", L"Błąd", MB_ICONERROR);
+            return 0; <span class="comment">// Przerywamy dalsze sprawdzanie</span>
+        }
+
+        <span class="comment">// Sprawdzamy Radio Buttony</span>
+        if (IsDlgButtonChecked(hwnd, ID_RADIO_MALE) == BST_CHECKED) {
+            MessageBoxW(hwnd, L"Wybrałeś małą porcję.", L"Info", MB_OK);
+        }
+        else if (IsDlgButtonChecked(hwnd, ID_RADIO_DUZE) == BST_CHECKED) {
+            MessageBoxW(hwnd, L"Wybrałeś dużą porcję.", L"Info", MB_OK);
+        }
+    }
+    return 0;
+}</code></pre>
+
+
 </body>
 </html>
