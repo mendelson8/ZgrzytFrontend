@@ -2470,5 +2470,158 @@ case WM_LBUTTONUP:
     return 0;
 }</code></pre>
 
+
+<hr>
+
+<h2 id="bez-globalnych-pro">45. Poziom Inżynier: Śmierć Zmiennym Globalnym (Struktury i CommCtrl)</h2>
+<p>Zmienne globalne to zło. Jeśli w programie otworzysz dwa takie same okna, ich zmienne globalne się pogryzą. Poniższe rozwiązanie to absolutny standard branżowy: pakujemy dane do własnej struktury, chowamy ją do tajnej "kieszeni" okna (<strong>GWLP_USERDATA</strong>) i używamy nowoczesnego subklasowania (<strong>SetWindowSubclass</strong>).</p>
+
+<div class="important">
+  <strong>Wymagane na samej górze pliku (pod windows.h):</strong><br>
+  <code>#include &lt;commctrl.h&gt;</code><br>
+  <code>#pragma comment(lib, "comctl32.lib")</code>
+</div>
+
+<h3>Krok 1: Struktura (Nasza paczka z danymi)</h3>
+<pre><code><span class="comment">// 1. Zamiast zmiennych globalnych, tworzymy własny "plecak" dla okna</span>
+struct StanTarczy {
+    HWND cyfry[10];
+    double calkowityKat = 0.0;
+    double katStartowy = 0.0;
+    bool czyKrece = false;
+
+    <span class="comment">// Wymiary tarczy (łatwe do zmiany w jednym miejscu)</span>
+    int centerX = 300;
+    int centerY = 300;
+    int promien = 150;
+};</code></pre>
+
+<h3>Krok 2: Nowoczesny Wirus-Przechwytywacz</h3>
+<p>Zwróć uwagę na magię <code>DefSubclassProc</code>. System Windows sam pamięta, jaki był stary "mózg" przycisku. My tylko kradniemy myszkę i puszczamy resztę komunikatów dalej.</p>
+<pre><code>LRESULT CALLBACK SubclassPrzycisku(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    <span class="comment">// Kradniemy kliknięcia i ruch myszką</span>
+    if (uMsg == WM_LBUTTONDOWN || uMsg == WM_MOUSEMOVE || uMsg == WM_LBUTTONUP)
+    {
+        HWND oknoGlowne = GetParent(hwnd);
+
+        <span class="comment">// Przeliczamy współrzędne z przycisku na okno główne</span>
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        MapWindowPoints(hwnd, oknoGlowne, &pt, 1);
+
+        <span class="comment">// Blokada myszki, żeby nie uciekła z małego przycisku</span>
+        if (uMsg == WM_LBUTTONDOWN) SetCapture(hwnd);
+        if (uMsg == WM_LBUTTONUP) ReleaseCapture();
+
+        <span class="comment">// Przesyłamy gotowy ruch do okna głównego!</span>
+        SendMessageW(oknoGlowne, uMsg, wParam, MAKELPARAM(pt.x, pt.y));
+        return 0;
+    }
+
+    <span class="comment">// MAGIA: Przekazujemy sterowanie dalej. Windows sam wie, do kogo!</span>
+    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}</code></pre>
+
+<h3>Krok 3: Tworzenie i chowanie do kieszeni (WM_CREATE)</h3>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// 1. Tworzymy nowy plecak z danymi w pamięci operacyjnej</span>
+    StanTarczy* stan = new StanTarczy();
+
+    <span class="comment">// 2. Chowamy plecak do tajnej kieszeni okna (GWLP_USERDATA)</span>
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)stan);
+
+    for (int i = 0; i < 10; i++)
+    {
+        double kat = i * (6.283185 / 10.0);
+        int x = stan->centerX + stan->promien * cos(kat) - 15;
+        int y = stan->centerY + stan->promien * sin(kat) - 15;
+        std::wstring napis = std::to_wstring(i);
+
+        <span class="comment">// Tworzymy przycisk...</span>
+        stan->cyfry[i] = CreateWindowExW(
+            0, L"BUTTON", napis.c_str(),
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            x, y, 30, 30,
+            hwnd, (HMENU)(2000 + i),
+            (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), nullptr
+        );
+
+        <span class="comment">// 3. INFEKCJA: Nowoczesne subklasowanie!</span>
+        <span class="comment">// Podajemy: pacjenta, naszego wirusa i unikalne ID (np. i)</span>
+        SetWindowSubclass(stan->cyfry[i], SubclassPrzycisku, i, 0);
+    }
+    return 0;
+}</code></pre>
+
+<h3>Krok 4: Czysta przyjemność z kręcenia (Okno Główne)</h3>
+<p>W każdym komunikacie po prostu sięgamy do kieszeni. Nie interesuje nas już, w co kliknął użytkownik. Jeśli dostajemy `WM_LBUTTONDOWN`, wiemy na 100%, że kliknął w przycisk.</p>
+<pre><code>case WM_LBUTTONDOWN:
+{
+    <span class="comment">// Wyciągamy nasz plecak z kieszeni okna!</span>
+    StanTarczy* stan = (StanTarczy*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (!stan) return 0; <span class="comment">// Zabezpieczenie</span>
+
+    int myszX = GET_X_LPARAM(lParam);
+    int myszY = GET_Y_LPARAM(lParam);
+
+    stan->czyKrece = true;
+    stan->katStartowy = atan2(myszY - stan->centerY, myszX - stan->centerX);
+    return 0;
+}
+
+case WM_MOUSEMOVE:
+{
+    StanTarczy* stan = (StanTarczy*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (!stan) return 0;
+
+    if (stan->czyKrece)
+    {
+        int myszX = GET_X_LPARAM(lParam);
+        int myszY = GET_Y_LPARAM(lParam);
+
+        <span class="comment">// Liczymy kąt...</span>
+        double katMyszki = atan2(myszY - stan->centerY, myszX - stan->centerX);
+        stan->calkowityKat += (katMyszki - stan->katStartowy);
+        stan->katStartowy = katMyszki;
+
+        <span class="comment">// Przesuwamy wszystkie przyciski!</span>
+        for (int i = 0; i < 10; i++)
+        {
+            double nowyKat = i * (6.283185 / 10.0) + stan->calkowityKat;
+            int noweX = stan->centerX + stan->promien * cos(nowyKat) - 15;
+            int noweY = stan->centerY + stan->promien * sin(nowyKat) - 15;
+
+            SetWindowPos(stan->cyfry[i], nullptr, noweX, noweY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
+    }
+    return 0;
+}
+
+case WM_LBUTTONUP:
+{
+    StanTarczy* stan = (StanTarczy*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (stan) stan->czyKrece = false;
+    return 0;
+}
+
+case WM_DESTROY:
+{
+    <span class="comment">// WAŻNE: Skoro stworzyliśmy plecak przez "new", musimy go usunąć!</span>
+    StanTarczy* stan = (StanTarczy*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (stan)
+    {
+        <span class="comment">// Zdejmujemy subklasowanie, żeby być czystym wobec systemu</span>
+        for (int i = 0; i < 10; i++) {
+            RemoveWindowSubclass(stan->cyfry[i], SubclassPrzycisku, i);
+        }
+        delete stan; <span class="comment">// Zwalniamy RAM!</span>
+    }
+
+    PostQuitMessage(0);
+    return 0;
+}</code></pre>
+
+
 </body>
 </html>
