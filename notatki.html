@@ -2174,7 +2174,7 @@ case WM_COMMAND:
 
 <hr>
 
-<h2 id="zadanie-tarcza-1">40. ZADANIE SPECJALNE: Tarcza Telefonu cz. 1 (Generowanie)</h2>
+<h2 id="zadanie-tarcza-1">40. ZADANIE SPECJALNE: Tarcza Zegara cz. 1 (Generowanie)</h2>
 <p>Rozwiązanie problemu obracających się kontrolek polega na wykorzystaniu klasy <code>STATIC</code> bez flagi <code>SS_NOTIFY</code>. Dzięki temu okienka są widoczne, ale "przezroczyste" dla kliknięć myszką, co pozwala obsłużyć całą matematykę obrotu w jednym miejscu – w oknie głównym.</p>
 
 <h3>Krok 1: Zmienne globalne (Na samej górze pliku)</h3>
@@ -2220,7 +2220,7 @@ const int TARCZA_R = 150;   <span class="comment">// Promień tarczy</span></cod
 
 <hr>
 
-<h2 id="zadanie-tarcza-2">41. ZADANIE SPECJALNE: Tarcza Telefonu cz. 2 (Hit Testing)</h2>
+<h2 id="zadanie-tarcza-2">41. ZADANIE SPECJALNE: Tarcza Zegara cz. 2 (Hit Testing)</h2>
 <p>Ponieważ kafelki przepuszczają kliknięcia, główne okno musi samo zgadnąć, czy użytkownik trafił w cyfrę. Używamy do tego klasycznego <strong>Twierdzenia Pitagorasa</strong> (liczymy odległość kursora od środka każdej cyfry).</p>
 
 <pre><code>case WM_LBUTTONDOWN:
@@ -2255,7 +2255,7 @@ const int TARCZA_R = 150;   <span class="comment">// Promień tarczy</span></cod
 
 <hr>
 
-<h2 id="zadanie-tarcza-3">42. ZADANIE SPECJALNE: Tarcza Telefonu cz. 3 (Kręcenie Karuzelą)</h2>
+<h2 id="zadanie-tarcza-3">42. ZADANIE SPECJALNE: Tarcza Zegara cz. 3 (Kręcenie Karuzelą)</h2>
 <p>Mając zablokowaną myszkę i znając kąt startowy, możemy w czasie rzeczywistym aktualizować <code>g_calkowityKat</code> i fizycznie przesuwać kafelki używając ich uchwytów za pomocą funkcji <code>SetWindowPos</code>.</p>
 
 <pre><code>case WM_MOUSEMOVE:
