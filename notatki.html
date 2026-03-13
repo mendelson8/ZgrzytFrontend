@@ -48,6 +48,56 @@
       .keyword { color: #0000ff; }
       .string { color: #a31515; }
       .comment { color: #008000; }
+
+      /* Code block container with buttons */
+      .code-container {
+          position: relative;
+          margin: 20px 0;
+      }
+
+      .code-buttons {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          gap: 8px;
+          z-index: 10;
+      }
+
+      .copy-btn {
+          background: #0078d7;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+          transition: all 0.2s;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .copy-btn:hover {
+          background: #0056b3;
+          transform: translateY(-1px);
+          box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      }
+
+      .copy-btn:active {
+          transform: translateY(0);
+      }
+
+      .copy-btn.copied {
+          background: #4caf50;
+      }
+
+      .copy-btn.no-comments {
+          background: #ff9800;
+      }
+
+      .copy-btn.no-comments:hover {
+          background: #f57c00;
+      }
   </style>
 </head>
 <body>
@@ -588,7 +638,7 @@ SetBkMode(dc, TRANSPARENT);
 <span class="comment">// Ustawiamy kolor czcionki na czarny</span>
 SetTextColor(dc, RGB(0, 0, 0));
 
-<span class="comment">// Rysujemy tekst wyśrodkowany w pionie i poziomie [cite: 903]</span>
+<span class="comment">// Rysujemy tekst wyśrodkowany w pionie i poziomie</span>
 DrawTextW(dc, napis.c_str(), -1, &amp;poleKafelka, DT_CENTER | DT_VCENTER | DT_SINGLELINE);</code></pre>
 
 
@@ -1774,5 +1824,94 @@ INT_PTR CALLBACK MojDialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
 <div class="important">
   <strong>Pamiętaj o rzutowaniu:</strong> WinAPI jest stare i wybredne. Zawsze rzutuj ID kontrolki na <code>(HMENU)</code> w <code>CreateWindow</code> oraz procedurę dialogu na <code>(DLGPROC)</code> w <code>DialogBox</code>.
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all <pre><code> blocks
+    const codeBlocks = document.querySelectorAll('pre code');
+
+    codeBlocks.forEach((codeBlock, index) => {
+        const pre = codeBlock.parentElement;
+
+        // Skip if already wrapped
+        if (pre.parentElement.classList.contains('code-container')) {
+            return;
+        }
+
+        // Create container wrapper
+        const container = document.createElement('div');
+        container.className = 'code-container';
+
+        // Create buttons container
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'code-buttons';
+
+        // Create "Copy" button
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.onclick = function() {
+            copyCode(codeBlock, copyBtn, false);
+        };
+
+        // Create "Copy without comments" button
+        const copyNoCommentsBtn = document.createElement('button');
+        copyNoCommentsBtn.className = 'copy-btn no-comments';
+        copyNoCommentsBtn.textContent = '📄 Copy without comments';
+        copyNoCommentsBtn.onclick = function() {
+            copyCode(codeBlock, copyNoCommentsBtn, true);
+        };
+
+        // Append buttons
+        buttonsDiv.appendChild(copyBtn);
+        buttonsDiv.appendChild(copyNoCommentsBtn);
+
+        // Wrap the pre element
+        pre.parentNode.insertBefore(container, pre);
+        container.appendChild(pre);
+        container.insertBefore(buttonsDiv, pre);
+    });
+
+    function copyCode(codeBlock, button, removeComments) {
+        // Get the text content
+        let code = codeBlock.textContent;
+
+        if (removeComments) {
+            // Remove lines starting with // (considering leading whitespace)
+            const lines = code.split('\n');
+            const filteredLines = lines.filter(line => {
+                const trimmed = line.trim();
+                return !trimmed.startsWith('//');
+            });
+            code = filteredLines.join('\n');
+
+            // Also remove inline comments like: code(); // comment
+            code = code.replace(/\s*\/\/.*$/gm, '');
+
+            // Remove empty lines that may have been left
+            code = code.split('\n').filter(line => line.trim() !== '').join('\n');
+        }
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(code).then(() => {
+            const originalText = button.textContent;
+            button.textContent = '✓ Copied!';
+            button.classList.add('copied');
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            button.textContent = '✗ Failed';
+            setTimeout(() => {
+                button.textContent = removeComments ? '📄 Copy without comments' : '📋 Copy';
+            }, 2000);
+        });
+    }
+});
+</script>
+
 </body>
 </html>
