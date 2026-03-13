@@ -105,7 +105,44 @@
 <h1>Kompedium WinApi dla Opornych (C++)</h1>
 <p>Ten dokument to ściągawka zbierająca najważniejsze funkcje, mechanizmy i pułapki systemu Windows API. Używaj jej jako bazy do kopiowania szablonów podczas tworzenia nowych projektów.</p>
 
-<hr>
+<div class="note">
+  <strong>Spis Treści:</strong>
+  <ol>
+    <li><a href="#setup">Setup Projektu i Pułapki C++</a></li>
+    <li><a href="#cykl">Cykl Życia Okna (Szablon Omijający C)</a></li>
+    <li><a href="#input">Obsługa Klawiatury i Myszki (Procedura Klasowa)</a></li>
+    <li><a href="#gdi">Rysowanie (GDI - Graphics Device Interface)</a></li>
+    <li><a href="#slownik">Słownik Najważniejszych Funkcji WinAPI</a></li>
+    <li><a href="#zarzadzanie-oknem">Zarządzanie Oknem (Wymiary, Pozycja, Tytuł)</a></li>
+    <li><a href="#zegary">Zegary i Animacje (Timers)</a></li>
+    <li><a href="#menu">Obsługa Menu (WM_COMMAND)</a></li>
+    <li><a href="#zapis">Zapis i Odczyt Stanu Gry (Pliki .ini)</a></li>
+    <li><a href="#tekst-przezroczystosc">Rysowanie Tekstu i Przezroczystość</a></li>
+    <li><a href="#lab1-okna">Wiele okien i relacje</a></li>
+    <li><a href="#lab1-kontrolki">Kontrolki STATIC i Kolorowanie</a></li>
+    <li><a href="#lab1-geometria">Geometria i Ekran</a></li>
+    <li><a href="#lab1-ikona">Ikona Programu</a></li>
+    <li><a href="#baza-kodu">Pełny Kod Bazowy (Koniec etapu 3.2)</a></li>
+    <li><a href="#dynamiczne-kontrolki">Ekstra: Dynamiczne tworzenie i poruszanie oknem-dzieckiem</a></li>
+    <li><a href="#tlo-okna">Zmiana Koloru Tła Okna</a></li>
+    <li><a href="#ruch-gdi">Płynny ruch obiektu (Podejście GDI - Rectangle)</a></li>
+    <li><a href="#slownik-flag">Słownik Podstawowych Stylów Okna (Window Styles)</a></li>
+    <li><a href="#plywajacy-przybornik">Zaawansowane: Pływający Przybornik (Niemodalny Dialog i Menu)</a></li>
+    <li><a href="#modalny-konfigurator">Zaawansowane: Modalny Konfigurator (Przekazywanie Danych i Parsowanie)</a></li>
+    <li><a href="#dynamiczna-lista">Zaawansowane: Kontrolki, ListBox i Menu Kontekstowe (Prawy Przycisk)</a></li>
+    <li><a href="#uciekajacy-przycisk">Zaawansowane: Uciekający Przycisk (Timery i Stan Menu)</a></li>
+    <li><a href="#suwaki-kolorow">Zaawansowane: Suwaki (Scrollbars) i GDI w locie</a></li>
+    <li><a href="#kontrolki-podstawy">Kontrolki dla opornych cz. 1: Przycisk i Pole Tekstowe (EDIT)</a></li>
+    <li><a href="#kontrolki-listy">Kontrolki dla opornych cz. 2: Magia ListBoxa (Listy)</a></li>
+    <li><a href="#kontrolki-wybor">Kontrolki dla opornych cz. 3: Checkboxy i Radio Buttony</a></li>
+    <li><a href="#menu-tworzenie">Podsumowanie: Menu</a></li>
+    <li><a href="#dialogi-zasoby">Podsumowanie: Dialogi</a></li>
+    <li><a href="#kontrola-totalna">Podsumowanie: Kontrolki, Menu i Dialogi (Logika Przepływu)</a></li>
+
+  </ol>
+</div>
+
+
 
 <h2 id="baza-kodu">15. Pełny Kod Bazowy (Koniec etapu 3.2)</h2>
 <p>Gotowe pliki startowe tworzące fundamentalną strukturę obiektową aplikacji WinAPI z jednym oknem [cite: 62-65, 206-208].</p>
@@ -267,40 +304,6 @@ int app_2048::run(int show_command)
     }
     return EXIT_SUCCESS;
 }</code></pre>
-
-<div class="note">
-  <strong>Spis Treści:</strong>
-  <ol>
-    <li><a href="#setup">Setup Projektu i Pułapki C++</a></li>
-    <li><a href="#cykl">Cykl Życia Okna (Szablon Omijający C)</a></li>
-    <li><a href="#input">Obsługa Klawiatury i Myszki (Procedura Klasowa)</a></li>
-    <li><a href="#gdi">Rysowanie (GDI - Graphics Device Interface)</a></li>
-    <li><a href="#slownik">Słownik Najważniejszych Funkcji WinAPI</a></li>
-    <li><a href="#zarzadzanie-oknem">Zarządzanie Oknem (Wymiary, Pozycja, Tytuł)</a></li>
-    <li><a href="#zegary">Zegary i Animacje (Timers)</a></li>
-    <li><a href="#menu">Obsługa Menu (WM_COMMAND)</a></li>
-    <li><a href="#zapis">Zapis i Odczyt Stanu Gry (Pliki .ini)</a></li>
-    <li><a href="#tekst-przezroczystosc">Rysowanie Tekstu i Przezroczystość</a></li>
-    <li><a href="#lab1-okna">Wiele okien i relacje</a></li>
-    <li><a href="#lab1-kontrolki">Kontrolki STATIC i Kolorowanie</a></li>
-    <li><a href="#lab1-geometria">Geometria i Ekran</a></li>
-    <li><a href="#lab1-ikona">Ikona Programu</a></li>
-    <li><a href="#baza-kodu">Pełny Kod Bazowy (Koniec etapu 3.2)</a></li>
-    <li><a href="#dynamiczne-kontrolki">Ekstra: Dynamiczne tworzenie i poruszanie oknem-dzieckiem</a></li>
-    <li><a href="#tlo-okna">Zmiana Koloru Tła Okna</a></li>
-    <li><a href="#ruch-gdi">Płynny ruch obiektu (Podejście GDI - Rectangle)</a></li>
-    <li><a href="#slownik-flag">Słownik Podstawowych Stylów Okna (Window Styles)</a></li>
-    <li><a href="#plywajacy-przybornik">Zaawansowane: Pływający Przybornik (Niemodalny Dialog i Menu)</a></li>
-    <li><a href="#modalny-konfigurator">Zaawansowane: Modalny Konfigurator (Przekazywanie Danych i Parsowanie)</a></li>
-    <li><a href="#dynamiczna-lista">Zaawansowane: Kontrolki, ListBox i Menu Kontekstowe (Prawy Przycisk)</a></li>
-    <li><a href="#uciekajacy-przycisk">Zaawansowane: Uciekający Przycisk (Timery i Stan Menu)</a></li>
-    <li><a href="#suwaki-kolorow">Zaawansowane: Suwaki (Scrollbars) i GDI w locie</a></li>
-    <li><a href="#kontrolki-podstawy">Kontrolki dla opornych cz. 1: Przycisk i Pole Tekstowe (EDIT)</a></li>
-    <li><a href="#kontrolki-listy">Kontrolki dla opornych cz. 2: Magia ListBoxa (Listy)</a></li>
-    <li><a href="#kontrolki-wybor">Kontrolki dla opornych cz. 3: Checkboxy i Radio Buttony</a></li>
-    <li><a href="#kontrola-totalna">Podsumowanie: Kontrolki, Menu i Dialogi (Logika Przepływu)</a></li>
-  </ol>
-</div>
 
 <hr>
 
@@ -1935,6 +1938,237 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<hr>
+
+<h2 id="menu-tworzenie">33. Menu dla opornych cz. 1: Budowanie paska (Klocki LEGO)</h2>
+<p>Górne menu buduje się od środka do zewnątrz. Najpierw robimy "szuflady" (zakładki np. Plik, Edycja), potem wrzucamy do nich opcje, a na końcu całą "szafkę" przybijamy do głównego okna.</p>
+
+
+
+<h3>Krok 1: Wymyślamy ID (Na samej górze pliku)</h3>
+<pre><code><span class="comment">// Każda opcja, którą da się kliknąć, MUSI mieć swój unikalny "PESEL"</span>
+#define ID_MENU_NOWY 401
+#define ID_MENU_ZAMKNIJ 402
+#define ID_MENU_INFO 403</code></pre>
+
+<h3>Krok 2: Składamy menu (Wewnątrz WM_CREATE)</h3>
+<pre><code>case WM_CREATE:
+{
+    <span class="comment">// 1. Tworzymy "Szafkę" (główny pasek na samej górze okna)</span>
+    HMENU hSzafka = CreateMenu();
+
+    <span class="comment">// 2. Tworzymy dwie puste "Szuflady" (rozwijane listy)</span>
+    HMENU hSzufladaPlik = CreatePopupMenu();
+    HMENU hSzufladaPomoc = CreatePopupMenu();
+
+    <span class="comment">// 3. Wrzucamy opcje do pierwszej szuflady (Plik)</span>
+    <span class="comment">// MF_STRING oznacza "zwykły tekst"</span>
+    AppendMenuW(hSzufladaPlik, MF_STRING, ID_MENU_NOWY, L"Nowy plik");
+    AppendMenuW(hSzufladaPlik, MF_SEPARATOR, 0, nullptr); <span class="comment">// To robi ładną poziomą kreskę odgradzającą!</span>
+    AppendMenuW(hSzufladaPlik, MF_STRING, ID_MENU_ZAMKNIJ, L"Zamknij program");
+
+    <span class="comment">// 4. Wrzucamy opcje do drugiej szuflady (Pomoc)</span>
+    AppendMenuW(hSzufladaPomoc, MF_STRING, ID_MENU_INFO, L"O programie...");
+
+    <span class="comment">// 5. Wkładamy szuflady do szafki! </span>
+    <span class="comment">// Używamy MF_POPUP, żeby system wiedział, że to jest rozwijane menu, a nie zwykły klikacz.</span>
+    AppendMenuW(hSzafka, MF_POPUP, (UINT_PTR)hSzufladaPlik, L"Plik");
+    AppendMenuW(hSzafka, MF_POPUP, (UINT_PTR)hSzufladaPomoc, L"Pomoc");
+
+    <span class="comment">// 6. Przybijamy całą szafkę do naszego okna</span>
+    SetMenu(hwnd, hSzafka);
+
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="menu-reakcja">34. Menu dla opornych cz. 2: Reagowanie na kliknięcia</h2>
+<p>Menu zrobione w kroku 1 na razie tylko ładnie wygląda. Jak sprawić, żeby działało? Dokładnie tak samo jak przyciski! Kiedy klikasz opcję w menu, okno dostaje komunikat <code>WM_COMMAND</code>.</p>
+
+<h3>Krok 1: Nasłuchiwanie (Wewnątrz WM_COMMAND)</h3>
+<pre><code>case WM_COMMAND:
+{
+    <span class="comment">// Zaglądamy do wParam, żeby sprawdzić, jaki "PESEL" właśnie kliknięto</span>
+    int kliknieteID = LOWORD(wParam);
+
+    <span class="comment">// Reagujemy zależnie od tego, co przyszło</span>
+    switch (kliknieteID)
+    {
+        case ID_MENU_NOWY:
+            <span class="comment">// Ktoś kliknął "Nowy plik"</span>
+            MessageBoxW(hwnd, L"Tworzę nowy plik!", L"Sukces", MB_OK);
+            break;
+
+        case ID_MENU_INFO:
+            <span class="comment">// Ktoś kliknął "O programie"</span>
+            MessageBoxW(hwnd, L"Program napisany na PWSG. \nWersja 1.0", L"Info", MB_ICONINFORMATION);
+            break;
+
+        case ID_MENU_ZAMKNIJ:
+            <span class="comment">// Ktoś kliknął "Zamknij" - grzecznie ubijamy aplikację</span>
+            PostQuitMessage(0);
+            break;
+    }
+
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="menu-popup">35. Menu dla opornych cz. 3: Pływające Menu (Prawy przycisk myszy)</h2>
+<p>A co jeśli chcemy menu, które pojawia się tam, gdzie klikniemy prawym przyciskiem? To tzw. Menu Kontekstowe (Pop-up). Nie przypinamy go na stałe do okna. Wyciągamy je z kieszeni tylko w momencie kliknięcia.</p>
+
+
+
+<h3>Krok 1: Wymyślamy ID (Góra pliku)</h3>
+<pre><code>#define ID_POPUP_KOPIUJ 501
+#define ID_POPUP_WKLEJ 502</code></pre>
+
+<h3>Krok 2: Łapiemy prawe kliknięcie (Wewnątrz WM_CONTEXTMENU)</h3>
+<p>Do prawego kliknięcia używamy komunikatu <code>WM_CONTEXTMENU</code>, bo on od razu daje nam idealne współrzędne dla wyskakującego menu (liczone od krawędzi monitora, a nie okienka).</p>
+
+<pre><code>case WM_CONTEXTMENU:
+{
+    <span class="comment">// 1. Pobieramy współrzędne myszki (gdzie dokładnie kliknięto)</span>
+    int pozycjaX = GET_X_LPARAM(lParam);
+    int pozycjaY = GET_Y_LPARAM(lParam);
+
+    <span class="comment">// 2. Tworzymy listę "w locie" (wyciągamy z kieszeni)</span>
+    HMENU hPopMenu = CreatePopupMenu();
+    AppendMenuW(hPopMenu, MF_STRING, ID_POPUP_KOPIUJ, L"Kopiuj wszystko");
+    AppendMenuW(hPopMenu, MF_STRING, ID_POPUP_WKLEJ, L"Wklej tutaj");
+
+    <span class="comment">// 3. Pokazujemy menu dokładnie tam, gdzie jest kursor.</span>
+    <span class="comment">// Magiczna flaga TPM_RETURNCMD sprawia, że program się tu "zatrzymuje", </span>
+    <span class="comment">// czeka aż coś klikniesz, i od razu wrzuca wynik do zmiennej "wybor"!</span>
+    int wybor = TrackPopupMenu(hPopMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pozycjaX, pozycjaY, 0, hwnd, nullptr);
+
+    <span class="comment">// 4. Niszczymy szkielet menu, żeby nie zaśmiecać pamięci RAM! (BARDZO WAŻNE)</span>
+    DestroyMenu(hPopMenu);
+
+    <span class="comment">// 5. Sprawdzamy co użytkownik kliknął i reagujemy:</span>
+    if (wybor == ID_POPUP_KOPIUJ) {
+        MessageBoxW(hwnd, L"Skopiowano!", L"Akcja", MB_OK);
+    }
+    else if (wybor == ID_POPUP_WKLEJ) {
+        MessageBoxW(hwnd, L"Wklejono!", L"Akcja", MB_OK);
+    }
+
+    return 0;
+}</code></pre>
+
+
+<hr>
+
+<h2 id="dialogi-zasoby">36. Dialogi dla opornych cz. 1: Szablon z IKEI (Plik .rc)</h2>
+<p>Tworzenie dialogu "z palca" w kodzie C++ to tortura. Dlatego Windows wymyślił pliki zasobów (<strong>.rc</strong>). To taka instrukcja z IKEI, która mówi systemowi: "Zrób mi okienko 200x100 pikseli i połóż tam dwa przyciski".</p>
+
+
+
+<h3>Krok 1: Wymyślamy ID dla dialogu i przycisków</h3>
+<pre><code><span class="comment">// W pliku nagłówkowym lub na górze main.cpp</span>
+#define IDD_MOJ_DIALOG 900
+#define IDC_PRZYCISK_OK 901
+#define IDC_PRZYCISK_ANULUJ 902</code></pre>
+
+<h3>Krok 2: Szablon w pliku zasobów (.rc)</h3>
+<p>Zazwyczaj wyklikujesz to w edytorze w Visual Studio (Add -> Resource -> Dialog), ale pod spodem generuje się taki prosty, czytelny tekst:</p>
+<pre><code><span class="comment">// To siedzi w osobnym pliku np. zasoby.rc</span>
+IDD_MOJ_DIALOG DIALOGEX 0, 0, 200, 100
+CAPTION "Moje Ustawienia"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+    <span class="comment">// LTEXT to zwykły napis (STATIC)</span>
+    LTEXT           "Czy chcesz zapisać zmiany?", IDC_STATIC, 10, 10, 150, 20
+
+    <span class="comment">// DEFPUSHBUTTON to główny, podświetlony przycisk (Enter go klika)</span>
+    DEFPUSHBUTTON   "Zapisz", IDC_PRZYCISK_OK, 40, 70, 50, 14
+
+    <span class="comment">// PUSHBUTTON to zwykły przycisk</span>
+    PUSHBUTTON      "Anuluj", IDC_PRZYCISK_ANULUJ, 100, 70, 50, 14
+END</code></pre>
+
+<hr>
+
+<h2 id="dialogi-mozg">37. Dialogi dla opornych cz. 2: Mózg Dialogu (DialogProc)</h2>
+<p>Dialog <strong>NIE KORZYSTA</strong> z głównej procedury Twojego okna (<code>WindowProc</code>). Ma swoją własną, małą funkcję, która obsługuje tylko to, co dzieje się wewnątrz tego małego okienka. Rządzą tu dwie święte zasady:</p>
+<ul>
+  <li>Zwracasz <code>TRUE</code>, jeśli obsłużyłeś kliknięcie, lub <code>FALSE</code>, jeśli nic nie zrobiłeś.</li>
+  <li>Do zamykania używasz <strong>TYLKO</strong> funkcji <code>EndDialog</code>. Żadnego <code>DestroyWindow</code>!</li>
+</ul>
+
+<h3>Krok 1: Piszemy procedurę dialogu (Nad funkcją WindowProc)</h3>
+<pre><code>INT_PTR CALLBACK UstawieniaDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        <span class="comment">// 1. WM_INITDIALOG to odpowiednik WM_CREATE. Wykonuje się RAZ na start.</span>
+        case WM_INITDIALOG:
+            <span class="comment">// Tutaj możesz np. ustawić domyślny tekst w polu edycji wewnątrz dialogu</span>
+            return TRUE;
+
+        <span class="comment">// 2. WM_COMMAND to kliknięcia w przyciski WEWNĄTRZ tego małego okienka</span>
+        case WM_COMMAND:
+        {
+            int kliknieteID = LOWORD(wParam);
+
+            if (kliknieteID == IDC_PRZYCISK_OK)
+            {
+                <span class="comment">// Użytkownik kliknął Zapisz! </span>
+                <span class="comment">// Tutaj zapisujesz dane, a potem ZAMYKASZ DIALOG:</span>
+                EndDialog(hwndDlg, IDC_PRZYCISK_OK);
+                return TRUE;
+            }
+            else if (kliknieteID == IDC_PRZYCISK_ANULUJ)
+            {
+                <span class="comment">// Użytkownik rozmyślił się. Zamykamy z kodem błędu.</span>
+                EndDialog(hwndDlg, IDC_PRZYCISK_ANULUJ);
+                return TRUE;
+            }
+            break;
+        }
+    }
+
+    <span class="comment">// Jeśli nie dotykaliśmy tego komunikatu, zwracamy FALSE</span>
+    return FALSE;
+}</code></pre>
+
+<hr>
+
+<h2 id="dialogi-odpalanie">38. Dialogi dla opornych cz. 3: Wywołanie bestii</h2>
+<p>Mamy już szablon wyglądu z IKEI (.rc) i mamy napisany "mózg" dialogu. Teraz trzeba go wywołać z poziomu naszego głównego okna (np. gdy użytkownik kliknie "Ustawienia" w górnym menu).</p>
+
+<h3>Krok 1: Zamrażamy program i odpalamy dialog (w WindowProc)</h3>
+<pre><code><span class="comment">// To jest fragment Twojego GŁÓWNEGO WindowProc</span>
+case WM_COMMAND:
+{
+    int kliknieteID = LOWORD(wParam);
+
+    <span class="comment">// Ktoś kliknął w górnym menu opcję "Otwórz Ustawienia" (załóżmy, że ma ID 500)</span>
+    if (kliknieteID == 500)
+    {
+        <span class="comment">// ODPALAMY DIALOG! Program w tym miejscu się ZATRZYMUJE.</span>
+        <span class="comment">// Będzie stał w tej linijce kodu, dopóki użytkownik nie kliknie Zapisz lub Anuluj.</span>
+
+        INT_PTR wynik = DialogBoxW(
+            GetModuleHandle(nullptr),           <span class="comment">// Instancja programu</span>
+            MAKEINTRESOURCEW(IDD_MOJ_DIALOG),   <span class="comment">// Nazwa z pliku .rc (IKEA)</span>
+            hwnd,                               <span class="comment">// Kto jest rodzicem? (Nasze główne okno)</span>
+            UstawieniaDialogProc                <span class="comment">// Gdzie jest Mózg tego dialogu?</span>
+        );
+
+        <span class="comment">// Ufff, użytkownik zamknął dialog! Sprawdzamy, JAK go zamknął:</span>
+        if (wynik == IDC_PRZYCISK_OK) {
+            MessageBoxW(hwnd, L"Zapisano ustawienia!", L"Super", MB_OK);
+        }
+        else if (wynik == IDC_PRZYCISK_ANULUJ) {
+            MessageBoxW(hwnd, L"Nic nie zmieniono.", L"Szkoda", MB_OK);
+        }
+    }
+    return 0;
+}</code></pre>
 
 </body>
 </html>
