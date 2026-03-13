@@ -2363,7 +2363,112 @@ case WM_LBUTTONUP:
     return 0;
 }</code></pre>
 
+<hr>
 
+<h2 id="zadanie-tarcza-pro">44. Tarcza Wersja PRO: Przyciski i Subklasowanie (Brak Pitagorasa!)</h2>
+<p>To jest rozwiązanie dla zaawansowanych. Używamy prawdziwych przycisków (<code>BUTTON</code>). Zaletą jest to, że <strong>Windows sam sprawdza, czy użytkownik trafił w przycisk</strong>. Nie musimy liczyć odległości z twierdzenia Pitagorasa! Musimy tylko "ukraść" przyciskowi ruch myszki i wysłać go do okna głównego.</p>
+
+<h3>Krok 1: Wirus-Przechwytywacz (Subclassing)</h3>
+<p>Ten kod wrzucasz nad swoim głównym <code>WindowProc</code>. Zastępuje on domyślny "mózg" przycisku.</p>
+<pre><code>WNDPROC DomyslnyButtonProc; <span class="comment">// Pamięć na oryginalny mózg przycisku</span>
+
+LRESULT CALLBACK PrzechwytywaczPrzycisku(HWND hwndPrzycisku, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    <span class="comment">// Łapiemy tylko to, co dotyczy myszki</span>
+    if (uMsg == WM_LBUTTONDOWN || uMsg == WM_MOUSEMOVE || uMsg == WM_LBUTTONUP)
+    {
+        HWND oknoGlowne = GetParent(hwndPrzycisku);
+
+        <span class="comment">// Pobieramy współrzędne wewnątrz przycisku i przeliczamy je na współrzędne głównego okna!</span>
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        MapWindowPoints(hwndPrzycisku, oknoGlowne, &pt, 1);
+
+        <span class="comment">// Jeśli kliknięto, blokujemy myszkę na tym przycisku (żeby nie uciekła przy szybkim ruchu)</span>
+        if (uMsg == WM_LBUTTONDOWN) SetCapture(hwndPrzycisku);
+        if (uMsg == WM_LBUTTONUP) ReleaseCapture();
+
+        <span class="comment">// PRZEKAZUJEMY KOMUNIKAT DO OKNA GŁÓWNEGO!</span>
+        <span class="comment">// Okno główne dostanie gotowe współrzędne i odpali kręcenie tarczą.</span>
+        SendMessageW(oknoGlowne, uMsg, wParam, MAKELPARAM(pt.x, pt.y));
+
+        <span class="comment">// Zwracamy 0, zabraniając przyciskowi reagować po swojemu</span>
+        return 0;
+    }
+
+    <span class="comment">// Wszystko inne (np. rysowanie przycisku) niech przycisk robi sam</span>
+    return CallWindowProcW(DomyslnyButtonProc, hwndPrzycisku, uMsg, wParam, lParam);
+}</code></pre>
+
+<h3>Krok 2: Tworzenie i infekowanie przycisków (WM_CREATE)</h3>
+<pre><code>case WM_CREATE:
+{
+    for (int i = 0; i < 10; i++)
+    {
+        double kat = i * (6.283185 / 10.0);
+        int x = TARCZA_X + TARCZA_R * cos(kat) - 15;
+        int y = TARCZA_Y + TARCZA_R * sin(kat) - 15;
+        std::wstring napis = std::to_wstring(i);
+
+        <span class="comment">// Tworzymy prawdziwy przycisk!</span>
+        g_cyfry[i] = CreateWindowExW(
+            0, L"BUTTON", napis.c_str(),
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            x, y, 30, 30,
+            hwnd, (HMENU)(2000 + i),
+            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), nullptr
+        );
+
+        <span class="comment">// INFEKCJA: Podmieniamy mózg przycisku na nasz przechwytywacz</span>
+        DomyslnyButtonProc = (WNDPROC)SetWindowLongPtrW(g_cyfry[i], GWLP_WNDPROC, (LONG_PTR)PrzechwytywaczPrzycisku);
+    }
+    return 0;
+}</code></pre>
+
+<h3>Krok 3: Banalnie proste okno główne</h3>
+<p>Zobacz, jakie to teraz proste! Okno główne nie musi sprawdzać, czy w coś kliknąłeś. Jeśli dostaje <code>WM_LBUTTONDOWN</code> od naszego wirusa, to <strong>WIE</strong>, że przycisk został kliknięty. Od razu przechodzi do akcji.</p>
+<pre><code><span class="comment">// W GŁÓWNYM WindowProc:</span>
+
+case WM_LBUTTONDOWN:
+{
+    <span class="comment">// ZERO PITAGORASA! Wiemy, że użytkownik kliknął w przycisk, </span>
+    <span class="comment">// bo ten komunikat przesłał nam nasz przechwytywacz!</span>
+
+    int myszX = GET_X_LPARAM(lParam);
+    int myszY = GET_Y_LPARAM(lParam);
+
+    g_czyKrece = true;
+    g_katStartowy = atan2(myszY - TARCZA_Y, myszX - TARCZA_X);
+    return 0;
+}
+
+case WM_MOUSEMOVE:
+{
+    if (g_czyKrece)
+    {
+        int myszX = GET_X_LPARAM(lParam);
+        int myszY = GET_Y_LPARAM(lParam);
+
+        <span class="comment">// Czysta matematyka obrotu i przesuwanie przycisków!</span>
+        double katMyszki = atan2(myszY - TARCZA_Y, myszX - TARCZA_X);
+        g_calkowityKat += (katMyszki - g_katStartowy);
+        g_katStartowy = katMyszki;
+
+        for (int i = 0; i < 10; i++)
+        {
+            double nowyKat = i * (6.283185 / 10.0) + g_calkowityKat;
+            int noweX = TARCZA_X + TARCZA_R * cos(nowyKat) - 15;
+            int noweY = TARCZA_Y + TARCZA_R * sin(nowyKat) - 15;
+            SetWindowPos(g_cyfry[i], nullptr, noweX, noweY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
+    }
+    return 0;
+}
+
+case WM_LBUTTONUP:
+{
+    g_czyKrece = false; <span class="comment">// Koniec kręcenia</span>
+    return 0;
+}</code></pre>
 
 </body>
 </html>
