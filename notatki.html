@@ -2069,6 +2069,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <h3>Krok 1: Wymyślamy ID dla dialogu i przycisków</h3>
 <pre><code><span class="comment">// W pliku nagłówkowym lub na górze main.cpp</span>
+
 #define IDD_MOJ_DIALOG 900
 #define IDC_PRZYCISK_OK 901
 #define IDC_PRZYCISK_ANULUJ 902</code></pre>
@@ -2169,6 +2170,137 @@ case WM_COMMAND:
     }
     return 0;
 }</code></pre>
+
+
+<hr>
+
+<h2 id="zadanie-tarcza-1">40. ZADANIE SPECJALNE: Tarcza Telefonu cz. 1 (Generowanie)</h2>
+<p>Rozwiązanie problemu obracających się kontrolek polega na wykorzystaniu klasy <code>STATIC</code> bez flagi <code>SS_NOTIFY</code>. Dzięki temu okienka są widoczne, ale "przezroczyste" dla kliknięć myszką, co pozwala obsłużyć całą matematykę obrotu w jednym miejscu – w oknie głównym.</p>
+
+<h3>Krok 1: Zmienne globalne (Na samej górze pliku)</h3>
+<pre><code><span class="comment">// Pamięć naszej tarczy</span>
+HWND g_cyfry[10];           <span class="comment">// Tablica uchwytów do naszych kafelków</span>
+double g_calkowityKat = 0;  <span class="comment">// O ile radianów tarcza jest aktualnie obrócona</span>
+double g_katStartowy = 0;   <span class="comment">// Pomocnicza do mierzenia ruchu myszki</span>
+bool g_czyKrece = false;    <span class="comment">// Flaga trzymania tarczy</span>
+
+<span class="comment">// Stałe wymiary (łatwiej modyfikować)</span>
+const int TARCZA_X = 300;   <span class="comment">// Środek tarczy (X)</span>
+const int TARCZA_Y = 300;   <span class="comment">// Środek tarczy (Y)</span>
+const int TARCZA_R = 150;   <span class="comment">// Promień tarczy</span></code></pre>
+
+<h3>Krok 2: Produkcja kafelków (Wewnątrz WM_CREATE)</h3>
+<p>Używamy pętli i funkcji trygonometrycznych, aby rozłożyć 10 kafelków po okręgu. Ważne: dołącz <code>#include &lt;string&gt;</code> oraz <code>#include &lt;cmath&gt;</code> na górze pliku!</p>
+
+<pre><code>case WM_CREATE:
+{
+    for (int i = 0; i < 10; i++)
+    {
+        <span class="comment">// Wyliczamy kąt dla danej cyfry (2*PI to pełne koło, dzielimy na 10)</span>
+        double kat = i * (6.283185 / 10.0);
+
+        <span class="comment">// Wyliczamy pozycje X i Y. Odejmujemy 15, żeby wyśrodkować kafelek (ma wymiary 30x30)</span>
+        int x = TARCZA_X + TARCZA_R * cos(kat) - 15;
+        int y = TARCZA_Y + TARCZA_R * sin(kat) - 15;
+
+        <span class="comment">// Zamieniamy liczbę 'i' na tekst w formacie szerokim (L"0", L"1"...)</span>
+        std::wstring napis = std::to_wstring(i);
+
+        <span class="comment">// Tworzymy okienko! Brak SS_NOTIFY to klucz do sukcesu.</span>
+        g_cyfry[i] = CreateWindowExW(
+            WS_EX_CLIENTEDGE, L"STATIC", napis.c_str(),
+            WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
+            x, y, 30, 30,
+            hwnd, (HMENU)(2000 + i),
+            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), nullptr
+        );
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="zadanie-tarcza-2">41. ZADANIE SPECJALNE: Tarcza Telefonu cz. 2 (Hit Testing)</h2>
+<p>Ponieważ kafelki przepuszczają kliknięcia, główne okno musi samo zgadnąć, czy użytkownik trafił w cyfrę. Używamy do tego klasycznego <strong>Twierdzenia Pitagorasa</strong> (liczymy odległość kursora od środka każdej cyfry).</p>
+
+<pre><code>case WM_LBUTTONDOWN:
+{
+    int myszX = GET_X_LPARAM(lParam);
+    int myszY = GET_Y_LPARAM(lParam);
+
+    <span class="comment">// Przeszukujemy wszystkie 10 pozycji na tarczy</span>
+    for (int i = 0; i < 10; i++)
+    {
+        <span class="comment">// GDZIE aktualnie leży ta cyfra? (Bierzemy pod uwagę aktualny obrót tarczy!)</span>
+        double katAktualnyCyfry = i * (6.283185 / 10.0) + g_calkowityKat;
+        int srodekX = TARCZA_X + TARCZA_R * cos(katAktualnyCyfry);
+        int srodekY = TARCZA_Y + TARCZA_R * sin(katAktualnyCyfry);
+
+        <span class="comment">// Pitagoras: odległość myszki od środka tej cyfry</span>
+        double dystans = sqrt(pow(myszX - srodekX, 2) + pow(myszY - srodekY, 2));
+
+        <span class="comment">// Jeśli trafiliśmy (promień kafelka to ok. 15 pikseli)</span>
+        if (dystans <= 15.0)
+        {
+            g_czyKrece = true;
+            SetCapture(hwnd); <span class="comment">// Łapiemy myszkę!</span>
+
+            <span class="comment">// Zapisujemy, pod jakim kątem złapaliśmy tarczę (używamy funkcji atan2)</span>
+            g_katStartowy = atan2(myszY - TARCZA_Y, myszX - TARCZA_X);
+            break; <span class="comment">// Trafiliśmy, nie musimy sprawdzać reszty</span>
+        }
+    }
+    return 0;
+}</code></pre>
+
+<hr>
+
+<h2 id="zadanie-tarcza-3">42. ZADANIE SPECJALNE: Tarcza Telefonu cz. 3 (Kręcenie Karuzelą)</h2>
+<p>Mając zablokowaną myszkę i znając kąt startowy, możemy w czasie rzeczywistym aktualizować <code>g_calkowityKat</code> i fizycznie przesuwać kafelki używając ich uchwytów za pomocą funkcji <code>SetWindowPos</code>.</p>
+
+<pre><code>case WM_MOUSEMOVE:
+{
+    if (g_czyKrece)
+    {
+        int myszX = GET_X_LPARAM(lParam);
+        int myszY = GET_Y_LPARAM(lParam);
+
+        <span class="comment">// 1. Liczymy nowy kąt myszki i różnicę od ostatniego pomiaru</span>
+        double katMyszki = atan2(myszY - TARCZA_Y, myszX - TARCZA_X);
+        g_calkowityKat += (katMyszki - g_katStartowy);
+        g_katStartowy = katMyszki; <span class="comment">// Aktualizujemy na następny ruch!</span>
+
+        <span class="comment">// 2. Przesuwamy prawdziwe okienka!</span>
+        for (int i = 0; i < 10; i++)
+        {
+            <span class="comment">// Wyliczamy nową pozycję z uwzględnieniem nowego g_calkowityKat</span>
+            double nowyKat = i * (6.283185 / 10.0) + g_calkowityKat;
+            int noweX = TARCZA_X + TARCZA_R * cos(nowyKat) - 15;
+            int noweY = TARCZA_Y + TARCZA_R * sin(nowyKat) - 15;
+
+            <span class="comment">// Przesuwamy kafelek o indeksie 'i' na wyliczoną pozycję na okręgu</span>
+            SetWindowPos(g_cyfry[i], nullptr, noweX, noweY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
+    }
+    return 0;
+}
+
+case WM_LBUTTONUP:
+{
+    <span class="comment">// Puszczamy tarczę</span>
+    if (g_czyKrece)
+    {
+        ReleaseCapture();
+        g_czyKrece = false;
+    }
+    return 0;
+}</code></pre>
+
+<div class="important">
+  <strong>Genialny Inżynierski Tip:</strong><br>
+  Zwróć uwagę, że zmienne do wymiarów tarczy (<code>TARCZA_X</code>, <code>TARCZA_Y</code>, <code>TARCZA_R</code>) wyciągnęliśmy jako stałe na samą górę. Prowadzący na PWSG to uwielbiają. Jeśli prowadzący podejdzie i powie: <em>"A niech pan zrobi mniejszą tarczę i przesunie ją w lewy róg"</em>, zmieniasz tylko te trzy wartości na górze kodu, a reszta matematyki robi się sama!
+</div>
+
 
 </body>
 </html>
