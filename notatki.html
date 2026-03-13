@@ -2302,5 +2302,68 @@ case WM_LBUTTONUP:
 </div>
 
 
+<hr>
+
+<h2 id="zadanie-tarcza-4">43. ZADANIE SPECJALNE: Tarcza Zegara cz. 4 (Animacja Powrotu)</h2>
+<p>Aby tarcza zachowywała się jak prawdziwa (sprężynowa), po puszczeniu przycisku myszy musimy ją płynnie cofnąć do pozycji początkowej (kąt = 0). W WinAPI robimy to za pomocą <strong>SetTimer</strong> oraz komunikatu <strong>WM_TIMER</strong>.</p>
+
+<h3>Krok 1: Definicja ID Timera</h3>
+<pre><code><span class="comment">// Na samej górze pliku, tam gdzie inne #define</span>
+#define ID_TIMER_POWROT 1001</code></pre>
+
+<h3>Krok 2: Odpalenie Timera przy puszczeniu myszki</h3>
+<p>Podmieniamy nasz stary kod w <code>WM_LBUTTONUP</code>. Zamiast tylko puszczać tarczę, odpalamy stoper.</p>
+<pre><code>case WM_LBUTTONUP:
+{
+    if (g_czyKrece)
+    {
+        ReleaseCapture();        <span class="comment">// Oddajemy myszkę systemowi</span>
+        g_czyKrece = false;      <span class="comment">// Przestajemy kręcić ręcznie</span>
+
+        <span class="comment">// ODPALAMY SILNIK SPRĘŻYNY!</span>
+        <span class="comment">// Arg 1: Nasze okno</span>
+        <span class="comment">// Arg 2: Unikalne ID naszego zegara</span>
+        <span class="comment">// Arg 3: Co ile milisekund ma "tykać" (16ms to około 60 FPS)</span>
+        <span class="comment">// Arg 4: nullptr (nie używamy funkcji callback, chcemy dostać WM_TIMER)</span>
+        SetTimer(hwnd, ID_TIMER_POWROT, 16, nullptr);
+    }
+    return 0;
+}</code></pre>
+
+<h3>Krok 3: Reakcja na "tyknięcie" zegara (Nowy komunikat!)</h3>
+<p>Dodajemy zupełnie nowy <code>case</code> w naszym wielkim switchu. To jest klatka animacji, która wykonuje się automatycznie bez udziału użytkownika.</p>
+<pre><code>case WM_TIMER:
+{
+    <span class="comment">// Upewniamy się, że to tyka nasz timer powrotu tarczy</span>
+    if (wParam == ID_TIMER_POWROT)
+    {
+        <span class="comment">// 1. Zmniejszamy kąt! </span>
+        <span class="comment">// Mnożenie przez 0.85 daje fajny efekt fizyczny: </span>
+        <span class="comment">// na początku tarcza wraca szybko, a przy końcu powoli zwalnia.</span>
+        g_calkowityKat *= 0.85;
+
+        <span class="comment">// 2. Jeśli tarcza jest już praktycznie na miejscu (kąt bliski zeru),</span>
+        <span class="comment">// to zatrzymujemy ją idealnie na zerze i wyłączamy stoper (ZABIJAMY TIMER).</span>
+        if (abs(g_calkowityKat) < 0.01)
+        {
+            g_calkowityKat = 0.0;
+            KillTimer(hwnd, ID_TIMER_POWROT); <span class="comment">// Bardzo ważne, żeby timer nie działał w tle w nieskończoność!</span>
+        }
+
+        <span class="comment">// 3. Przeliczamy i przesuwamy okienka na nowe pozycje (dokładnie to samo co w MOUSEMOVE)</span>
+        for (int i = 0; i < 10; i++)
+        {
+            double nowyKat = i * (6.283185 / 10.0) + g_calkowityKat;
+            int noweX = TARCZA_X + TARCZA_R * cos(nowyKat) - 15;
+            int noweY = TARCZA_Y + TARCZA_R * sin(nowyKat) - 15;
+
+            SetWindowPos(g_cyfry[i], nullptr, noweX, noweY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
+    }
+    return 0;
+}</code></pre>
+
+
+
 </body>
 </html>
