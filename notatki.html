@@ -3254,6 +3254,64 @@ case WM_USER:
     return 0;
 }</code></pre>
 
+<hr>
+
+<h2 id="wybor-koloru">51. ZADANIE SPECJALNE: Okienko Wyboru Koloru (ChooseColor)</h2>
+<p>Aby pozwolić użytkownikowi wybrać kolor, nie piszemy własnych suwaków. Wywołujemy wbudowane w Windowsa okno <strong>ChooseColor</strong>. Zwraca ono wartość typu <code>COLORREF</code>, którą można rozbić na składowe RGB.</p>
+
+<div class="important">
+  <strong>⚠️ Inżynierski Tip (Tablica Kolorów)</strong><br>
+  Zwróć uwagę na tablicę <code>customColors</code>. System wymaga od nas podania tablicy 16 elementów na tzw. "Kolory niestandardowe". Musi ona być <strong>static</strong> (albo w strukturze w <code>GWLP_USERDATA</code>), żeby kolory, które użytkownik stworzy w palecie, nie znikały przy każdym kolejnym otwarciu okienka!
+</div>
+
+<h3>Kod wywołujący okienko (np. wewnątrz WM_COMMAND po kliknięciu przycisku):</h3>
+<pre><code>case WM_COMMAND:
+{
+    if (LOWORD(wParam) == ID_PRZYCISK_KOLOR) <span class="comment">// Przykładowe ID Twojego przycisku</span>
+    {
+        <span class="comment">// 1. Pamięć na 16 "Kolorów niestandardowych" (Zawsze musi być tablica 16 elementów!)</span>
+        static COLORREF customColors[16] = { 0 };
+
+        <span class="comment">// 2. Konfigurujemy strukturę okienka</span>
+        CHOOSECOLORW cc = { 0 };
+        cc.lStructSize = sizeof(CHOOSECOLORW);
+        cc.hwndOwner = hwnd;            <span class="comment">// Nasze główne okno jest rodzicem okienka wyboru</span>
+        cc.lpCustColors = customColors; <span class="comment">// Podpinamy tablicę na kolory niestandardowe</span>
+        cc.rgbResult = RGB(255, 0, 0);  <span class="comment">// Domyślnie zaznaczony kolor (np. Czerwony)</span>
+
+        <span class="comment">// Flagi: </span>
+        <span class="comment">// CC_FULLOPEN - od razu rozwija zaawansowany panel z paletą barw</span>
+        <span class="comment">// CC_RGBINIT  - każe okienku wystartować z kolorem podanym w rgbResult</span>
+        cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+        <span class="comment">// 3. Wywołujemy okienko! (Zablokuje ono nasz program, dopóki użytkownik nie kliknie OK lub Anuluj)</span>
+        if (ChooseColorW(&cc) == TRUE)
+        {
+            <span class="comment">// BINGO! Użytkownik kliknął OK. </span>
+            <span class="comment">// Wybrany kolor siedzi w zmiennej cc.rgbResult</span>
+            COLORREF wybranyKolor = cc.rgbResult;
+
+            <span class="comment">// --- CO MOŻESZ Z TYM ZROBIĆ? ---</span>
+
+            <span class="comment">// Opcja A: Zapisać do zmiennej i odświeżyć ekran, żeby np. namalować nowe tło</span>
+            <span class="comment">// stan->mojKolor = wybranyKolor; </span>
+            <span class="comment">// InvalidateRect(hwnd, NULL, TRUE);</span>
+
+            <span class="comment">// Opcja B: Wyciągnąć poszczególne składowe R, G, B !</span>
+            <span class="comment">// W WinAPI służą do tego specjalne makra GetRValue, GetGValue, GetBValue</span>
+            int r = GetRValue(wybranyKolor);
+            int g = GetGValue(wybranyKolor);
+            int b = GetBValue(wybranyKolor);
+
+            <span class="comment">// Rzucamy składowe na pasek tytułowy, żeby udowodnić prowadzącemu, że działa:</span>
+            std::wstring tekst = L"Wybrano kolor: R=" + std::to_wstring(r) +
+                                 L", G=" + std::to_wstring(g) +
+                                 L", B=" + std::to_wstring(b);
+            SetWindowTextW(hwnd, tekst.c_str());
+        }
+    }
+    return 0;
+}</code></pre>
 
 </body>
 </html>
