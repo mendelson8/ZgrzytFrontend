@@ -2622,6 +2622,581 @@ case WM_DESTROY:
     return 0;
 }</code></pre>
 
+<hr>
+
+<h2 id="zadania-cw-1">46. ROZWIĄZANIE: Zadanie 1 (Menu, Skróty klawiszowe i Modalny Dialog)</h2>
+<p>To zadanie sprawdza, czy potrafisz korzystać z <strong>Zasobów (Resources)</strong>. W WinAPI menu, skróty klawiszowe (akceleratory) i okna dialogowe trzyma się w osobnych plikach, a w kodzie C++ tylko się je "wczytuje". Zrobimy to krok po kroku, idiotoodpornie.</p>
+
+<h3>Krok 1: Definicje ID (Plik <code>resource.h</code>)</h3>
+<p>Zanim cokolwiek stworzymy, każda rzecz musi dostać swój unikalny "PESEL". Stwórz w Visual Studio nowy plik nagłówkowy o nazwie <code>resource.h</code> i wklej do niego to:</p>
+<pre><code><span class="comment">// --- resource.h ---</span>
+#define IDR_MENU1           101  <span class="comment">// ID naszego Menu</span>
+#define IDR_ACCELERATOR1    102  <span class="comment">// ID skrótów klawiszowych</span>
+#define IDI_ICON1           103  <span class="comment">// ID ikonki</span>
+#define IDD_DIALOG1         104  <span class="comment">// ID okna dialogowego</span>
+
+#define ID_PLIK_ZAMKNIJ     40001 <span class="comment">// ID opcji "Zamknij"</span>
+#define ID_POMOC_OPROGRAMIE 40002 <span class="comment">// ID opcji "O Programie"</span></code></pre>
+
+<h3>Krok 2: Plik zasobów z IKEI (Plik <code>Zasoby.rc</code>)</h3>
+<p>Teraz stworzymy instrukcję dla Windowsa, jak ma to wszystko wyglądać. Stwórz nowy plik o nazwie <code>Zasoby.rc</code> (Visual C++ -> Resource -> Resource File) i wklej ten surowy tekst. <strong>To zaoszczędzi Ci pół godziny wyklikiwania w edytorze wizualnym!</strong></p>
+<p><em>Pamiętaj: Do folderu z projektem musisz wrzucić dowolną ikonkę o nazwie <code>ikona.ico</code>.</em></p>
+<pre><code><span class="comment">// --- Zasoby.rc ---</span>
+#include "resource.h"
+#include &lt;windows.h&gt;
+
+<span class="comment">// 1. Dodajemy Ikonę</span>
+IDI_ICON1 ICON "ikona.ico"
+
+<span class="comment">// 2. Budujemy Menu</span>
+IDR_MENU1 MENU
+BEGIN
+    POPUP "Plik"
+    BEGIN
+        <span class="comment">// \t robi ładny odstęp dla skrótu</span>
+        MENUITEM "Zamknij\tCtrl+Q", ID_PLIK_ZAMKNIJ
+    END
+    POPUP "Pomoc"
+    BEGIN
+        MENUITEM "O Programie\tF1", ID_POMOC_OPROGRAMIE
+    END
+END
+
+<span class="comment">// 3. Definiujemy Skróty Klawiszowe (Akceleratory)</span>
+IDR_ACCELERATOR1 ACCELERATORS
+BEGIN
+    <span class="comment">// Klawisz, ID komendy, Typ</span>
+    "Q", ID_PLIK_ZAMKNIJ, VIRTKEY, CONTROL
+    VK_F1, ID_POMOC_OPROGRAMIE, VIRTKEY
+END
+
+<span class="comment">// 4. Szablon Okna Dialogowego (Zwymiarowane w specjalnych jednostkach DLU)</span>
+IDD_DIALOG1 DIALOGEX 0, 0, 200, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "O Programie"
+BEGIN
+    CTEXT           "Program ""Przykładowe okno dialogowe""", IDC_STATIC, 10, 20, 180, 20
+    DEFPUSHBUTTON   "OK", IDOK, 75, 70, 50, 14
+END</code></pre>
+
+<h3>Krok 3: Ożywiamy to w C++ (Plik <code>main.cpp</code>)</h3>
+<p>Mamy już przygotowane zasoby. Teraz musimy je załadować w naszym głównym kodzie. Oto kompletny kod, w którym zmodyfikowano najważniejsze rzeczy (czytaj komentarze!).</p>
+
+<pre><code>#include &lt;windows.h&gt;
+#include "resource.h" <span class="comment">// MUSIMY dołączyć nasze definicje!</span>
+
+<span class="comment">// -----------------------------------------------------------------</span>
+<span class="comment">// MÓZG OKNA DIALOGOWEGO (Zupełnie nowa procedura!)</span>
+<span class="comment">// -----------------------------------------------------------------</span>
+INT_PTR CALLBACK DialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_COMMAND)
+    {
+        <span class="comment">// Zamykamy dialog, gdy ktoś kliknie przycisk OK albo Krzyżyk</span>
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+        }
+    }
+    return FALSE; <span class="comment">// W dialogach zwracamy FALSE, jeśli nic nie zrobiliśmy</span>
+}
+
+<span class="comment">// -----------------------------------------------------------------</span>
+<span class="comment">// MÓZG GŁÓWNEGO OKNA</span>
+<span class="comment">// -----------------------------------------------------------------</span>
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+        case WM_CREATE:
+        {
+            <span class="comment">// ZADANIE: Załaduj Menu z zasobów!</span>
+            HMENU hMenu = LoadMenuW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDR_MENU1));
+            SetMenu(hwnd, hMenu);
+
+            <span class="comment">// ZADANIE: Załaduj Ikonę z zasobów na pasek tytułowy!</span>
+            HICON hIkona = (HICON)LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_ICON1), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIkona);
+            SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIkona);
+
+            return 0;
+        }
+
+        case WM_COMMAND:
+        {
+            <span class="comment">// Tu wpadają kliknięcia w Menu ORAZ wciśnięcia skrótów klawiszowych!</span>
+            int id = LOWORD(wParam);
+
+            if (id == ID_PLIK_ZAMKNIJ)
+            {
+                <span class="comment">// ZADANIE: Wyłącz program</span>
+                PostQuitMessage(0);
+            }
+            else if (id == ID_POMOC_OPROGRAMIE)
+            {
+                <span class="comment">// ZADANIE: Odpal okno dialogowe w trybie MODALNYM</span>
+                <span class="comment">// Tryb modalny blokuje okno główne, dopóki użytkownik nie zamknie dialogu!</span>
+                DialogBoxW(
+                    GetModuleHandle(NULL),
+                    MAKEINTRESOURCEW(IDD_DIALOG1), <span class="comment">// ID z pliku .rc</span>
+                    hwnd,                          <span class="comment">// Kto jest rodzicem? (Nasze główne okno)</span>
+                    DialogProc                     <span class="comment">// Mózg okna dialogowego</span>
+                );
+            }
+            return 0;
+        }
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+<span class="comment">// -----------------------------------------------------------------</span>
+<span class="comment">// SERCE PROGRAMU (WinMain)</span>
+<span class="comment">// -----------------------------------------------------------------</span>
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+{
+    WNDCLASSW wc = { };
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = L"Zadanie1Klasa";
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+
+    RegisterClassW(&wc);
+
+    HWND hwnd = CreateWindowExW(
+        0, L"Zadanie1Klasa", L"Zadanie 1 - Akceleratory",
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
+        NULL, NULL, hInstance, NULL
+    );
+
+    ShowWindow(hwnd, nCmdShow);
+
+    <span class="comment">// ZADANIE: Załaduj tabelę skrótów klawiszowych (Akceleratory) z zasobów!</span>
+    HACCEL hAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(IDR_ACCELERATOR1));
+
+    MSG msg = { };
+
+    <span class="comment">// ZADANIE: Zmodyfikuj pętlę komunikatów!</span>
+    <span class="comment">// Jeśli użytkownik wciśnie klawisz, funkcja TranslateAcceleratorW przechwyci go, </span>
+    <span class="comment">// sprawdzi czy to np. Ctrl+Q i wyśle odpowiedni WM_COMMAND.</span>
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        <span class="comment">// Jeśli TO NIE JEST skrót klawiszowy, to przetwórz normalnie</span>
+        if (!TranslateAcceleratorW(hwnd, hAccel, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+    return 0;
+}</code></pre>
+
+<div class="important">
+  <strong>Podsumowanie "dla opornych" - Co tu się wydarzyło?</strong><br>
+  1. Akceleratory to pułapka! Same definicje nic nie dadzą. Musisz załadować je złączeniu <code>LoadAcceleratorsW</code> w <code>WinMain</code> i <strong>zmienić główną pętlę while</strong> używając <code>TranslateAcceleratorW</code>. Inaczej Windows potraktuje Ctrl+Q jak zwykłe literki.<br>
+  2. Kiedy wciśniesz <code>F1</code>, pętla to zauważa i wysyła do Twojego okna komendę <code>ID_POMOC_OPROGRAMIE</code>. System zachowuje się dokładnie tak, jakbyś kliknął to myszką w górnym menu!<br>
+  3. Okno dialogowe stworzone przez <code>DialogBoxW</code> jest tzw. "modalne". Oznacza to, że posiada wewnątrz własną nieskończoną pętlę <code>while</code>, która całkowicie "zamraża" główną pętlę z WinMain, dopóki nie klikniesz przycisku "OK".
+</div>
+
+<hr>
+
+<h2 id="zadania-cw-2">47. ROZWIĄZANIE: Zadanie 2 (Niemodalne Okno Dialogowe)</h2>
+<p>Tryb niemodalny oznacza, że okno "O Programie" może być otwarte, a Ty nadal możesz używać głównego okna programu. Wymaga to fundamentalnej zmiany w tym, jak traktujemy to okno: <strong>już go nie niszczymy, tylko ukrywamy!</strong></p>
+
+<h3>Krok 1: Zmienna globalna na uchwyt dialogu</h3>
+<p>Ponieważ okno dialogowe będzie sobie żyło w tle (nawet jak je ukryjemy), musimy gdzieś zapamiętać jego uchwyt (PESEL), żeby nasza główna pętla w <code>WinMain</code> wiedziała o jego istnieniu. Dodaj to na samej górze pliku <code>main.cpp</code> (pod include'ami):</p>
+<pre><code><span class="comment">// Pamięć na nasze niemodalne okno dialogowe</span>
+HWND g_hDlg = NULL;</code></pre>
+
+<h3>Krok 2: Modyfikacja Mózgu Dialogu (Ukrywanie zamiast zabijania)</h3>
+<p>W poprzednim zadaniu używaliśmy <code>EndDialog</code>. Ta funkcja to morderca – całkowicie niszczy okno. Skoro nasze okno ma być niemodalne i dać się otworzyć ponownie, musimy po prostu wyłączyć mu widoczność funkją <code>ShowWindow(..., SW_HIDE)</code>.</p>
+<pre><code>INT_PTR CALLBACK DialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_COMMAND)
+    {
+        <span class="comment">// Jeśli kliknięto OK lub Krzyżyk...</span>
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            <span class="comment">// ZADANIE 2: TYLKO UKRYWAMY OKNO! Nie używamy już EndDialog!</span>
+            ShowWindow(hDlg, SW_HIDE);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}</code></pre>
+
+<h3>Krok 3: Modyfikacja Głównego Okna (Tworzenie vs Pokazywanie)</h3>
+<p>Zamiast funkcji <code>DialogBoxW</code> (która jest modalna i blokuje program), używamy <code>CreateDialogW</code>, która natychmiast zwraca uchwyt i pozwala programowi działać dalej.</p>
+<pre><code><span class="comment">// Fragment wewnątrz WindowProc -> WM_COMMAND:</span>
+
+else if (id == ID_POMOC_OPROGRAMIE)
+{
+    <span class="comment">// ZADANIE 2: Logika tworzenia lub pokazywania</span>
+    if (g_hDlg == NULL)
+    {
+        <span class="comment">// 1. Okno jeszcze nie istnieje? TWORZYMY JE RAZ.</span>
+        HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE);
+
+        <span class="comment">// CreateDialogW nie blokuje programu! Zwraca HWND i leci dalej.</span>
+        g_hDlg = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_DIALOG1), hwnd, DialogProc);
+
+        <span class="comment">// Od razu je pokazujemy</span>
+        ShowWindow(g_hDlg, SW_SHOW);
+    }
+    else
+    {
+        <span class="comment">// 2. Okno już istnieje w pamięci? (Tylko je ukryliśmy wcześniej)</span>
+        ShowWindow(g_hDlg, SW_SHOW); <span class="comment">// Pokaż je znowu</span>
+        SetActiveWindow(g_hDlg);     <span class="comment">// Wyciągnij na wierzch, jeśli było pod spodem</span>
+    }
+}</code></pre>
+
+<h3>Krok 4: Hackowanie Głównej Pętli (IsDialogMessageW)</h3>
+<p>Skoro okno dialogowe żyje równolegle z głównym oknem, główna pętla komunikatów musi wiedzieć, kiedy wysłać np. wciśnięcie klawisza <code>TAB</code> albo <code>ENTER</code> do dialogu, a kiedy do okna głównego. Służy do tego <code>IsDialogMessageW</code>.</p>
+<pre><code><span class="comment">// Podmień całą pętlę while w funkcji WinMain na tę:</span>
+
+while (GetMessage(&msg, NULL, 0, 0))
+{
+    <span class="comment">// 1. NAJPIERW: Czy to komunikat dla naszego okna dialogowego? </span>
+    <span class="comment">// (Np. nawigacja klawiszami TAB / Strzałki po przyciskach w oknie)</span>
+    <span class="comment">// Sprawdzamy czy g_hDlg istnieje, żeby program nie wybuchł na starcie.</span>
+    if (g_hDlg == NULL || !IsDialogMessageW(g_hDlg, &msg))
+    {
+        <span class="comment">// 2. POTEM: Czy to skrót klawiszowy? (Nasz Ctrl+Q)</span>
+        if (!TranslateAcceleratorW(hwnd, hAccel, &msg))
+        {
+            <span class="comment">// 3. NA KOŃCU: Zwykłe komunikaty (myszka, rysowanie okna)</span>
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+}</code></pre>
+
+<div class="important">
+  <strong>Podsumowanie Inżynierskie:</strong><br>
+  Różnica między dialogiem modalnym a niemodalnym leży wyłącznie w sposobie jego wywołania i pętli komunikatów. <br>
+  - <strong>Modalne:</strong> Używasz <code>DialogBoxW</code>, zamykasz przez <code>EndDialog</code>. System tworzy w ukryciu małą, własną pętlę <code>while</code>, która kradnie 100% uwagi użytkownika.<br>
+  - <strong>Niemodalne:</strong> Używasz <code>CreateDialogW</code>, ukrywasz przez <code>ShowWindow(..., SW_HIDE)</code>. Okno dzieli jedną, dużą pętlę <code>while</code> w <code>WinMain</code> z resztą programu. Wymaga to funkcji <code>IsDialogMessageW</code> do ręcznego kierowania "ruchu drogowego" komunikatów klawiatury.
+</div>
+
+<hr>
+
+<h2 id="zadania-cw-3">48. ROZWIĄZANIE: Zadanie 3 (Własna Kontrolka Up-Down)</h2>
+<p>To zadanie to mistrzostwo inżynierii WinAPI. Zamiast używać gotowych klocków, tworzymy własny! Rejestrujemy nową klasę okna (np. <code>"MojaKontrolkaUpDown"</code>), która wewnątrz siebie zarządza polem tekstowym i dwoma przyciskami. Okno główne tylko wysyła i odbiera komunikaty <code>WM_USER</code>.</p>
+
+<h3>Krok 1: Definicje i Struktura Wewnętrzna Kontrolki</h3>
+<p>Dodaj to na samej górze pliku <code>main.cpp</code>. Kontrolka potrzebuje flagi, żeby wiedzieć, czy tekst zmienił się przez wpisanie z klawiatury, czy kliknięcie przycisku.</p>
+<pre><code><span class="comment">// Identyfikatory wewnętrznych klocków naszej kontrolki</span>
+#define ID_WEW_EDIT  1
+#define ID_WEW_UP    2
+#define ID_WEW_DOWN  3
+
+<span class="comment">// Pamięć naszej kontrolki (ukryjemy ją w kieszeni GWLP_USERDATA)</span>
+struct UpDownStan {
+    bool programowaZmiana = false; <span class="comment">// Flaga, by uniknąć pętli komunikatów</span>
+};</code></pre>
+
+<h3>Krok 2: Mózg Naszej Kontrolki (Custom Window Procedure)</h3>
+<p>To jest serce zadania. Ta funkcja obsługuje tylko i wyłącznie wnętrze naszej nowej kontrolki.</p>
+<pre><code>LRESULT CALLBACK UpDownProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+        case WM_CREATE:
+        {
+            <span class="comment">// 1. Rezerwujemy pamięć na stan i chowamy w kieszeni</span>
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)new UpDownStan());
+
+            <span class="comment">// 2. Tworzymy wewnętrzne klocki: Edit i dwa Przyciski</span>
+            <span class="comment">// ES_NUMBER wymusza wpisywanie tylko cyfr!</span>
+            CreateWindowExW(0, L"EDIT", L"0", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+                            0, 0, 0, 0, hwnd, (HMENU)ID_WEW_EDIT, NULL, NULL);
+
+            CreateWindowExW(0, L"BUTTON", L"^", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                            0, 0, 0, 0, hwnd, (HMENU)ID_WEW_UP, NULL, NULL);
+
+            CreateWindowExW(0, L"BUTTON", L"v", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                            0, 0, 0, 0, hwnd, (HMENU)ID_WEW_DOWN, NULL, NULL);
+            return 0;
+        }
+
+        case WM_WINDOWPOSCHANGING:
+        {
+            <span class="comment">// ZADANIE: Zablokuj wysokość na 32px i wymuś minimalną szerokość 64px</span>
+            WINDOWPOS* pos = (WINDOWPOS*)lParam;
+            pos->cy = 32; <span class="comment">// Zawsze 32 piksele wysokości</span>
+            if (pos->cx < 64) pos->cx = 64; <span class="comment">// Minimum 64 piksele szerokości</span>
+            return 0;
+        }
+
+        case WM_WINDOWPOSCHANGED:
+        {
+            <span class="comment">// ZADANIE: Rozmieść klocki wewnątrz po każdej zmianie rozmiaru</span>
+            WINDOWPOS* pos = (WINDOWPOS*)lParam;
+            int szer = pos->cx;
+            int wys = pos->cy;
+
+            HWND hEdit = GetDlgItem(hwnd, ID_WEW_EDIT);
+            HWND hUp   = GetDlgItem(hwnd, ID_WEW_UP);
+            HWND hDown = GetDlgItem(hwnd, ID_WEW_DOWN);
+
+            <span class="comment">// Pole Edit zajmuje całą lewą stronę (zostawia 16px na guziki)</span>
+            SetWindowPos(hEdit, NULL, 0, 0, szer - 16, wys, SWP_NOZORDER);
+            <span class="comment">// Górny guzik (16x16) z prawej</span>
+            SetWindowPos(hUp,   NULL, szer - 16, 0, 16, 16, SWP_NOZORDER);
+            <span class="comment">// Dolny guzik (16x16) z prawej pod górnym</span>
+            SetWindowPos(hDown, NULL, szer - 16, 16, 16, 16, SWP_NOZORDER);
+            return 0;
+        }
+
+        case WM_COMMAND:
+        {
+            int idAkcji = LOWORD(wParam);
+            int typAkcji = HIWORD(wParam);
+            UpDownStan* stan = (UpDownStan*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+
+            if (idAkcji == ID_WEW_UP && typAkcji == BN_CLICKED)
+            {
+                <span class="comment">// Pobieramy liczbę, dodajemy 1 i wysyłamy do rodzica z lParam = 1</span>
+                int val = GetDlgItemInt(hwnd, ID_WEW_EDIT, NULL, FALSE);
+
+                stan->programowaZmiana = true; <span class="comment">// Usypiamy na chwilę reagowanie na zmianę tekstu</span>
+                SetDlgItemInt(hwnd, ID_WEW_EDIT, val + 1, FALSE);
+                stan->programowaZmiana = false;
+
+                SendMessageW(GetParent(hwnd), WM_USER, val + 1, 1);
+            }
+            else if (idAkcji == ID_WEW_DOWN && typAkcji == BN_CLICKED)
+            {
+                <span class="comment">// Pobieramy liczbę, odejmujemy 1 i wysyłamy z lParam = -1</span>
+                int val = GetDlgItemInt(hwnd, ID_WEW_EDIT, NULL, FALSE);
+
+                stan->programowaZmiana = true;
+                SetDlgItemInt(hwnd, ID_WEW_EDIT, val - 1, FALSE);
+                stan->programowaZmiana = false;
+
+                SendMessageW(GetParent(hwnd), WM_USER, val - 1, -1);
+            }
+            else if (idAkcji == ID_WEW_EDIT && typAkcji == EN_CHANGE)
+            {
+                <span class="comment">// Zmiana tekstu przez wpisanie cyfry (Wysyłamy z lParam = 0)</span>
+                <span class="comment">// Reagujemy tylko, jeśli zmienił to człowiek, a nie nasz kod powyżej!</span>
+                if (!stan->programowaZmiana)
+                {
+                    int val = GetDlgItemInt(hwnd, ID_WEW_EDIT, NULL, FALSE);
+                    SendMessageW(GetParent(hwnd), WM_USER, val, 0);
+                }
+            }
+            return 0;
+        }
+
+        case WM_USER + 1:
+        {
+            <span class="comment">// ZADANIE: Ktoś z zewnątrz każe nam zmienić wartość na nową (wParam)</span>
+            int nowaWartosc = (int)wParam;
+            UpDownStan* stan = (UpDownStan*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+
+            stan->programowaZmiana = true;
+            SetDlgItemInt(hwnd, ID_WEW_EDIT, nowaWartosc, FALSE);
+            stan->programowaZmiana = false;
+
+            <span class="comment">// Odpowiadamy do rodzica, że wykonano polecenie</span>
+            SendMessageW(GetParent(hwnd), WM_USER, nowaWartosc, 0);
+            return 0;
+        }
+
+        case WM_DESTROY:
+        {
+            <span class="comment">// Sprzątamy po sobie</span>
+            UpDownStan* stan = (UpDownStan*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+            delete stan;
+            return 0;
+        }
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}</code></pre>
+
+<h3>Krok 3: Demonstracja w Głównym Oknie (Pętla WinMain i WindowProc)</h3>
+<p>Teraz używamy naszej nowej zabawki w głównym oknie aplikacji.</p>
+<pre><code><span class="comment">// UWAGA: Wewnątrz funkcji WinMain, PRZED rejestracją głównego okna, </span>
+<span class="comment">// musimy zarejestrować klasę naszej nowej kontrolki!</span>
+
+<span class="comment">// --- FRAGMENT DO WINMAIN: ---</span>
+WNDCLASSW wcUpDn = { };
+wcUpDn.lpfnWndProc = UpDownProc;
+wcUpDn.hInstance = hInstance;
+wcUpDn.lpszClassName = L"MojaKontrolkaUpDown";
+RegisterClassW(&wcUpDn);
+<span class="comment">// ----------------------------</span>
+
+
+<span class="comment">// --- FRAGMENTY DO GŁÓWNEGO WINDOWPROC: ---</span>
+
+<span class="comment">// Identyfikator dla naszego dziecka na formie</span>
+#define ID_MOJ_UPDOWN 500
+
+case WM_CREATE:
+{
+    <span class="comment">// 1. Tworzymy naszą nową kontrolkę w głównym oknie!</span>
+    <span class="comment">// Zobacz, używamy wymyślonej przed chwilą nazwy klasy: "MojaKontrolkaUpDown"</span>
+    HWND hUpDown = CreateWindowExW(
+        0, L"MojaKontrolkaUpDown", L"",
+        WS_CHILD | WS_VISIBLE,
+        50, 50, 100, 32, <span class="comment">// x, y, szerokość, wysokość</span>
+        hwnd, (HMENU)ID_MOJ_UPDOWN,
+        (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL
+    );
+
+    <span class="comment">// 2. Ustawiamy rok urodzenia wysyłając WM_USER + 1</span>
+    <span class="comment">// Przekazujemy np. 2000 w wParam.</span>
+    SendMessageW(hUpDown, WM_USER + 1, 2000, 0);
+
+    return 0;
+}
+
+case WM_USER:
+{
+    <span class="comment">// 3. Nasza kontrolka krzyczy do nas, że zmieniła się wartość!</span>
+    int nowaWartosc = (int)wParam;
+    int coSieStalo = (int)lParam; <span class="comment">// 1 (w górę), -1 (w dół), 0 (klawiatura)</span>
+
+    <span class="comment">// Sklejamy napis i wrzucamy na pasek tytułowy</span>
+    std::wstring tytul = L"Wartość kontrolki: " + std::to_wstring(nowaWartosc) +
+                         L" (Źródło: " + std::to_wstring(coSieStalo) + L")";
+
+    SetWindowTextW(hwnd, tytul.c_str());
+    return 0;
+}
+</code></pre>
+
+<div class="step-box">
+  <strong>💡 Sekret zadania: SetDlgItemInt kontra EN_CHANGE</strong><br>
+  Zauważ, jak sprytnie użyliśmy zmiennej <code>programowaZmiana</code>. Dlaczego? Kiedy w kodzie każemy polu tekstowemu się zmienić (funkcją <code>SetDlgItemInt</code>), pole to z automatu krzyczy <code>EN_CHANGE</code>, myśląc, że to użytkownik wcisnął klawisz. Gdybyśmy tego nie zablokowali flagą <code>programowaZmiana = true</code>, po kliknięciu przycisku "w górę", okno główne dostałoby DWIE wiadomości <code>WM_USER</code> zamiast jednej! Taka wpadka często kosztuje utratę punktów u zaawansowanych prowadzących.
+</div>
+
+<hr>
+
+<h2 id="zadania-cw-4">49. ROZWIĄZANIE: Zadanie 4 (Śledzenie Myszki - TrackMouseEvent)</h2>
+<p>To zadanie uczy nas korzystania z <code>TrackMouseEvent</code>. Ważna uwaga: ten "radar" jest jednorazowy! Jeśli wyłapie ucieczkę myszki (LEAVE) albo jej zatrzymanie (HOVER), radar się wyłącza i trzeba go "uzbroić" ponownie przy kolejnym ruchu myszki.</p>
+
+<div class="important">
+  <strong>⚠️ Pułapka prowadzącego (Literówka)</strong><br>
+  W treści zadania prowadzący wpisał <code>WM_GETCURSOR</code>. Taki komunikat <strong>nie istnieje</strong> w standardowym WinAPI! Komunikat odpowiedzialny za zmianę kursora podczas ruchu to <strong><code>WM_SETCURSOR</code></strong>. Użyjemy go, żeby ustawić klepsydrę.
+</div>
+
+<h3>Krok 1: Pamięć radaru (Zmienne w procedurze okna)</h3>
+<p>Żeby nie uzbrajać radaru milion razy na sekundę przy każdym najmniejszym drgnięciu myszki, potrzebujemy dwóch flag. Dodaj je na samej górze funkcji <code>WindowProc</code> jako zmienne statyczne (pamiętają wartość między wywołaniami).</p>
+
+<pre><code>LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    <span class="comment">// Pamięć stanu myszki (static sprawia, że zachowują się jak globalne, ale są zamknięte w funkcji)</span>
+    static bool czySledze = false;
+    static bool czyHover = false;
+
+    switch (msg)
+    {</code></pre>
+
+<h3>Krok 2: Myszka wjeżdża na okno i się rusza (Uzbrajanie radaru)</h3>
+<p>Łapiemy zarówno ruch w środku okna (<code>WM_MOUSEMOVE</code>) jak i na pasku tytułowym (<code>WM_NCMOUSEMOVE</code> - Non-Client).</p>
+
+<pre><code>        case WM_MOUSEMOVE:
+        case WM_NCMOUSEMOVE:
+        {
+            <span class="comment">// Jeśli myszka ruszyła się po tym jak stała w miejscu, wyłączamy tryb HOVER</span>
+            if (czyHover)
+            {
+                czyHover = false;
+            }
+
+            <span class="comment">// Jeśli radar nie jest włączony, włączamy go!</span>
+            if (!czySledze)
+            {
+                czySledze = true;
+
+                <span class="comment">// Ustawiamy wesoły tytuł (myszka jest z nami!)</span>
+                SetWindowTextW(hwnd, L":-)");
+
+                <span class="comment">// Konfiguracja radaru</span>
+                TRACKMOUSEEVENT tme = { 0 };
+                tme.cbSize = sizeof(TRACKMOUSEEVENT);
+                tme.dwFlags = TME_HOVER | TME_LEAVE; <span class="comment">// Chcemy wiedzieć o zatrzymaniu i ucieczce</span>
+
+                <span class="comment">// Jeśli myszka jest na pasku tytułowym, musimy dodać specjalną flagę</span>
+                if (msg == WM_NCMOUSEMOVE) {
+                    tme.dwFlags |= TME_NONCLIENT;
+                }
+
+                tme.hwndTrack = hwnd;
+                tme.dwHoverTime = HOVER_DEFAULT; <span class="comment">// Domyślny czas Windowsa (ok. 400ms)</span>
+
+                <span class="comment">// Odpalamy radar!</span>
+                TrackMouseEvent(&tme);
+            }
+
+            <span class="comment">// Zwracamy DefWindowProc, żeby system mógł normalnie obsłużyć ruch!</span>
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }</code></pre>
+
+<h3>Krok 3: Myszka się zatrzymuje (HOVER)</h3>
+<p>Kiedy radar wykryje brak ruchu przez 400ms, wysyła nam ten komunikat.</p>
+
+<pre><code>        case WM_MOUSEHOVER:
+        case WM_NCMOUSEHOVER:
+        {
+            <span class="comment">// Włączamy flagę HOVER. System za ułamek sekundy zapyta nas o kursor (WM_SETCURSOR)</span>
+            czyHover = true;
+
+            <span class="comment">// UWAGA: Komunikat HOVER wyłącza radar! </span>
+            <span class="comment">// Musimy go odpalić jeszcze raz, żeby nie przegapić ucieczki myszki (LEAVE)</span>
+            TRACKMOUSEEVENT tme = { 0 };
+            tme.cbSize = sizeof(TRACKMOUSEEVENT);
+            tme.dwFlags = TME_HOVER | TME_LEAVE;
+            if (msg == WM_NCMOUSEHOVER) tme.dwFlags |= TME_NONCLIENT;
+            tme.hwndTrack = hwnd;
+            tme.dwHoverTime = HOVER_DEFAULT;
+            TrackMouseEvent(&tme);
+
+            return 0;
+        }</code></pre>
+
+<h3>Krok 4: Myszka ucieka z okna (LEAVE)</h3>
+<p>Wreszcie wiemy, że nas opuściła!</p>
+
+<pre><code>        case WM_MOUSELEAVE:
+        case WM_NCMOUSELEAVE:
+        {
+            <span class="comment">// Smutna minka</span>
+            SetWindowTextW(hwnd, L";-(");
+
+            <span class="comment">// Radar się sam wyłączył po ucieczce. Resetujemy nasze flagi.</span>
+            czySledze = false;
+            czyHover = false;
+
+            return 0;
+        }</code></pre>
+
+<h3>Krok 5: Zmiana wyglądu kursora (WM_SETCURSOR)</h3>
+<p>Zawsze, gdy myszka jest w oknie, Windows non-stop spamuje nas pytaniem <code>WM_SETCURSOR</code> ("Jakiego obrazka mam użyć do kursora?"). To idealne miejsce na wymianę strzałki na klepsydrę.</p>
+
+<pre><code>        case WM_SETCURSOR:
+        {
+            <span class="comment">// Jeśli jesteśmy w trybie zatrzymania (HOVER), wymuszamy klepsydrę!</span>
+            if (czyHover)
+            {
+                <span class="comment">// IDC_WAIT to standardowa windowsowa klepsydra / kółko ładowania</span>
+                SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+                <span class="comment">// Zwracamy TRUE, co oznacza: "Dzięki Windows, ja się tym zająłem. Nie zmieniaj już tego."</span>
+                return TRUE;
+            }
+
+            <span class="comment">// Jeśli nie ma HOVER, puszczamy to dalej - system sam ustawi strzałkę.</span>
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }</code></pre>
 
 </body>
 </html>
