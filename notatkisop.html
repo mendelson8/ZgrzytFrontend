@@ -154,8 +154,8 @@
 
         if (ftruncate(shm_fd, 4096) == -1) ERR("ftruncate");
 
-        void* ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-        if (ptr == MAP_FAILED) ERR("mmap");
+        int* data = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+        if (data == MAP_FAILED) ERR("mmap");
 
         if (close(shm_fd) == -1) ERR("close");
 
@@ -163,7 +163,7 @@
 
         // ================= 2. SPRZĄTANIE (DESTROY) =================
 
-        if (munmap(ptr, 4096) == -1) ERR("munmap");
+        if (munmap(data, 4096) == -1) ERR("munmap");
 
         if (shm_unlink("/moj_kanal") == -1) ERR("shm_unlink");</div>
       <pre><span class="keyword">#include</span> &lt;fcntl.h&gt;
@@ -434,10 +434,8 @@
 
           // 1. Zmapowanie pamięci na tablicę (np. 3 inty)
           size_t mem_size = NUM_CHILDREN * sizeof(int);
-          void* ptr = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-          if (ptr == MAP_FAILED) ERR("mmap");
-
-          int* data = (int*)ptr;
+          int* data = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+          if (data == MAP_FAILED) ERR("mmap");
 
           // 2. Pętla tworząca procesy potomne
           for (int i = 0; i < NUM_CHILDREN; i++) {
@@ -450,9 +448,9 @@
           data[i] = (i + 1) * 10;
 
           // Zsynchronizowanie pamięci (wymuszenie widoczności zmian)
-          if (msync(ptr, mem_size, MS_SYNC) == -1) ERR("msync");
+          if (msync(data, mem_size, MS_SYNC) == -1) ERR("msync");
 
-          if (munmap(ptr, mem_size) == -1) ERR("munmap child");
+          if (munmap(data, mem_size) == -1) ERR("munmap child");
           return 0; // BARDZO WAŻNE: Potomek musi zakończyć działanie, by nie wchodzić dalej w pętlę fork!
           }
           }
@@ -493,7 +491,7 @@
         <span class="keyword">if</span> (<span class="func">msync</span>(ptr, mem_size, MS_SYNC) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"msync"</span>);
 
         <span class="keyword">if</span> (<span class="func">munmap</span>(ptr, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);
-        <span class="keyword">return</span> <span class="string">0</span>; <span class="comment">// Blokada przed tworzeniem "bąbli" forków</span>
+        <span class="keyword">return</span>0;
     }
 }
 
