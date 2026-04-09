@@ -416,5 +416,71 @@
     });
   }
 </script>
+<section id="mutex_robust">
+  <h2>5. Mutex Robust (Odporny na awarie)</h2>
+  <p>Zapobiega zakleszczeniu całego systemu, gdy proces trzymający blokadę zginie (SEGFAULT, kill -9). Wymaga obsługi błędu <code>EOWNERDEAD</code>.</p>
+
+  <div class="code-container">
+    <div class="code-header">
+      <span>mutex_robust.c</span>
+      <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+    </div>
+    <div class="raw-code">#include <pthread.h>
+      #include <errno.h>
+      #include "macros.h"
+
+      pthread_mutex_t* mtx = (pthread_mutex_t*) ptr;
+      pthread_mutexattr_t attr;
+
+      pthread_mutexattr_init(&attr);
+      pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+
+      // 1. KLUCZ: Ustawienie atrybutu ROBUST
+      if (pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) != 0) ERR("setrobust");
+
+      pthread_mutex_init(mtx, &attr);
+      pthread_mutexattr_destroy(&attr);
+
+      // --- OBSŁUGA BLOKOWANIA ---
+      int rc = pthread_mutex_lock(mtx);
+
+      if (rc == EOWNERDEAD) {
+      // 2. Poprzedni właściciel zginął. Musimy naprawić stan danych!
+      // [Tu naprawiamy struktury w pamięci współdzielonej]
+
+      // 3. Oznaczamy mutex jako spójny (Consistent)
+      if (pthread_mutex_consistent(mtx) != 0) ERR("pthread_mutex_consistent");
+
+      printf("Odzyskano mutex po martwym procesie!\n");
+      } else if (rc != 0) {
+      ERR("pthread_mutex_lock");
+      }
+
+      // Teraz mamy mutex i możemy bezpiecznie pracować
+      pthread_mutex_unlock(mtx);</div>
+    <pre><span class="keyword">#include</span> &lt;pthread.h&gt;
+<span class="keyword">#include</span> &lt;errno.h&gt;
+
+<span class="comment">// 1. Inicjalizacja z flagą ROBUST</span>
+<span class="func">pthread_mutexattr_setrobust</span>(&amp;attr, PTHREAD_MUTEX_ROBUST);
+<span class="func">pthread_mutex_init</span>(mtx, &amp;attr);
+
+<span class="comment">// 2. Specjalna obsługa lockowania</span>
+<span class="type">int</span> rc = <span class="func">pthread_mutex_lock</span>(mtx);
+
+<span class="keyword">if</span> (rc == <span class="keyword">EOWNERDEAD</span>) {
+    <span class="comment">// KROK A: Napraw dane w pamięci współdzielonej</span>
+
+    <span class="comment">// KROK B: Ustaw mutex jako spójny (Consistent)</span>
+    <span class="keyword">if</span> (<span class="func">pthread_mutex_consistent</span>(mtx) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"consistent"</span>);
+
+    <span class="func">printf</span>(<span class="string">"Odzyskano mutex po martwym właścicielu!\n"</span>);
+} <span class="keyword">else if</span> (rc != <span class="string">0</span>) {
+    <span class="func">ERR</span>(<span class="string">"pthread_mutex_lock"</span>);
+}
+
+<span class="func">pthread_mutex_unlock</span>(mtx);</pre>
+  </div>
+</section>
 </body>
 </html>
