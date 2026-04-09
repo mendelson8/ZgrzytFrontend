@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Współdzielona pamięć dla opornych</title>
+  <style>
+      :root {
+          --bg-color: #1e1e1e;
+          --text-color: #d4d4d4;
+          --accent-color: #569cd6;
+          --code-bg: #2d2d2d;
+          --border-color: #404040;
+          --btn-bg: #0e639c;
+          --btn-hover: #1177bb;
+      }
+
+      body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: var(--bg-color);
+          color: var(--text-color);
+          line-height: 1.6;
+          margin: 0;
+          padding: 0;
+      }
+
+      header {
+          background-color: #252526;
+          padding: 2rem;
+          text-align: center;
+          border-bottom: 2px solid var(--accent-color);
+      }
+
+      h1 { margin: 0; color: #fff; font-size: 2.5rem; }
+      h2 { color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 2rem;}
+      p { margin-bottom: 1rem; }
+
+      .container {
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 2rem;
+      }
+
+      .code-container {
+          position: relative;
+          margin-bottom: 2rem;
+          background-color: var(--code-bg);
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          overflow: hidden;
+      }
+
+      .code-header {
+          background-color: #1e1e1e;
+          padding: 0.5rem 1rem;
+          font-family: monospace;
+          font-size: 0.9rem;
+          color: #9cdcfe;
+          border-bottom: 1px solid var(--border-color);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+
+      pre {
+          margin: 0;
+          padding: 1.5rem;
+          overflow-x: auto;
+          font-family: 'Consolas', 'Courier New', monospace;
+          font-size: 14px;
+          color: #ce9178;
+      }
+
+      .comment { color: #6a9955; }
+      .keyword { color: #569cd6; }
+      .type { color: #4ec9b0; }
+      .func { color: #dcdcaa; }
+
+      button.copy-btn {
+          background-color: var(--btn-bg);
+          color: white;
+          border: none;
+          padding: 0.4rem 0.8rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.8rem;
+          transition: background 0.2s;
+      }
+
+      button.copy-btn:hover { background-color: var(--btn-hover); }
+
+      nav {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+          padding: 1rem;
+          background-color: #252526;
+      }
+
+      nav a {
+          color: #fff;
+          text-decoration: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          background-color: var(--border-color);
+          transition: 0.2s;
+      }
+
+      nav a:hover { background-color: var(--accent-color); }
+
+      /* Klasy pomocnicze do JS */
+      .raw-code { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Współdzielona pamięć dla opornych</h1>
+  <p>Pełny cykl życia obiektów POSIX z użyciem makra ERR.</p>
+</header>
+
+<nav>
+  <a href="#shm">Pełny cykl SHM</a>
+  <a href="#semafor">Semafor Nazwany</a>
+  <a href="#mutex">Mutex (Shared)</a>
+  <a href="#cv">Zmienna Warunkowa (CV)</a>
+  <a href="#bariera">Bariera (Shared)</a>
+</nav>
+
+<div class="container">
+
+  <section id="shm">
+    <h2>1. Pełny cykl życia pamięci współdzielonej</h2>
+    <p>Od utworzenia (shm_open), przez mapowanie (mmap), aż po zniszczenie w systemie operacyjnym (shm_unlink).</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>cykl_zycia_shm.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <fcntl.h>
+        #include <sys/stat.h>
+        #include <sys/mman.h>
+        #include <unistd.h>
+        #include "macros.h"
+
+        // ================= 1. INICJALIZACJA =================
+
+        // Tworzenie/otwarcie deskryptora pliku shm
+        int shm_fd = shm_open("/moj_kanal", O_CREAT | O_RDWR, 0666);
+        if (shm_fd == -1) ERR("shm_open");
+
+        // Ustalenie rozmiaru pamięci (np. 4096 bajtów)
+        if (ftruncate(shm_fd, 4096) == -1) ERR("ftruncate");
+
+        // Mapowanie deskryptora do wirtualnej pamięci procesu (ptr)
+        void* ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+        if (ptr == MAP_FAILED) ERR("mmap");
+
+        // Zamknięcie deskryptora - nie jest już potrzebny po mmap, mamy wskaźnik 'ptr'
+        if (close(shm_fd) == -1) ERR("close");
+
+        // ... TUTAJ PROCES KORZYSTA Z PAMIĘCI 'ptr' ...
+
+        // ================= 2. SPRZĄTANIE (DESTROY) =================
+
+        // Odmapowanie pamięci z wirtualnej przestrzeni TYLKO TEGO procesu
+        if (munmap(ptr, 4096) == -1) ERR("munmap");
+
+        // Całkowite zniszczenie rury/kanału w systemie (Zazwyczaj robi to tylko program czyszczący!)
+        // Usunięcie tego sprawi, że wywołanie ls /dev/shm nie pokaże już naszego pliku
+        if (shm_unlink("/moj_kanal") == -1) ERR("shm_unlink");</div>
+      <pre><span class="keyword">#include</span> &lt;fcntl.h&gt;
+<span class="keyword">#include</span> &lt;sys/stat.h&gt;
+<span class="keyword">#include</span> &lt;sys/mman.h&gt;
+<span class="keyword">#include</span> &lt;unistd.h&gt;
+<span class="keyword">#include</span> <span class="string">"macros.h"</span>
+
+<span class="comment">// ====== 1. INICJALIZACJA ======</span>
+<span class="type">int</span> shm_fd = <span class="func">shm_open</span>(<span class="string">"/moj_kanal"</span>, O_CREAT | O_RDWR, <span class="string">0666</span>);
+<span class="keyword">if</span> (shm_fd == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"shm_open"</span>);
+
+<span class="keyword">if</span> (<span class="func">ftruncate</span>(shm_fd, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"ftruncate"</span>);
+
+<span class="type">void*</span> ptr = <span class="func">mmap</span>(<span class="type">NULL</span>, <span class="string">4096</span>, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, <span class="string">0</span>);
+<span class="keyword">if</span> (ptr == MAP_FAILED) <span class="func">ERR</span>(<span class="string">"mmap"</span>);
+
+<span class="keyword">if</span> (<span class="func">close</span>(shm_fd) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"close"</span>);
+
+<span class="comment">// ====== 2. SPRZĄTANIE ======</span>
+<span class="keyword">if</span> (<span class="func">munmap</span>(ptr, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);
+
+<span class="comment">// Niszczy obiekt współdzielony całkowicie (odpowiednik _destroy dla shm)</span>
+<span class="keyword">if</span> (<span class="func">shm_unlink</span>(<span class="string">"/moj_kanal"</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"shm_unlink"</span>);</pre>
+    </div>
+  </section>
+
+  <section id="semafor">
+    <h2>2. Semafor Nazwany (sem_open)</h2>
+    <p>Idealny do ochrony "sekcji inicjalizacji" pamięci dzielonej. Pamiętaj o <code>sem_unlink</code> na końcu!</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>semafor.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <fcntl.h>
+        #include <sys/stat.h>
+        #include <semaphore.h>
+        #include "macros.h"
+
+        // Tworzenie semafora (nazwa MUSI zaczynać się od /)
+        sem_t* sem = sem_open("/moj_semafor", O_CREAT, 0666, 1);
+        if (sem == SEM_FAILED) ERR("sem_open");
+
+        // Zablokowanie (dekrementacja)
+        if (sem_wait(sem) == -1) ERR("sem_wait");
+
+        // --- SEKCJA KRYTYCZNA ---
+
+        // Odblokowanie (inkrementacja)
+        if (sem_post(sem) == -1) ERR("sem_post");
+
+        // Odłączenie procesu od semafora (analogiczne do close)
+        if (sem_close(sem) == -1) ERR("sem_close");
+
+        // DESTROY: Całkowite usunięcie semafora z systemu (/dev/shm/)
+        if (sem_unlink("/moj_semafor") == -1) ERR("sem_unlink");</div>
+      <pre><span class="keyword">#include</span> &lt;semaphore.h&gt;
+<span class="keyword">#include</span> <span class="string">"macros.h"</span>
+
+<span class="type">sem_t*</span> sem = <span class="func">sem_open</span>(<span class="string">"/moj_semafor"</span>, O_CREAT, <span class="string">0666</span>, <span class="string">1</span>);
+<span class="keyword">if</span> (sem == SEM_FAILED) <span class="func">ERR</span>(<span class="string">"sem_open"</span>);
+
+<span class="func">sem_wait</span>(sem);
+<span class="comment">// ... KRYTYCZNE (np. inicjalizacja) ...</span>
+<span class="func">sem_post</span>(sem);
+
+<span class="comment">// Zamknięcie lokalne</span>
+<span class="keyword">if</span> (<span class="func">sem_close</span>(sem) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"sem_close"</span>);
+
+<span class="comment">// DESTROY: Zniszczenie obiektu w całym systemie</span>
+<span class="keyword">if</span> (<span class="func">sem_unlink</span>(<span class="string">"/moj_semafor"</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"sem_unlink"</span>);</pre>
+    </div>
+  </section>
+
+  <section id="mutex">
+    <h2>3. Mutex Międzyprocesowy (Shared Mutex)</h2>
+    <p>Zmienna leży w mmap. Zawiera obowiązkowe niszczenie na końcu.</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>shared_mutex.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <pthread.h>
+        #include "macros.h"
+
+        // UWAGA: wskaźnik 'mtx' musi wskazywać na adres leżący W PAMIĘCI WSPÓŁDZIELONEJ (ptr)
+        pthread_mutex_t* mtx = (pthread_mutex_t*) ptr;
+
+        pthread_mutexattr_t attr;
+        if (pthread_mutexattr_init(&attr) != 0) ERR("pthread_mutexattr_init");
+
+        // Współdzielenie między procesami!
+        if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0) ERR("pthread_mutexattr_setpshared");
+
+        // Inicjalizacja
+        if (pthread_mutex_init(mtx, &attr) != 0) ERR("pthread_mutex_init");
+        pthread_mutexattr_destroy(&attr); // Atrybuty usuwamy od razu
+
+        // Użycie
+        if (pthread_mutex_lock(mtx) != 0) ERR("pthread_mutex_lock");
+        // ... działanie ...
+        if (pthread_mutex_unlock(mtx) != 0) ERR("pthread_mutex_unlock");
+
+        // DESTROY: Niszczymy mutex TYLKO RAZ przed zamknięciem całej struktury kanału (np. ops-cleanup)
+        if (pthread_mutex_destroy(mtx) != 0) ERR("pthread_mutex_destroy");</div>
+      <pre><span class="keyword">#include</span> &lt;pthread.h&gt;
+<span class="keyword">#include</span> <span class="string">"macros.h"</span>
+
+<span class="type">pthread_mutex_t*</span> mtx = (<span class="type">pthread_mutex_t*</span>) ptr;
+
+<span class="type">pthread_mutexattr_t</span> attr;
+<span class="keyword">if</span> (<span class="func">pthread_mutexattr_init</span>(&amp;attr) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"attr_init"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_mutexattr_setpshared</span>(&amp;attr, PTHREAD_PROCESS_SHARED) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"setpshared"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_mutex_init</span>(mtx, &amp;attr) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"init"</span>);
+<span class="func">pthread_mutexattr_destroy</span>(&amp;attr);
+
+<span class="func">pthread_mutex_lock</span>(mtx);
+<span class="comment">// ... KRYTYCZNE ...</span>
+<span class="func">pthread_mutex_unlock</span>(mtx);
+
+<span class="comment">// DESTROY: Gdy mutex przestaje być komukolwiek potrzebny</span>
+<span class="keyword">if</span> (<span class="func">pthread_mutex_destroy</span>(mtx) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"mutex_destroy"</span>);</pre>
+    </div>
+  </section>
+
+  <section id="cv">
+    <h2>4. Zmienna Warunkowa (Condition Variable)</h2>
+    <p>Usypianie, budzenie i niszczenie struktury (CV).</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>shared_cv.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <pthread.h>
+        #include "macros.h"
+
+        // Wskaźnik do pamięci współdzielonej (obok mutexa)
+        pthread_cond_t* cv = (pthread_cond_t*) (ptr + sizeof(pthread_mutex_t));
+
+        pthread_condattr_t attr;
+        if (pthread_condattr_init(&attr) != 0) ERR("pthread_condattr_init");
+        if (pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0) ERR("pthread_condattr_setpshared");
+        if (pthread_cond_init(cv, &attr) != 0) ERR("pthread_cond_init");
+        pthread_condattr_destroy(&attr);
+
+        // Użycie - Czekanie
+        /*
+        pthread_mutex_lock(mtx);
+        while (stan == PUSTY) {
+        if (pthread_cond_wait(cv, mtx) != 0) ERR("pthread_cond_wait");
+        }
+        pthread_mutex_unlock(mtx);
+        */
+
+        // Użycie - Sygnalizacja
+        /*
+        pthread_cond_signal(cv); // LUB pthread_cond_broadcast(cv);
+        */
+
+        // DESTROY: Na samym końcu cyklu życia programu sprzątającego
+        if (pthread_cond_destroy(cv) != 0) ERR("pthread_cond_destroy");</div>
+      <pre><span class="type">pthread_condattr_t</span> attr;
+<span class="keyword">if</span> (<span class="func">pthread_condattr_init</span>(&amp;attr) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"attr_init"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_condattr_setpshared</span>(&amp;attr, PTHREAD_PROCESS_SHARED) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"setpshared"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_cond_init</span>(cv, &amp;attr) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"cond_init"</span>);
+<span class="func">pthread_condattr_destroy</span>(&amp;attr);
+
+<span class="comment">// Czekanie w pętli while!</span>
+<span class="keyword">while</span> (warunek == <span class="string">0</span>) {
+    <span class="func">pthread_cond_wait</span>(cv, mtx);
+}
+
+<span class="comment">// DESTROY: Zniszczenie zmiennej warunkowej na końcu</span>
+<span class="keyword">if</span> (<span class="func">pthread_cond_destroy</span>(cv) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"cond_destroy"</span>);</pre>
+    </div>
+  </section>
+
+  <section id="bariera">
+    <h2>5. Bariera Międzyprocesowa (Shared Barrier)</h2>
+    <p>Zatrzymywanie grupy procesów. Po użyciu wywołaj destroy.</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>shared_barrier.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <pthread.h>
+        #include "macros.h"
+
+        // Wskaźnik wewnątrz mmap()
+        pthread_barrier_t* barrier = (pthread_barrier_t*) ptr;
+
+        pthread_barrierattr_t attr;
+        if (pthread_barrierattr_init(&attr) != 0) ERR("pthread_barrierattr_init");
+        if (pthread_barrierattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0) ERR("pthread_barrierattr_setpshared");
+
+        // Inicjalizacja: wymaga podania liczby procesów (np. 3)
+        if (pthread_barrier_init(barrier, &attr, 3) != 0) ERR("pthread_barrier_init");
+        pthread_barrierattr_destroy(&attr);
+
+        // Czekanie na resztę procesów
+        // Zwraca PTHREAD_BARRIER_SERIAL_THREAD dla jednego z wątków, dla reszty 0
+        int ret = pthread_barrier_wait(barrier);
+        if (ret != 0 && ret != PTHREAD_BARRIER_SERIAL_THREAD) ERR("pthread_barrier_wait");
+
+        // DESTROY: Po zwolnieniu i zamknięciu systemu pamięci
+        if (pthread_barrier_destroy(barrier) != 0) ERR("pthread_barrier_destroy");</div>
+      <pre><span class="type">pthread_barrierattr_t</span> attr;
+<span class="keyword">if</span> (<span class="func">pthread_barrierattr_init</span>(&amp;attr) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"attr_init"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_barrierattr_setpshared</span>(&amp;attr, PTHREAD_PROCESS_SHARED) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"setpshared"</span>);
+<span class="keyword">if</span> (<span class="func">pthread_barrier_init</span>(barrier, &amp;attr, <span class="string">3</span>) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"barrier_init"</span>);
+<span class="func">pthread_barrierattr_destroy</span>(&amp;attr);
+
+<span class="comment">// Blokada do momentu przyjścia 3 procesów</span>
+<span class="func">pthread_barrier_wait</span>(barrier);
+
+<span class="comment">// DESTROY: Czyszczenie pamięci po barierze</span>
+<span class="keyword">if</span> (<span class="func">pthread_barrier_destroy</span>(barrier) != <span class="string">0</span>) <span class="func">ERR</span>(<span class="string">"barrier_destroy"</span>);</pre>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  function copyCode(btn) {
+    const rawCodeElement = btn.parentElement.nextElementSibling;
+    const textToCopy = rawCodeElement.textContent || rawCodeElement.innerText;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      const originalText = btn.innerText;
+      btn.innerText = "Skopiowano!";
+      btn.style.backgroundColor = "#4ec9b0";
+
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.style.backgroundColor = "var(--btn-bg)";
+      }, 2000);
+    }).catch(err => {
+      console.error('Błąd podczas kopiowania:', err);
+      btn.innerText = "Błąd!";
+    });
+  }
+</script>
+</body>
+</html>
