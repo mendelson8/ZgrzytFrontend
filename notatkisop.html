@@ -127,6 +127,7 @@
   <a href="#cv">Zmienna Warunkowa (CV)</a>
   <a href="#bariera">Bariera (Shared)</a>
   <a href="#mutex_robust">Mutex Robust</a>
+  <a href="#mmap_anon">mmap (Rodzina procesów)</a>
 </nav>
 
 <div class="container">
@@ -380,13 +381,10 @@
         #include <errno.h>
         #include "macros.h"
 
-        pthread_mutex_t* mtx = (pthread_mutex_t*) ptr;
         pthread_mutexattr_t attr;
-
         if (pthread_mutexattr_init(&attr) != 0) ERR("init");
         if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0) ERR("shared");
         if (pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) != 0) ERR("robust");
-
         if (pthread_mutex_init(mtx, &attr) != 0) ERR("init");
         pthread_mutexattr_destroy(&attr);
 
@@ -397,7 +395,6 @@
         } else if (rc != 0) {
         ERR("lock");
         }
-
         pthread_mutex_unlock(mtx);</div>
       <pre><span class="keyword">#include</span> &lt;pthread.h&gt;
 <span class="keyword">#include</span> &lt;errno.h&gt;
@@ -416,8 +413,77 @@
 } <span class="keyword">else if</span> (rc != <span class="string">0</span>) {
     <span class="func">ERR</span>(<span class="string">"lock"</span>);
 }
-
 <span class="func">pthread_mutex_unlock</span>(mtx);</pre>
+    </div>
+  </section>
+
+  <section id="mmap_anon">
+    <h2>7. Anonimowa pamięć współdzielona (Rodzina procesów)</h2>
+    <p>Omija <code>shm_open</code>. Używa flagi <code>MAP_ANONYMOUS</code> oraz deskryptora <code>-1</code>. Działa tylko dla procesów powiązanych przez <code>fork()</code>.</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>mmap_anonimowe.c</span>
+        <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
+      </div>
+      <div class="raw-code">#include <sys/mman.h>
+        #include <sys/wait.h>
+        #include <unistd.h>
+          #include "macros.h"
+
+          // 1. Zmapowanie pamięci z flagą MAP_ANONYMOUS (deskryptor = -1)
+          void* ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+          if (ptr == MAP_FAILED) ERR("mmap");
+
+          // 2. Utworzenie potomka
+          pid_t pid = fork();
+          if (pid == -1) ERR("fork");
+
+          if (pid == 0) {
+          // --- POTOMEK ---
+          int* data = (int*)ptr;
+          *data = 42; // Zapis do pamięci współdzielonej
+
+          if (munmap(ptr, 4096) == -1) ERR("munmap child");
+          return 0;
+          }
+
+          // --- MACIERZYSTY ---
+          if (wait(NULL) == -1) ERR("wait");
+
+          // Odczyt danych zapisanych przez potomka
+          int* data = (int*)ptr;
+          // Tutaj w zmiennej *data znajduje się wartość 42
+
+          // 3. Sprzątanie
+          if (munmap(ptr, 4096) == -1) ERR("munmap parent");</div>
+      <pre><span class="keyword">#include</span> &lt;sys/mman.h&gt;
+<span class="keyword">#include</span> &lt;unistd.h&gt;
+<span class="keyword">#include</span> <span class="string">"macros.h"</span>
+
+<span class="comment">// Deskryptor to -1, a do flag dodajemy MAP_ANONYMOUS</span>
+<span class="type">void*</span> ptr = <span class="func">mmap</span>(<span class="type">NULL</span>, <span class="string">4096</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="string">1</span>, <span class="string">0</span>);
+<span class="keyword">if</span> (ptr == MAP_FAILED) <span class="func">ERR</span>(<span class="string">"mmap"</span>);
+
+<span class="type">pid_t</span> pid = <span class="func">fork</span>();
+<span class="keyword">if</span> (pid == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"fork"</span>);
+
+<span class="keyword">if</span> (pid == <span class="string">0</span>) {
+    <span class="comment">// --- POTOMEK ---</span>
+    <span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
+    *data = <span class="string">42</span>; <span class="comment">// Zapisuje w pamięci dzielonej</span>
+
+    <span class="keyword">if</span> (<span class="func">munmap</span>(ptr, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap child"</span>);
+    <span class="keyword">return</span> <span class="string">0</span>;
+}
+
+<span class="comment">// --- MACIERZYSTY ---</span>
+<span class="func">wait</span>(<span class="type">NULL</span>); <span class="comment">// Czeka na zakończenie potomka</span>
+
+<span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
+<span class="comment">// *data ma teraz wartość 42 </span>
+
+<span class="keyword">if</span> (<span class="func">munmap</span>(ptr, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap parent"</span>);</pre>
     </div>
   </section>
 
