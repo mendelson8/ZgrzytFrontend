@@ -474,10 +474,8 @@
 <span class="keyword">#define</span> NUM_CHILDREN 3
 
 <span class="type">size_t</span> mem_size = NUM_CHILDREN * <span class="keyword">sizeof</span>(<span class="type">int</span>);
-<span class="type">void*</span> ptr = <span class="func">mmap</span>(<span class="type">NULL</span>, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="string">1</span>, <span class="string">0</span>);
+<span class="type">int*</span> data = <span class="func">mmap</span>(<span class="type">NULL</span>, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="string">1</span>, <span class="string">0</span>);
 <span class="keyword">if</span> (ptr == MAP_FAILED) <span class="func">ERR</span>(<span class="string">"mmap"</span>);
-
-<span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
 
 <span class="keyword">for</span> (<span class="type">int</span> i = <span class="string">0</span>; i &lt; NUM_CHILDREN; i++) {
     <span class="type">pid_t</span> pid = <span class="func">fork</span>();
@@ -488,9 +486,9 @@
         data[i] = (i + <span class="string">1</span>) * <span class="string">10</span>;
 
         <span class="comment">// Synchronizacja pamięci z flagą MS_SYNC</span>
-        <span class="keyword">if</span> (<span class="func">msync</span>(ptr, mem_size, MS_SYNC) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"msync"</span>);
+        <span class="keyword">if</span> (<span class="func">msync</span>(data, mem_size, MS_SYNC) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"msync"</span>);
 
-        <span class="keyword">if</span> (<span class="func">munmap</span>(ptr, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);
+        <span class="keyword">if</span> (<span class="func">munmap</span>(data, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);
         <span class="keyword">return</span>0;
     }
 }
@@ -500,7 +498,7 @@
     <span class="keyword">if</span> (<span class="func">wait</span>(<span class="type">NULL</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"wait"</span>);
 }
 
-<span class="keyword">if</span> (<span class="func">munmap</span>(ptr, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);</pre>
+<span class="keyword">if</span> (<span class="func">munmap</span>(data, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);</pre>
     </div>
   </section>
 
