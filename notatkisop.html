@@ -416,14 +416,13 @@
 <span class="func">pthread_mutex_unlock</span>(mtx);</pre>
     </div>
   </section>
-
   <section id="mmap_anon">
-    <h2>7. Anonimowa pamięć współdzielona (Rodzina procesów)</h2>
-    <p>Omija <code>shm_open</code>. Używa flagi <code>MAP_ANONYMOUS</code> oraz deskryptora <code>-1</code>. Działa tylko dla procesów powiązanych przez <code>fork()</code>.</p>
+    <h2>7. Anonimowa pamięć współdzielona (Wiele potomków)</h2>
+    <p>Omija <code>shm_open</code>. Używa flagi <code>MAP_ANONYMOUS</code> oraz deskryptora <code>-1</code>. Kod uwzględnia tworzenie wielu dzieci w pętli <code>for</code> oraz użycie funkcji <code>msync</code>.</p>
 
     <div class="code-container">
       <div class="code-header">
-        <span>mmap_anonimowe.c</span>
+        <span>mmap_wiele_dzieci.c</span>
         <button class="copy-btn" onclick="copyCode(this)">Skopiuj Kod</button>
       </div>
       <div class="raw-code">#include <sys/mman.h>
@@ -431,59 +430,79 @@
         #include <unistd.h>
           #include "macros.h"
 
-          // 1. Zmapowanie pamięci z flagą MAP_ANONYMOUS (deskryptor = -1)
-          void* ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+          #define NUM_CHILDREN 3
+
+          // 1. Zmapowanie pamięci na tablicę (np. 3 inty)
+          size_t mem_size = NUM_CHILDREN * sizeof(int);
+          void* ptr = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
           if (ptr == MAP_FAILED) ERR("mmap");
 
-          // 2. Utworzenie potomka
+          int* data = (int*)ptr;
+
+          // 2. Pętla tworząca procesy potomne
+          for (int i = 0; i < NUM_CHILDREN; i++) {
           pid_t pid = fork();
           if (pid == -1) ERR("fork");
 
           if (pid == 0) {
           // --- POTOMEK ---
-          int* data = (int*)ptr;
-          *data = 42; // Zapis do pamięci współdzielonej
+          // Każdy potomek pisze w swój unikalny indeks
+          data[i] = (i + 1) * 10;
 
-          if (munmap(ptr, 4096) == -1) ERR("munmap child");
-          return 0;
+          // Zsynchronizowanie pamięci (wymuszenie widoczności zmian)
+          if (msync(ptr, mem_size, MS_SYNC) == -1) ERR("msync");
+
+          if (munmap(ptr, mem_size) == -1) ERR("munmap child");
+          return 0; // BARDZO WAŻNE: Potomek musi zakończyć działanie, by nie wchodzić dalej w pętlę fork!
+          }
           }
 
           // --- MACIERZYSTY ---
+          // 3. Pętla oczekująca na zakończenie WSZYSTKICH dzieci
+          for (int i = 0; i < NUM_CHILDREN; i++) {
           if (wait(NULL) == -1) ERR("wait");
+          }
 
-          // Odczyt danych zapisanych przez potomka
-          int* data = (int*)ptr;
-          // Tutaj w zmiennej *data znajduje się wartość 42
+          // Rodzic ma teraz pewność, że wszystkie dzieci skończyły.
+          // Można odczytać wyniki: data[0]=10, data[1]=20, data[2]=30.
 
-          // 3. Sprzątanie
-          if (munmap(ptr, 4096) == -1) ERR("munmap parent");</div>
+          // 4. Sprzątanie
+          if (munmap(ptr, mem_size) == -1) ERR("munmap parent");</div>
       <pre><span class="keyword">#include</span> &lt;sys/mman.h&gt;
+<span class="keyword">#include</span> &lt;sys/wait.h&gt;
 <span class="keyword">#include</span> &lt;unistd.h&gt;
 <span class="keyword">#include</span> <span class="string">"macros.h"</span>
 
-<span class="comment">// Deskryptor to -1, a do flag dodajemy MAP_ANONYMOUS</span>
-<span class="type">void*</span> ptr = <span class="func">mmap</span>(<span class="type">NULL</span>, <span class="string">4096</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="string">1</span>, <span class="string">0</span>);
+<span class="keyword">#define</span> NUM_CHILDREN 3
+
+<span class="type">size_t</span> mem_size = NUM_CHILDREN * <span class="keyword">sizeof</span>(<span class="type">int</span>);
+<span class="type">void*</span> ptr = <span class="func">mmap</span>(<span class="type">NULL</span>, mem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="string">1</span>, <span class="string">0</span>);
 <span class="keyword">if</span> (ptr == MAP_FAILED) <span class="func">ERR</span>(<span class="string">"mmap"</span>);
 
-<span class="type">pid_t</span> pid = <span class="func">fork</span>();
-<span class="keyword">if</span> (pid == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"fork"</span>);
+<span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
 
-<span class="keyword">if</span> (pid == <span class="string">0</span>) {
-    <span class="comment">// --- POTOMEK ---</span>
-    <span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
-    *data = <span class="string">42</span>; <span class="comment">// Zapisuje w pamięci dzielonej</span>
+<span class="keyword">for</span> (<span class="type">int</span> i = <span class="string">0</span>; i &lt; NUM_CHILDREN; i++) {
+    <span class="type">pid_t</span> pid = <span class="func">fork</span>();
+    <span class="keyword">if</span> (pid == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"fork"</span>);
 
-    <span class="keyword">if</span> (<span class="func">munmap</span>(ptr, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap child"</span>);
-    <span class="keyword">return</span> <span class="string">0</span>;
+    <span class="keyword">if</span> (pid == <span class="string">0</span>) {
+        <span class="comment">// POTOMEK: Bezpieczny zapis w swój indeks</span>
+        data[i] = (i + <span class="string">1</span>) * <span class="string">10</span>;
+
+        <span class="comment">// Synchronizacja pamięci z flagą MS_SYNC</span>
+        <span class="keyword">if</span> (<span class="func">msync</span>(ptr, mem_size, MS_SYNC) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"msync"</span>);
+
+        <span class="keyword">if</span> (<span class="func">munmap</span>(ptr, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);
+        <span class="keyword">return</span> <span class="string">0</span>; <span class="comment">// Blokada przed tworzeniem "bąbli" forków</span>
+    }
 }
 
-<span class="comment">// --- MACIERZYSTY ---</span>
-<span class="func">wait</span>(<span class="type">NULL</span>); <span class="comment">// Czeka na zakończenie potomka</span>
+<span class="comment">// MACIERZYSTY: Oczekuje na wszystkie procesy potomne</span>
+<span class="keyword">for</span> (<span class="type">int</span> i = <span class="string">0</span>; i &lt; NUM_CHILDREN; i++) {
+    <span class="keyword">if</span> (<span class="func">wait</span>(<span class="type">NULL</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"wait"</span>);
+}
 
-<span class="type">int*</span> data = (<span class="type">int*</span>)ptr;
-<span class="comment">// *data ma teraz wartość 42 </span>
-
-<span class="keyword">if</span> (<span class="func">munmap</span>(ptr, <span class="string">4096</span>) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap parent"</span>);</pre>
+<span class="keyword">if</span> (<span class="func">munmap</span>(ptr, mem_size) == -<span class="string">1</span>) <span class="func">ERR</span>(<span class="string">"munmap"</span>);</pre>
     </div>
   </section>
 
