@@ -444,8 +444,205 @@ body {
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
   </div>
+  <h2 id="youtube-clone">7. Projekt Praktyczny: Klon YouTube</h2>
+  <p>Odtworzenie interfejsu YouTube to ostateczny test Twojej wiedzy z CSS. Łączymy tu pozycjonowanie stałe (Fixed), Flexboxa (do pasków i detali) oraz Grida (do siatki filmów).</p>
 
+
+
+  <h3>A. Architektura i Wyjaśnienia (Snippety)</h3>
+
+  <div class="task-box">
+    <span class="requirement">Nawigacja (Header) - Zawsze na górze</span>
+    <div class="explanation">
+      Górny pasek YouTube'a składa się z 3 sekcji (Logo, Szukajka, Profil). Idealnie pasuje tu <code>flex</code> z <code>justify-content: space-between</code>. Aby pasek nie znikał przy scrollowaniu, używamy <code>position: fixed</code>.
+    </div>
+    <pre><code>/* Pasek nawigacji przypięty do góry */
+.yt-header {
+    display: flex;
+    justify-content: space-between; /* Rozsuwa 3 elementy maksymalnie na boki */
+    align-items: center; /* Centruje w pionie */
+    position: fixed; /* Przykleja do ekranu */
+    top: 0; left: 0; width: 100%;
+    height: 60px;
+    background: white;
+    z-index: 100; /* Zawsze nad filmami */
+}</code></pre>
+  </div>
+
+  <div class="task-box">
+    <span class="requirement">Pasek boczny (Sidebar) - Przypięty do lewej</span>
+    <div class="explanation">
+      Podobnie jak Header, pasek boczny nie scrolluje się razem z filmami. Musi być przypięty do lewej krawędzi i zajmować całą wysokość ekranu (<code>100vh</code>).
+    </div>
+    <pre><code>.yt-sidebar {
+    width: 240px;
+    position: fixed;
+    top: 60px; /* Zaczyna się POD Headerem */
+    left: 0;
+    height: calc(100vh - 60px); /* 100% wysokości ekranu minus wysokość Headera */
+    background: #f8f8f8;
+}</code></pre>
+  </div>
+
+  <div class="task-box">
+    <span class="requirement">Magiczna Siatka Filmów (Auto-fill & Minmax)</span>
+    <div class="explanation">
+      To jest najpotężniejsza linijka w CSS Grid. Zamiast pisać Media Queries dla telefonów, tabletów i PC, używamy <code>repeat(auto-fill, minmax(300px, 1fr))</code>. Mówimy systemowi: "Wciskaj tyle kolumn, ile wlezie, ale żadna nie może być węższa niż 300px. Jeśli zostanie wolne miejsce, rozciągnij je (1fr)".
+    </div>
+
+    <pre><code>.yt-video-grid {
+    margin-left: 240px; /* Robimy miejsce na boczny pasek! */
+    margin-top: 60px;   /* Robimy miejsce na górny pasek! */
+    padding: 24px;
+
+    display: grid;
+    /* MAGIA RESPONSYWNOŚCI BEZ MEDIA QUERIES: */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}</code></pre>
+  </div>
+
+  <div class="task-box">
+    <span class="requirement">Kafelek Filmu (Zagnieżdżony Flexbox)</span>
+    <div class="explanation">
+      Każdy film ma miniaturkę, a pod spodem avatar twórcy obok tytułu i nazwy kanału. Sytuacja, gdzie masz obrazek obok bloku tekstu, to klasyczny <code>display: flex</code> wewnątrz karty filmu.
+    </div>
+    <pre><code>.video-info {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.channel-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%; /* Robi idealne kółko z kwadratowego obrazka */
+}</code></pre>
+  </div>
+
+  <h3>B. GOTOWIEC: Pełny Klon YouTube</h3>
+  <div class="task-box">
+    <p>Połączony kod. Przeklej do pustego pliku <code>youtube.html</code> i zobacz, jak działa siatka podczas zmniejszania okna przeglądarki!</p>
+
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="pl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;YouTube Clone&lt;/title&gt;
+    &lt;style&gt;
+        /* --- RESET I ZMIENNE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', Arial, sans-serif; background: #f9f9f9; color: #0f0f0f; }
+
+        /* --- HEADER --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            padding: 0 20px;
+            background: white;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 100;
+        }
+        .header-logo { font-weight: bold; font-size: 20px; letter-spacing: -1px; }
+        .header-search input { padding: 8px 16px; width: 400px; border: 1px solid #ccc; border-radius: 20px; }
+        .header-profile { width: 32px; height: 32px; background: #000; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 240px;
+            background: white;
+            position: fixed;
+            top: 60px; left: 0;
+            height: calc(100vh - 60px);
+            padding: 12px;
+        }
+        .sidebar-item { padding: 10px 15px; border-radius: 10px; cursor: pointer; }
+        .sidebar-item:hover { background: #f2f2f2; }
+
+        /* --- GŁÓWNA SIATKA (GRID) --- */
+        .main-content {
+            margin-left: 240px;
+            margin-top: 60px;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px 16px; /* 20px pionowo, 16px poziomo */
+        }
+
+        /* --- KAFELEK FILMU --- */
+        .video-card { cursor: pointer; }
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Wymusza proporcje wideo! */
+            background: #ddd;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .video-details { display: flex; gap: 12px; margin-top: 12px; }
+        .channel-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: #999;
+            flex-shrink: 0; /* Zabrania avatarowi kurczyć się z braku miejsca */
+        }
+        .video-text { display: flex; flex-direction: column; gap: 4px; }
+        .video-title { font-size: 16px; font-weight: bold; line-height: 1.4; }
+        .video-meta { font-size: 14px; color: #606060; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;header class="header"&gt;
+        &lt;div class="header-logo"&gt;▶ YouTube&lt;/div&gt;
+        &lt;div class="header-search"&gt;
+            &lt;input type="text" placeholder="Szukaj"&gt;
+        &lt;/div&gt;
+        &lt;div class="header-profile"&gt;K&lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;nav class="sidebar"&gt;
+        &lt;div class="sidebar-item"&gt;Główna&lt;/div&gt;
+        &lt;div class="sidebar-item"&gt;Shorts&lt;/div&gt;
+        &lt;div class="sidebar-item"&gt;Subskrypcje&lt;/div&gt;
+    &lt;/nav&gt;
+
+    &lt;main class="main-content"&gt;
+        &lt;!-- Wklej ten blok kilka razy, żeby zobaczyć jak działa siatka --&gt;
+        &lt;article class="video-card"&gt;
+            &lt;img src="https://via.placeholder.com/600x337" class="video-thumbnail" alt="Miniaturka"&gt;
+            &lt;div class="video-details"&gt;
+                &lt;div class="channel-avatar"&gt;&lt;/div&gt;
+                &lt;div class="video-text"&gt;
+                    &lt;h3 class="video-title"&gt;Jak zrobić klon YouTube w 10 minut (HTML & CSS)&lt;/h3&gt;
+                    &lt;div class="video-meta"&gt;Front-end Inżynier&lt;/div&gt;
+                    &lt;div class="video-meta"&gt;10 tys. wyświetleń • 2 dni temu&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/article&gt;
+
+        &lt;!-- Miejsce na kolejne filmy... --&gt;
+        &lt;article class="video-card"&gt;
+            &lt;img src="https://via.placeholder.com/600x337" class="video-thumbnail" alt="Miniaturka"&gt;
+            &lt;div class="video-details"&gt;
+                &lt;div class="channel-avatar"&gt;&lt;/div&gt;
+                &lt;div class="video-text"&gt;
+                    &lt;h3 class="video-title"&gt;CSS Grid vs Flexbox - Ostateczne Starcie&lt;/h3&gt;
+                    &lt;div class="video-meta"&gt;Kodujemy&lt;/div&gt;
+                    &lt;div class="video-meta"&gt;50 tys. wyświetleń • 1 rok temu&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/article&gt;
+    &lt;/main&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+  </div>
 </main>
+
 
 </body>
 </html>
