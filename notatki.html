@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kompendium HTML/CSS - Zadania Laboratoryjne</title>
+  <title>Kompendium: Zadanie OtoPromotor</title>
   <style>
       :root {
           --primary: #2563eb;
@@ -23,9 +23,8 @@
           display: flex;
       }
 
-      /* Sidebar Navigation */
       nav {
-          width: 280px;
+          width: 250px;
           height: 100vh;
           background: var(--code-bg);
           color: white;
@@ -40,9 +39,8 @@
       nav a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
       nav a:hover { color: white; padding-left: 5px; }
 
-      /* Main Content */
       main {
-          margin-left: 320px;
+          margin-left: 290px;
           padding: 40px;
           max-width: 900px;
       }
@@ -67,11 +65,7 @@
           overflow-x: auto;
           font-family: 'Consolas', monospace;
           font-size: 0.9rem;
-          position: relative;
       }
-
-      code { color: var(--accent); font-weight: bold; background: #fee2e2; padding: 2px 4px; border-radius: 4px; }
-      pre code { color: inherit; background: none; padding: 0; font-weight: normal; }
 
       .explanation {
           background: #f0f9ff;
@@ -91,14 +85,6 @@
           font-weight: bold;
           margin-bottom: 5px;
       }
-
-      .preview {
-          border: 2px dashed #cbd5e1;
-          padding: 10px;
-          margin-top: 10px;
-          border-radius: 4px;
-          background: #fff;
-      }
   </style>
 </head>
 <body>
@@ -106,384 +92,359 @@
 <nav>
   <h2>Nawigacja</h2>
   <ul>
-    <li><a href="#boilerplate">1. Boilerplate HTML5</a></li>
-    <li><a href="#typography">2. Typografia (Pkt 3, 4, 5)</a></li>
-    <li><a href="#semantics">3. Semantyka (Pkt 7)</a></li>
-    <li><a href="#float">4. Obrazek i Float (Pkt 8)</a></li>
-    <li><a href="#paywall">5. Paywall i Box (Pkt 9, 10, 11)</a></li>
-    <li><a href="#blur">6. Progresywny Blur (Pkt 12)</a></li>
+    <li><a href="#colors">1. Zmienne CSS i Zaznaczenie</a></li>
+    <li><a href="#logo">2. Panel Logo (Flex & Font)</a></li>
+    <li><a href="#filters">3. Panel Filtrów (Form & Select)</a></li>
+    <li><a href="#grid">4. Siatka Kafelków (Grid)</a></li>
+    <li><a href="#semantics">5. Semantyka (Figure & Abbr)</a></li>
+    <li><a href="#boilerplate">6. GOTOWIEC (Full Code)</a></li>
   </ul>
 </nav>
 
 <main>
-  <h1>Notatki HTML/CSS: Projekt MathBuzz</h1>
-  <p>Ten plik zawiera gotowe fragmenty kodu (boilerplaty) niezbędne do zaliczenia zadania MathBuzz zgodnie z wymaganiami punktowymi.</p>
+  <h1>Notatki: Interfejs OtoPromotor</h1>
+  <p>Zadanie sprawdza nowoczesne techniki CSS (zmienne, Grid, Flexbox) i poprawną semantykę HTML (formularze, adnotacje zdjęć).</p>
 
-  <h2 id="boilerplate">1. Czysty Start: Boilerplate HTML5</h2>
+  <h2 id="colors">1. Zmienne CSS i Kolorystyka (1.5 pkt)</h2>
   <div class="task-box">
-    <span class="requirement">Pkt 2 (MathBuzz)</span>
-    <p>Podstawowa struktura dokumentu z dołączonym CSS i tytułem.</p>
-    <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;MathBuzz&lt;/title&gt;
-    &lt;link rel="stylesheet" href="style.css"&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;!-- Treść strony --&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-  </div>
-
-  <h2 id="typography">2. Typografia i Tekst</h2>
-  <div class="task-box">
-    <span class="requirement">Pkt 3, 4, 5</span>
+    <span class="requirement">Zarządzanie z jednego miejsca, kolory granatowy/jasnoszary, odwrócenie przy zaznaczeniu.</span>
     <div class="explanation">
-      Wymaganie 5 (Lucida Sans -> Verdana -> sans-serif) realizujemy przez listę fallbacków. Wymaganie 4 (Justowanie) i 3 (Środkowanie nagłówków) to proste właściwości <code>text-align</code>.
+      Aby zarządzać kolorami z jednego miejsca, definiujemy tzw. <strong>CSS Custom Properties</strong> (zmienne) w pseudo-klasie <code>:root</code>. Do stylowania zaznaczonego tekstu używamy selektora <code>::selection</code>.
     </div>
-    <pre><code>/* style.css */
+    <pre><code>/* Definiujemy zmienne na samej górze CSS */
+:root {
+    --main-color: #000080; /* Granatowy */
+    --bg-color: #d3d3d3;   /* Jasnoszary */
+}
+
 body {
-    /* Pkt 5: Lucida Sans, jeśli brak to Verdana, jeśli brak to domyślny */
-    font-family: "Lucida Sans", Verdana, sans-serif;
+    color: var(--main-color);
+    background-color: var(--bg-color);
 }
 
-h1, h2, h3 {
-    /* Pkt 3: Nagłówki wyśrodkowane w kontenerach */
-    text-align: center;
-}
-
-p {
-    /* Pkt 4: Treść artykułów wyjustowana */
-    text-align: justify;
+/* Pseudo-element działający przy zaznaczaniu tekstu myszką */
+::selection {
+    background-color: var(--main-color);
+    color: var(--bg-color);
 }</code></pre>
   </div>
 
-  <h2 id="semantics">3. Semantyczne Kontenery</h2>
+  <h2 id="logo">2. Panel Logo (1.5 pkt)</h2>
   <div class="task-box">
-    <span class="requirement">Pkt 1, 7</span>
+    <span class="requirement">Flexbox, łamanie wiersza, własna czcionka.</span>
     <div class="explanation">
-      Prowadzący ocenia użycie tagów HTML5 zamiast samych <code>&lt;div&gt;</code>. Artykuł to <code>&lt;article&gt;</code>, zajawki to <code>&lt;aside&gt;</code> lub lista <code>&lt;ul&gt;</code>.
+      Hasło ZAWSZE podzielone na 2 wiersze oznacza użycie tagu <code>&lt;br&gt;</code>.
+      Zmiana układu (obok siebie -> pod sobą) to klasyczny przypadek dla <strong>Flexboxa</strong> i tzw. <strong>Media Queries</strong>. Własną czcionkę ładujemy przez <code>@font-face</code>.
     </div>
-    <pre><code>&lt;!-- Pkt 1 & 7 --&gt;
-&lt;main class="page-container"&gt;
-    &lt;!-- Kontener na główny artykuł --&gt;
-    &lt;article class="full-article"&gt;
-        &lt;header&gt;
-            &lt;h1&gt;Tytuł Artykułu&lt;/h1&gt;
-        &lt;/header&gt;
-        &lt;div class="content"&gt;
-            &lt;!-- Treść z pliku tekstowego --&gt;
-        &lt;/div&gt;
-    &lt;/article&gt;
-
-    &lt;!-- Kontener na zajawki (leads) --&gt;
-    &lt;aside class="article-leads"&gt;
-        &lt;h2&gt;Other Articles&lt;/h2&gt;
-        &lt;ul&gt;
-            &lt;li&gt;Lead 1...&lt;/li&gt;
-            &lt;li&gt;Lead 2...&lt;/li&gt;
-        &lt;/ul&gt;
-    &lt;/aside&gt;
-&lt;/main&gt;</code></pre>
-  </div>
-
-  <h2 id="float">4. Obrazek i Oblewanie Tekstem</h2>
-  <div class="task-box">
-    <span class="requirement">Pkt 8</span>
-    <div class="explanation">
-      Aby tekst otaczał obrazek, używamy <code>float: left</code> lub <code>right</code>. Do adnotacji (podpisu) najlepszy jest tag <code>&lt;figure&gt;</code>.
-    </div>
-    <pre><code>&lt;!-- HTML --&gt;
-&lt;figure class="lead-image"&gt;
-    &lt;img src="couple.jpg" alt="Description"&gt;
-    &lt;figcaption&gt;Adnotacja pod obrazkiem&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-/* CSS */
-.lead-image {
-    float: left; /* Pkt 8: Tekst otacza obrazek */
-    margin: 0 15px 10px 0;
-    width: 200px;
-}
-.lead-image img { width: 100%; }</code></pre>
-  </div>
-
-  <h2 id="paywall">5. Paywall: Czerwony Box</h2>
-  <div class="task-box">
-    <span class="requirement">Pkt 9, 10, 11</span>
-    <div class="explanation">
-      Box musi być wyśrodkowany nad artykułem. Używamy <code>position: absolute</code> względem rodzica (<code>relative</code>).
-      Przezroczystość 20% tła uzyskujemy przez <code>rgba(..., 0.8)</code> (0.8 to krycie, czyli 0.2 to przezroczystość).
-    </div>
-    <pre><code>/* CSS */
-.article-container {
-    position: relative; /* Rodzic musi być relative */
+    <pre><code>/* Ładowanie czcionki z pliku */
+@font-face {
+    font-family: 'Caveat';
+    src: url('caveat-regular.woff2') format('woff2'); /* dostosuj format */
 }
 
-.paywall-info {
-    /* Pkt 9: Wyśrodkowany box */
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-
-    /* Pkt 10: Czerwony, lekko zaokrąglone rogi */
-    background-color: rgba(255, 0, 0, 0.8); /* Pkt 11: 20% przezroczystości */
-    border-radius: 10px;
-    padding: 20px;
-
-    /* Pkt 11: Biały kolor tekstu */
-    color: white;
-    text-align: center;
-    font-weight: bold;
-}</code></pre>
-  </div>
-
-  <h2 id="blur">6. Progresywne Rozmycie (Blur)</h2>
-  <div class="task-box">
-    <span class="requirement">Pkt 12</span>
-    <div class="explanation">
-      To najtrudniejszy punkt. Używamy <code>backdrop-filter</code> na nakładce, która ma maskę gradientową. Dzięki temu rozmycie na dole jest silniejsze niż na górze.
-    </div>
-    <pre><code>/* CSS */
-.blur-layer {
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 100%; height: 60%;
-
-    /* Pkt 12: Rozmycie */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    /* Nasilanie się ku dołowi (Maska gradientowa) */
-    mask-image: linear-gradient(to bottom, transparent, black);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black);
-}</code></pre>
-  </div>
-  <h2 id="flex-grid">7. Święty Graal Layoutu: Flexbox vs Grid</h2>
-  <p>Złota zasada: <strong>Flexbox</strong> służy do układania elementów w jednym wymiarze (tylko w rzędzie LUB tylko w kolumnie). <strong>Grid</strong> służy do budowania w dwóch wymiarach naraz (rzędy I kolumny, jak szachownica).</p>
-
-  <h3>A. Flexbox (display: flex)</h3>
-  <div class="task-box">
-    <div class="explanation">
-      Flexbox rozwiązuje odwieczny problem centrowania w pionie i poziomie w CSS. Kiedy nadajesz kontenerowi <code>display: flex</code>, jego dzieci stają się elastyczne. Działasz na dwóch osiach: osi głównej (domyślnie poziomej - <code>justify-content</code>) i osi poprzecznej (domyślnie pionowej - <code>align-items</code>).
-    </div>
-
-
-
-    <h4>Przykład: Idealne wyśrodkowanie i rozkład elementów</h4>
-    <pre><code>&lt;!-- HTML --&gt;
-&lt;div class="flex-container"&gt;
-    &lt;div class="box"&gt;A&lt;/div&gt;
-    &lt;div class="box"&gt;B&lt;/div&gt;
-    &lt;div class="box"&gt;C&lt;/div&gt;
-&lt;/div&gt;
-
-/* CSS */
-.flex-container {
+.logo-panel {
     display: flex;
-
-    /* flexDirection: row (domyślnie - elementy obok siebie) lub column (elementy pod sobą) */
-    flex-direction: row;
-
-    /* justify-content: Rozkład na osi GŁÓWNEJ (tutaj poziomej).
-       Opcje: center, space-between (maksymalnie rozsuwa), space-around, flex-start, flex-end */
-    justify-content: space-between;
-
-    /* align-items: Rozkład na osi POPRZECZNEJ (tutaj pionowej).
-       Opcje: center, flex-start (do góry), flex-end (do dołu), stretch (rozciągnięcie) */
-    align-items: center;
-
-    /* gap: nowsza właściwość, ustala równy odstęp między elementami bez marginesów! */
+    align-items: center; /* Wyrównanie w pionie */
+    justify-content: center;
     gap: 20px;
-
-    /* flex-wrap: wrap pozwala elementom spaść do nowej linii, gdy brakuje miejsca */
-    flex-wrap: wrap;
 }
 
-/* Magia flex na dzieciach */
-.box {
-    /* flex: 1 sprawia, że element zajmie całą DOSTĘPNĄ wolną przestrzeń.
-       Gdy 3 elementy mają flex: 1, podzielą się kontenerem po równo (1/3). */
-    flex: 1;
+.motto {
+    font-family: 'Caveat', cursive;
+}
+
+/* Responsywność: Gdy ekran jest węższy niż 768px, układamy pionowo */
+@media (max-width: 768px) {
+    .logo-panel {
+        flex-direction: column;
+        text-align: center;
+    }
 }</code></pre>
   </div>
 
-  <h3>B. CSS Grid (display: grid)</h3>
+  <h2 id="filters">3. Panel Filtrów (2.5 pkt)</h2>
   <div class="task-box">
+    <span class="requirement">Select, disabled selected, optgroup, value kodowanie, reset form.</span>
     <div class="explanation">
-      Grid to potężna siatka. Ty definiujesz strukturę kolumn i rzędów, a elementy po prostu "wpadają" w wyznaczone kratki lub mogą rozciągać się na kilka kratek naraz. Idealne do budowania całych szablonów stron (Header, Sidebar, Main, Footer).
+      To pułapka na wiele punktów!
+      1. Aby przycisk "Wyczyść" działał naturalnie bez JS, wszystko musi być wewnątrz tagu <code>&lt;form&gt;</code>, a przycisk musi mieć <code>type="reset"</code>.
+      2. Niewybieralny tytuł robimy flagami <code>disabled selected hidden</code>.
+      3. "Zakodowane wartości" oznaczają, że wpisujesz kod w atrybut <code>value="1"</code>.
+      4. Kategorie robimy tagiem <code>&lt;optgroup label="..."&gt;</code>.
     </div>
 
+    <pre><code>&lt;form class="filters-panel"&gt;
 
+    &lt;select name="academic-title"&gt;
+        &lt;!-- Niewybieralny, domyślny tytuł --&gt;
+        &lt;option value="" disabled selected hidden&gt;Tytuł/stopień naukowy&lt;/option&gt;
 
-    <h4>Przykład: Szachownica z boczkiem (Układ klasycznej strony)</h4>
-    <pre><code>&lt;!-- HTML --&gt;
-&lt;div class="grid-container"&gt;
-    &lt;header class="header"&gt;NAGŁÓWEK&lt;/header&gt;
-    &lt;aside class="sidebar"&gt;MENU&lt;/aside&gt;
-    &lt;main class="content"&gt;TREŚĆ ARTYKUŁU&lt;/main&gt;
-    &lt;footer class="footer"&gt;STOPKA&lt;/footer&gt;
-&lt;/div&gt;
+        &lt;!-- Wartość dla maszyny (value="2"), tekst dla człowieka (Doktor) --&gt;
+        &lt;option value="2"&gt;Doktor&lt;/option&gt;
+        &lt;option value="3"&gt;Profesor&lt;/option&gt;
+    &lt;/select&gt;
 
-/* CSS */
-.grid-container {
+    &lt;select name="topic"&gt;
+        &lt;option value="" disabled selected hidden&gt;Obszar zainteresowań&lt;/option&gt;
+
+        &lt;!-- Kategorie (niewybieralne) grupujące opcje --&gt;
+        &lt;optgroup label="Matematyka"&gt;
+            &lt;option value="1"&gt;Obliczenia numeryczne&lt;/option&gt;
+        &lt;/optgroup&gt;
+    &lt;/select&gt;
+
+    &lt;!-- Przycisk przywracający domyślne opcje formularza --&gt;
+    &lt;button type="reset"&gt;Wyczyść&lt;/button&gt;
+
+&lt;/form&gt;</code></pre>
+  </div>
+
+  <h2 id="grid">4. Siatka i Kafelki (2.5 pkt)</h2>
+  <div class="task-box">
+    <span class="requirement">Siatka 4 kolumn, przerywane zaokrąglone ramki, zdjęcia równej wysokości, padding/gap.</span>
+    <div class="explanation">
+      Użycie <code>display: grid</code> z opcją <code>repeat(4, 1fr)</code> automatycznie dzieli przestrzeń na 4 równe kolumny. Przezroczystość zdjęć i ich jednakową wysokość bez niszczenia proporcji (spłaszczania) załatwia <code>object-fit: cover</code>.
+    </div>
+
+    <pre><code>/* --- SIATKA --- */
+.promoters-grid {
     display: grid;
-
-    /* Definiujemy kolumny. Tutaj tworzymy dwie:
-       Pierwsza ma sztywno 250px.
-       Druga zajmuje 1fr (1 fraction - całą resztę dostępnego miejsca) */
-    grid-template-columns: 250px 1fr;
-
-    /* Definiujemy rzędy. Tutaj trzy:
-       auto (dopasuj do zawartości), 1fr (zajmij resztę miejsca), 50px (sztywne dla stopki) */
-    grid-template-rows: auto 1fr 50px;
-
-    gap: 15px; /* Odstęp między kratkami */
+    grid-template-columns: repeat(4, 1fr); /* Dokładnie 4 kolumny */
+    gap: 30px; /* Odpowiednie rozdzielenie (światło między kafelkami) */
 }
 
-/* Wrzucanie elementów w konkretne miejsca w siatce */
-.header {
-    /* Mówimy: zacznij od 1 linii pionowej i skończ na 3 linii pionowej
-       (czyli rozciągnij się na obie kolumny!) */
-    grid-column: 1 / 3;
+/* --- KAFELEK --- */
+.card {
+    border: 2px dashed var(--main-color); /* Przerywana ramka */
+    border-radius: 15px; /* Zaokrąglone rogi */
+    padding: 20px; /* Światło wewnątrz kafelka */
 }
 
-.sidebar {
-    /* Nie musimy nic pisać! Wpadnie automatycznie w pierwszy wolny slot (lewa kolumna, drugi rząd) */
-}
-
-.content {
-    /* Wpadnie automatycznie obok sidebara (prawa kolumna, drugi rząd) */
-}
-
-.footer {
-    grid-column: 1 / 3; /* Znowu rozciągamy na całą szerokość */
+/* --- ZDJĘCIA RÓWNEJ WYSOKOŚCI --- */
+.card img {
+    width: 100%;
+    height: 250px; /* Sztywna wysokość dla wszystkich */
+    object-fit: cover; /* Przycina, ale NIE ZNIEKSZTAŁCA proporcji! */
+    border-radius: 8px;
 }</code></pre>
   </div>
 
-  <h2 id="czyste-rozwiazanie">8. GOTOWIEC: Pełne Rozwiązanie MathBuzz (Kopiuj-Wklej)</h2>
+  <h2 id="semantics">5. Semantyka Tytułów i Skrótów (1.5 pkt)</h2>
   <div class="task-box">
-    <p>Skopiuj poniższy kod do pliku <code>index.html</code>. Podmień tylko teksty z plików `.txt` i upewnij się, że plik <code>couple.jpg</code> jest w tym samym folderze. Reszta zrobi się sama.</p>
+    <span class="requirement">Związanie zdjęcia z podpisem, rozwijany skrót po najechaniu.</span>
+    <div class="explanation">
+      To jest moment, w którym prowadzący sprawdza, czy znasz tagi HTML5. Zamiast pakować zdjęcie i nazwisko w puste <code>&lt;div&gt;</code>, należy użyć <code>&lt;figure&gt;</code> oraz <code>&lt;figcaption&gt;</code>. Do skrótów służy tag <code>&lt;abbr&gt;</code>.
+    </div>
+    <pre><code>&lt;!-- Poprawne semantycznie połączenie zdjęcia z osobą --&gt;
+&lt;figure class="card"&gt;
+    &lt;img src="promotor1.jpg" alt="Zdjęcie dr. Jana Kowalskiego"&gt;
 
+    &lt;figcaption&gt;
+        &lt;h3&gt;dr Jan Kowalski&lt;/h3&gt;
+    &lt;/figcaption&gt;
+
+    &lt;!-- Słowa kluczowe ze skrótami --&gt;
+    &lt;div class="keywords"&gt;
+        Zainteresowania:
+        &lt;!-- Tag abbr z atrybutem title robi automatyczny tooltip (podpowiedź) --&gt;
+        &lt;abbr title="Artificial Intelligence"&gt;AI&lt;/abbr&gt;,
+        &lt;abbr title="Machine Learning"&gt;ML&lt;/abbr&gt;
+    &lt;/div&gt;
+&lt;/figure&gt;</code></pre>
+  </div>
+
+  <h2 id="boilerplate">6. GOTOWIEC: Pełne Rozwiązanie</h2>
+  <div class="task-box">
+    <p>Połączony HTML i CSS spełniający wszystkie wymogi. Zapisz jako <code>index.html</code> i oddaj prowadzącemu.</p>
     <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
+&lt;html lang="pl"&gt;
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;MathBuzz&lt;/title&gt;
+    &lt;title&gt;OtoPromotor&lt;/title&gt;
     &lt;style&gt;
+        /* --- ZARZĄDZANIE KOLORAMI --- */
+        :root {
+            --navy-color: #000080;
+            --bg-color: #f0f0f0;
+        }
+
+        @font-face {
+            font-family: 'Caveat';
+            src: url('caveat-regular.woff2') format('woff2'); /* Załóż, że plik jest w folderze */
+        }
+
         body {
-            font-family: "Lucida Sans", Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f5f5f5;
+            color: var(--navy-color);
+            background-color: var(--bg-color);
+            font-family: Arial, sans-serif;
             margin: 0; padding: 20px;
         }
 
-        h1, h2, h3 { text-align: center; }
-        p { text-align: justify; }
+        ::selection {
+            background-color: var(--navy-color);
+            color: var(--bg-color);
+        }
 
-        .container {
+        /* --- PANEL 1: LOGO --- */
+        .logo-panel {
             display: flex;
-            gap: 30px;
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        .main-article { width: 65%; }
-        .leads { width: 35%; border-left: 2px solid #eee; padding-left: 20px; }
-
-        .lead-image {
-            float: left;
-            margin: 0 15px 5px 0;
-            width: 150px;
-        }
-        .lead-image img { width: 100%; display: block; }
-        .lead-image figcaption {
-            font-size: 0.8em; font-style: italic; text-align: center;
-            background: #eee; padding: 3px;
+        .logo-panel img {
+            max-width: 150px;
         }
 
-        .content-wrapper {
-            position: relative;
-            overflow: hidden;
-            padding-bottom: 30px;
+        .motto {
+            font-family: 'Caveat', cursive;
+            font-size: 24px;
         }
 
-        .blur-overlay {
-            position: absolute;
-            bottom: 0; left: 0;
-            width: 100%; height: 60%;
-            z-index: 5;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            mask-image: linear-gradient(to bottom, transparent, black);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black);
-            pointer-events: none;
+        @media (max-width: 768px) {
+            .logo-panel {
+                flex-direction: column;
+                text-align: center;
+            }
         }
 
-        .paywall-box {
-            position: absolute;
-            top: 60%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            width: 80%;
+        /* --- PANEL 2: FILTRY --- */
+        .filters-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid var(--navy-color);
             border-radius: 8px;
-            background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            text-align: center;
+        }
+
+        .filters-panel select, .filters-panel button {
+            padding: 10px;
+            border: 1px solid var(--navy-color);
+            color: var(--navy-color);
+            background: white;
+            border-radius: 5px;
+        }
+
+        .filters-panel button {
+            cursor: pointer;
             font-weight: bold;
+        }
+
+        /* --- PANEL 3: KAFELKI --- */
+        .promoters-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .card {
+            border: 2px dashed var(--navy-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 0; /* reset domyślnego marginesu figure */
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--navy-color);
+        }
+
+        .card figcaption h3 {
+            margin: 10px 0 5px 0;
+            text-align: center;
+        }
+
+        .keywords {
+            font-size: 0.9em;
+            text-align: center;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            margin-top: auto; /* Wypycha na sam dół kafelka */
+        }
+
+        abbr {
+            text-decoration: underline dotted;
+            cursor: help;
         }
     &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
 
-    &lt;header&gt;
-        &lt;h1&gt;MathBuzz: The Math Gossip Portal&lt;/h1&gt;
+    &lt;!-- PANEL 1 --&gt;
+    &lt;header class="logo-panel"&gt;
+        &lt;img src="logo.png" alt="OtoPromotor Logo"&gt;
+        &lt;div class="motto"&gt;
+            Czym się różni seminarium od proseminarium?&lt;br&gt;
+            Tym samym czym motor od promotora
+        &lt;/div&gt;
     &lt;/header&gt;
 
-    &lt;main class="container"&gt;
-        &lt;article class="main-article"&gt;
-            &lt;h2&gt;Shocking Discovery in Algebra!&lt;/h2&gt;
+    &lt;!-- PANEL 2 --&gt;
+    &lt;form class="filters-panel"&gt;
+        &lt;select name="academic-title"&gt;
+            &lt;option value="" disabled selected hidden&gt;Tytuł/stopień naukowy/zawodowy&lt;/option&gt;
+            &lt;option value="1"&gt;Magister&lt;/option&gt;
+            &lt;option value="2"&gt;Doktor&lt;/option&gt;
+            &lt;option value="3"&gt;Profesor&lt;/option&gt;
+        &lt;/select&gt;
 
-            &lt;div class="content-wrapper"&gt;
-                &lt;p&gt;(Wklej pierwszy paragraf tekstu tutaj...) Lorem ipsum dolor sit amet, consectetur adipiscing elit.&lt;/p&gt;
-                &lt;p&gt;(Wklej drugi paragraf...) Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&lt;/p&gt;
-                &lt;p&gt;(Wklej trzeci paragraf...) Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.&lt;/p&gt;
+        &lt;select name="thesis-type"&gt;
+            &lt;option value="" disabled selected hidden&gt;Praca dyplomowa&lt;/option&gt;
+            &lt;option value="1"&gt;Licencjacka&lt;/option&gt;
+            &lt;option value="2"&gt;Inżynierska&lt;/option&gt;
+            &lt;option value="3"&gt;Magisterska&lt;/option&gt;
+        &lt;/select&gt;
 
-                &lt;div class="blur-overlay"&gt;&lt;/div&gt;
+        &lt;select name="topic"&gt;
+            &lt;option value="" disabled selected hidden&gt;Obszar zainteresowań&lt;/option&gt;
+            &lt;optgroup label="Informatyka"&gt;
+                &lt;option value="1"&gt;Sztuczna Inteligencja&lt;/option&gt;
+                &lt;option value="2"&gt;Sieci Komputerowe&lt;/option&gt;
+            &lt;/optgroup&gt;
+            &lt;optgroup label="Matematyka"&gt;
+                &lt;option value="3"&gt;Obliczenia numeryczne&lt;/option&gt;
+            &lt;/optgroup&gt;
+        &lt;/select&gt;
 
-                &lt;div class="paywall-box"&gt;
-                    WOULD YOU LIKE TO READ THE REST? USE BROWSER DEBUGGING TOOLS
-                &lt;/div&gt;
+        &lt;button type="reset"&gt;Wyczyść&lt;/button&gt;
+    &lt;/form&gt;
+
+    &lt;!-- PANEL 3 --&gt;
+    &lt;main class="promoters-grid"&gt;
+
+        &lt;!-- Wzór 1 Kafelka (Kopiuj i wklej 4 razy) --&gt;
+        &lt;figure class="card"&gt;
+            &lt;img src="https://via.placeholder.com/300x200" alt="dr inż. Anna Nowak"&gt;
+            &lt;figcaption&gt;
+                &lt;h3&gt;dr inż. Anna Nowak&lt;/h3&gt;
+            &lt;/figcaption&gt;
+            &lt;div class="keywords"&gt;
+                &lt;abbr title="Artificial Intelligence"&gt;AI&lt;/abbr&gt;,
+                &lt;abbr title="Machine Learning"&gt;ML&lt;/abbr&gt;, Python
             &lt;/div&gt;
-        &lt;/article&gt;
+        &lt;/figure&gt;
 
-        &lt;aside class="leads"&gt;
-            &lt;h2&gt;Trending Gossips&lt;/h2&gt;
+        &lt;!-- Dodaj kolejne 3 &lt;figure&gt; na zaliczeniu... --&gt;
 
-            &lt;article class="lead-item"&gt;
-                &lt;h3&gt;Is Pi really 3.14?&lt;/h3&gt;
-
-                &lt;figure class="lead-image"&gt;
-                    &lt;img src="couple.jpg" alt="Famous mathematical couple"&gt;
-                    &lt;figcaption&gt;Secret couple spotted!&lt;/figcaption&gt;
-                &lt;/figure&gt;
-
-                &lt;p&gt;(Wklej tekst poboczny...) Exclusive photos reveal the shocking truth behind the mathematical couple.&lt;/p&gt;
-            &lt;/article&gt;
-        &lt;/aside&gt;
     &lt;/main&gt;
 
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
   </div>
+
 </main>
 
 </body>
