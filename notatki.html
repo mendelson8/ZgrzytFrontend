@@ -139,6 +139,47 @@
 </nav>
 
 <main>
+
+  <h2 id="podstawy-wlasciwosci">0. Podstawy WPF: Właściwości Okna (Window)</h2>
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Jak zmienić nazwę, wymiary i logo aplikacji?</h4>
+      <p>Wszystkie podstawowe ustawienia Twojej aplikacji definiujesz w głównym tagu <code>&lt;Window&gt;</code> na samej górze pliku XAML. To tutaj ustalasz, co wyświetla się na pasku tytułowym, jak duże jest okno na starcie i czy użytkownik ma prawo je minimalizować lub rozciągać.</p>
+      <ul>
+        <li><strong>Title</strong> - Nazwa okienka widoczna na samej górze.</li>
+        <li><strong>Icon</strong> - Ścieżka do pliku z logo (np. <code>.png</code> lub <code>.ico</code>). Ważne: plik graficzny musi być dodany do projektu w Visual Studio, a jego <em>Build Action</em> najlepiej ustawić na <em>Resource</em>.</li>
+        <li><strong>Width / Height</strong> - Wymiary startowe, z jakimi okno się uruchomi.</li>
+        <li><strong>MinWidth / MinHeight</strong> - Blokada przed zbytnim pomniejszeniem okna. Przydatne, by interfejs się nie "zgniótł".</li>
+        <li><strong>WindowStartupLocation</strong> - <code>CenterScreen</code> sprawia, że okno zawsze pojawia się na środku monitora, a nie w losowym rogu.</li>
+        <li><strong>ResizeMode</strong> - Ustawienie na <code>NoResize</code> zabrania użytkownikowi powiększania/pomniejszania okna (ukrywa przycisk maksymalizacji).</li>
+      </ul>
+    </div>
+
+    <div class="code-header">Plik: MainWindow.xaml (Główny tag okna)</div>
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"MojaAplikacja.MainWindow"</span>
+        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
+        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
+
+        <span class="comment">&lt;!-- 1. NAZWA I LOGO --&gt;</span>
+        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Moja Super Aplikacja"</span>
+        <span class="xml-attr">Icon</span><span class="xml-punct">=</span><span class="xml-val">"logo.png"</span>
+
+        <span class="comment">&lt;!-- 2. WYMIARY STARTOWE --&gt;</span>
+        <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"800"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"600"</span>
+
+        <span class="comment">&lt;!-- 3. WYMIARY MINIMALNE (Zabezpieczenie przed zgnieceniem UI) --&gt;</span>
+        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"500"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"400"</span>
+
+        <span class="comment">&lt;!-- 4. ZACHOWANIE OKNA --&gt;</span>
+        <span class="xml-attr">WindowStartupLocation</span><span class="xml-punct">=</span><span class="xml-val">"CenterScreen"</span>
+        <span class="xml-attr">ResizeMode</span><span class="xml-punct">=</span><span class="xml-val">"CanResize"</span><span class="xml-punct">&gt;</span>
+
+    <span class="comment">&lt;!-- Tutaj wchodzi reszta interfejsu np. &lt;Grid&gt; --&gt;</span>
+
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
+  </div>
+
+
   <h1>WPF: Contact Manager - Głęboka Analiza</h1>
   <p>XAML potrafi być przytłaczający. Rozłóżmy go na czynniki pierwsze, żebyś rozumiał każdą linijkę, którą wpisujesz.</p>
 
@@ -413,163 +454,172 @@
       </ul>
     </div>
     <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code>&lt;Window x:Class="MiNIPotter.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:MiNIPotter"
-        Title="MiNIPotter Library"
-        Width="1200" Height="800"
-        MinWidth="1000" MinHeight="600"
-        Background="{DynamicResource PrimaryBackgroundBrush}"
-        Foreground="{DynamicResource PrimaryForegroundBrush}"
-        Icon="potter.png"&gt;
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter.MainWindow"</span>
+        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
+        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
+        <span class="xml-ns">xmlns:local</span><span class="xml-punct">=</span><span class="xml-val">"clr-namespace:MiNIPotter"</span>
+        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter Library"</span>
+        <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"1200"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"800"</span>
+        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"1000"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"600"</span>
+        <span class="comment">&lt;!-- Używamy DynamicResource, aby podpiąć kolory załadowane ze słownika niżej --&gt;</span>
+        <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryBackgroundBrush}"</span>
+        <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span>
+        <span class="xml-attr">Icon</span><span class="xml-punct">=</span><span class="xml-val">"potter.png"</span><span class="xml-punct">&gt;</span>
 
-    &lt;Window.Resources&gt;
-        &lt;ResourceDictionary&gt;
-            &lt;!-- Wciąganie dostarczonych pędzli i kolorów --&gt;
-            &lt;ResourceDictionary.MergedDictionaries&gt;
-                &lt;ResourceDictionary Source="Styles/Colors/Colors.xaml"/&gt;
-            &lt;/ResourceDictionary.MergedDictionaries&gt;
+    <span class="xml-punct">&lt;</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary</span><span class="xml-punct">&gt;</span>
+            <span class="comment">&lt;!-- Wciąganie dostarczonych pędzli i kolorów z zewnętrznego pliku (wymóg z PDF) --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary.MergedDictionaries</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"Styles/Colors/Colors.xaml"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">ResourceDictionary.MergedDictionaries</span><span class="xml-punct">&gt;</span>
 
-            &lt;!-- Podłączanie lokalnych klas jako narzędzia konwertujące --&gt;
-            &lt;local:RatingToStarsConverter x:Key="RatingToStarsConverter"/&gt;
-            &lt;local:AverageRatingToStarsConverter x:Key="AverageRatingToStarsConverter"/&gt;
-            &lt;local:RatingToColorConverter x:Key="RatingToColorConverter"/&gt;
+            <span class="comment">&lt;!-- Podłączanie lokalnych klas C# (Konwerterów) jako narzędzi dostępnych w XAML --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">local:RatingToStarsConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"RatingToStarsConverter"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">local:AverageRatingToStarsConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"AverageRatingToStarsConverter"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">local:RatingToColorConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"RatingToColorConverter"</span><span class="xml-punct">/&gt;</span>
 
-            &lt;!-- Deklaracja czcionki pobranej z pliku .ttf --&gt;
-            &lt;FontFamily x:Key="HarryPotterFont"&gt;./#Harry Potter&lt;/FontFamily&gt;
-        &lt;/ResourceDictionary&gt;
-    &lt;/Window.Resources&gt;
+            <span class="comment">&lt;!-- Deklaracja niestandardowej czcionki. Znaczek ./# wskazuje na plik w folderze programu --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">FontFamily</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"HarryPotterFont"</span><span class="xml-punct">&gt;</span>./#Harry Potter<span class="xml-punct">&lt;/</span><span class="xml-elem">FontFamily</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">ResourceDictionary</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
 
-    &lt;Grid&gt;
-        &lt;Grid.RowDefinitions&gt;
-            &lt;RowDefinition Height="Auto"/&gt; &lt;!-- Sekcja z banerem i przyciskiem --&gt;
-            &lt;RowDefinition Height="*"/&gt;    &lt;!-- Reszta okna --&gt;
-        &lt;/Grid.RowDefinitions&gt;
+    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Sekcja z banerem i przyciskiem (wysokość dopasowana do zawartości) --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- Reszta okna (bierze całe dostępne miejsce) --&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-        &lt;!-- =================== TOP BANNER =================== --&gt;
-        &lt;Grid Grid.Row="0" Margin="10"&gt;
-            &lt;TextBlock Text="MiNIPotter Library"
-                       FontFamily="{StaticResource HarryPotterFont}"
-                       FontSize="40"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       Foreground="{DynamicResource PrimaryForegroundBrush}"/&gt;
+        <span class="comment">&lt;!-- =================== TOP BANNER =================== --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter Library"</span>
+                       <span class="xml-attr">FontFamily</span><span class="xml-punct">=</span><span class="xml-val">"{StaticResource HarryPotterFont}"</span>
+                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"40"</span>
+                       <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span>
+                       <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span>
+                       <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span><span class="xml-punct">/&gt;</span>
 
-            &lt;Button HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Width="40" Height="40"
-                    Background="{DynamicResource SecondaryBackgroundBrush}"
-                    Foreground="{DynamicResource SecondaryForegroundBrush}"
-                    Content="&#x1F5F2;" FontSize="16" FontWeight="Bold"
-                    Click="LoadBtn_Click"/&gt;
-        &lt;/Grid&gt;
+            <span class="comment">&lt;!-- Znak 🗲 to unicode &#x1F5F2; --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Right"</span> <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span>
+                    <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"40"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"40"</span>
+                    <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span>
+                    <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryForegroundBrush}"</span>
+                    <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"&#x1F5F2;"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span>
+                    <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"LoadBtn_Click"</span><span class="xml-punct">/&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
 
-        &lt;!-- =================== GŁÓWNA ZAWARTOŚĆ =================== --&gt;
-        &lt;Grid Grid.Row="1"&gt;
-            &lt;Grid.ColumnDefinitions&gt;
-                &lt;ColumnDefinition Width="400"/&gt; &lt;!-- Sztywna szerokość dla Listy --&gt;
-                &lt;ColumnDefinition Width="*"/&gt;   &lt;!-- Reszta na Szczegóły --&gt;
-            &lt;/Grid.ColumnDefinitions&gt;
+        <span class="comment">&lt;!-- =================== GŁÓWNA ZAWARTOŚĆ =================== --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"400"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Sztywna szerokość 400px wymuszona w poleceniu zadania --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>   <span class="comment">&lt;!-- Reszta na Szczegóły powieści --&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
 
-            &lt;!-- ==== LISTA KSIĄŻEK ==== --&gt;
-            &lt;ListBox Grid.Column="0" ItemsSource="{Binding Books}" x:Name="BooksList"
-                     Background="{DynamicResource SecondaryBackgroundBrush}"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Visible"&gt;
-                &lt;ListBox.ItemTemplate&gt;
-                    &lt;DataTemplate&gt;
-                        &lt;Grid Margin="5"&gt;
-                            &lt;Grid.ColumnDefinitions&gt;
-                                &lt;ColumnDefinition Width="100"/&gt;
-                                &lt;ColumnDefinition Width="*"/&gt;
-                            &lt;/Grid.ColumnDefinitions&gt;
+            <span class="comment">&lt;!-- ==== LISTA KSIĄŻEK ==== --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Books}"</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"BooksList"</span>
+                     <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span>
+                     <span class="xml-attr">ScrollViewer.HorizontalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Disabled"</span>
+                     <span class="xml-attr">ScrollViewer.VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Visible"</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+                        <span class="comment">&lt;!-- Foremka do wycinania pojedynczej książki na liście --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"5"</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"100"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Szerokość obrazka (okładki) --&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+                            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
 
-                            &lt;Image Source="{Binding Cover}" Stretch="Uniform" Width="100"/&gt;
+                            <span class="comment">&lt;!-- Stretch="Uniform" zachowuje oryginalne proporcje --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">Image</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Cover}"</span> <span class="xml-attr">Stretch</span><span class="xml-punct">=</span><span class="xml-val">"Uniform"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"100"</span><span class="xml-punct">/&gt;</span>
 
-                            &lt;Grid Grid.Column="1" Margin="10,0,0,0"&gt;
-                                &lt;Grid.RowDefinitions&gt;
-                                    &lt;RowDefinition Height="Auto"/&gt;
-                                    &lt;RowDefinition Height="Auto"/&gt;
-                                    &lt;RowDefinition Height="*"/&gt;
-                                    &lt;RowDefinition Height="Auto"/&gt;
-                                &lt;/Grid.RowDefinitions&gt;
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,0,0"</span><span class="xml-punct">&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Spycha elementy do dołu kafelka --&gt;</span>
+                                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-                                &lt;TextBlock Text="{Binding Title}" TextWrapping="Wrap" FontWeight="Bold" FontSize="18"/&gt;
-                                &lt;TextBlock Grid.Row="1" Text="{Binding Author}" FontSize="10"/&gt;
+                                <span class="comment">&lt;!-- TextWrapping="Wrap" pozwala długim tytułom zawijać się do nowej linii --&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="val">"Wrap"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"18"</span><span class="xml-punct">/&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Author}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
 
-                                &lt;StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Bottom"&gt;
-                                    &lt;TextBlock Text="{Binding Pages, StringFormat='Strony: {0}'}" FontSize="12" Margin="0,0,10,0"/&gt;
-                                    &lt;TextBlock Text="{Binding ReleaseDate, StringFormat='{}{0:d MMMM yyyy}'}" FontSize="12"/&gt;
-                                &lt;/StackPanel&gt;
-                            &lt;/Grid&gt;
-                        &lt;/Grid&gt;
-                    &lt;/DataTemplate&gt;
-                &lt;/ListBox.ItemTemplate&gt;
-            &lt;/ListBox&gt;
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"3"</span> <span class="xml-attr">Orientation</span><span class="xml-punct">=</span><span class="xml-val">"Horizontal"</span> <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Bottom"</span><span class="xml-punct">&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Pages, StringFormat='Strony: {0}'}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span><span class="xml-punct">/&gt;</span>
 
-            &lt;!-- ==== SZCZEGÓŁY WYBRANEJ KSIĄŻKI ==== --&gt;
-            &lt;!-- Kontekst bindowania zostaje uwiązany ze wskazanym elementem na BooksList --&gt;
-            &lt;Grid Grid.Column="1" DataContext="{Binding SelectedItem, ElementName=BooksList}" Margin="10,0,10,10"&gt;
-                &lt;Grid.RowDefinitions&gt;
-                    &lt;RowDefinition Height="*"/&gt; &lt;!-- Detale --&gt;
-                    &lt;RowDefinition Height="*"/&gt; &lt;!-- Rozdziały --&gt;
-                &lt;/Grid.RowDefinitions&gt;
+                                    <span class="comment">&lt;!-- Ważne: Formatowanie daty 'd MMMM yyyy' zamieni datę na format np. 26 czerwca 1997 --&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding ReleaseDate, StringFormat='{}{0:d MMMM yyyy}'}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span><span class="xml-punct">/&gt;</span>
+                                <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span>
 
-                &lt;!-- Górna część: Detale + Okładka --&gt;
-                &lt;Grid Grid.Row="0" Margin="0,0,0,10"&gt;
-                    &lt;Grid.ColumnDefinitions&gt;
-                        &lt;ColumnDefinition Width="*"/&gt;
-                        &lt;ColumnDefinition Width="*"/&gt;
-                    &lt;/Grid.ColumnDefinitions&gt;
+            <span class="comment">&lt;!-- ==== SZCZEGÓŁY WYBRANEJ KSIĄŻKI ==== --&gt;</span>
+            <span class="comment">&lt;!-- Magia WPF: ElementName połączy ten Grid ze wskazaną książką z ListBoxa obok! --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">DataContext</span><span class="xml-punct">=</span><span class="xml-val">"{Binding SelectedItem, ElementName=BooksList}"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,10,10"</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Detale (połowa miejsca) --&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Rozdziały (druga połowa) --&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-                    &lt;ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,10,0"&gt;
-                        &lt;StackPanel&gt;
-                            &lt;TextBlock Text="{Binding Dedication}" FontSize="14" FontStyle="Italic" FontWeight="DemiBold" TextWrapping="Wrap"/&gt;
-                            &lt;TextBlock Text="{Binding Author}" FontSize="14" HorizontalAlignment="Right" Margin="0,10,0,10"/&gt;
-                            &lt;TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="14" FontStyle="Italic"/&gt;
+                <span class="comment">&lt;!-- Górna część: Detale + Okładka (Podział na pół) --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,0,10"</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
 
-                            &lt;!-- Wywołanie naszego konwertera wyliczającego średnią i zwracającego ciąg gwiazdek --&gt;
-                            &lt;TextBlock Text="{Binding Chapters, Converter={StaticResource AverageRatingToStarsConverter}}"
-                                       FontSize="20" Foreground="Gold" Margin="0,10,0,0"/&gt;
-                        &lt;/StackPanel&gt;
-                    &lt;/ScrollViewer&gt;
+                    <span class="comment">&lt;!-- ScrollViewer zapobiega "ucinaniu" tekstu na małych ekranach --&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">ScrollViewer</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Dedication}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"DemiBold"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span><span class="xml-punct">/&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Author}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Right"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,10,0,10"</span><span class="xml-punct">/&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Summary}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span><span class="xml-punct">/&gt;</span>
 
-                    &lt;Image Grid.Column="1" Source="{Binding Cover}" Stretch="Uniform"/&gt;
-                &lt;/Grid&gt;
+                            <span class="comment">&lt;!-- Wywołanie naszego konwertera wyliczającego średnią dla książki --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Chapters, Converter={StaticResource AverageRatingToStarsConverter}}"</span>
+                                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"20"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"Gold"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,10,0,0"</span><span class="xml-punct">/&gt;</span>
+                        <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">ScrollViewer</span><span class="xml-punct">&gt;</span>
 
-                &lt;!-- Dolna część: Lista Rozdziałów --&gt;
-                &lt;Grid Grid.Row="1" Background="{DynamicResource SecondaryBackgroundBrush}"&gt;
-                    &lt;Grid.RowDefinitions&gt;
-                        &lt;RowDefinition Height="Auto"/&gt;
-                        &lt;RowDefinition Height="*"/&gt;
-                    &lt;/Grid.RowDefinitions&gt;
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Image</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Cover}"</span> <span class="xml-attr">Stretch</span><span class="xml-punct">=</span><span class="xml-val">"Uniform"</span><span class="xml-punct">/&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
 
-                    &lt;TextBlock Text="Rozdziały" Foreground="{DynamicResource PrimaryForegroundBrush}" FontSize="20" FontWeight="Bold" Margin="10"/&gt;
+                <span class="comment">&lt;!-- Dolna część: Lista Rozdziałów --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-                    &lt;ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"&gt;
-                        &lt;ItemsControl ItemsSource="{Binding Chapters}"&gt;
-                            &lt;ItemsControl.ItemTemplate&gt;
-                                &lt;DataTemplate&gt;
-                                    &lt;!-- Element Expander - zwinięty / rozwinięty kafelek --&gt;
-                                    &lt;Expander Header="{Binding Title}" FontSize="14" FontWeight="DemiBold" IsExpanded="False" Margin="5"&gt;
-                                        &lt;StackPanel Margin="10,5,10,10"&gt;
-                                            &lt;TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="12" FontStyle="Italic"/&gt;
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"Rozdziały"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"20"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
 
-                                            &lt;!-- Gwiazdki + Konwerter koloru na bazie oceny od 0 do 10 --&gt;
-                                            &lt;TextBlock Text="{Binding Rating, Converter={StaticResource RatingToStarsConverter}}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource RatingToColorConverter}}"
-                                                       FontSize="16" Margin="0,5,0,0"/&gt;
-                                        &lt;/StackPanel&gt;
-                                    &lt;/Expander&gt;
-                                &lt;/DataTemplate&gt;
-                            &lt;/ItemsControl.ItemTemplate&gt;
-                        &lt;/ItemsControl&gt;
-                    &lt;/ScrollViewer&gt;
-                &lt;/Grid&gt;
-            &lt;/Grid&gt;
-        &lt;/Grid&gt;
-    &lt;/Grid&gt;
-&lt;/Window&gt;</code></pre>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">ScrollViewer</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">&gt;</span>
+                        <span class="comment">&lt;!-- ItemsControl to taka prosta lista bez klikania. Wyświetla elementy jeden pod drugim --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">ItemsControl</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Chapters}"</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">ItemsControl.ItemTemplate</span><span class="xml-punct">&gt;</span>
+                                <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+                                    <span class="comment">&lt;!-- Expander: kontrolka rozwijana (harmonijka) --&gt;</span>
+                                    <span class="xml-punct">&lt;</span><span class="xml-elem">Expander</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"DemiBold"</span> <span class="xml-attr">IsExpanded</span><span class="xml-punct">=</span><span class="xml-val">"False"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"5"</span><span class="xml-punct">&gt;</span>
+                                        <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,5,10,10"</span><span class="xml-punct">&gt;</span>
+                                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Summary}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span><span class="xml-punct">/&gt;</span>
+
+                                            <span class="comment">&lt;!-- Dwa konwertery w akcji: Pierwszy rysuje gwiazdki, drugi liczy ich RGB --&gt;</span>
+                                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Rating, Converter={StaticResource RatingToStarsConverter}}"</span>
+                                                       <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Rating, Converter={StaticResource RatingToColorConverter}}"</span>
+                                                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,5,0,0"</span><span class="xml-punct">/&gt;</span>
+                                        <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
+                                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Expander</span><span class="xml-punct">&gt;</span>
+                                <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;/</span><span class="xml-elem">ItemsControl.ItemTemplate</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;/</span><span class="xml-elem">ItemsControl</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">ScrollViewer</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
   </div>
 
   <h1 style="margin-top: 60px;">Dodatek: Jak zrobić To-Do List w WPF</h1>
