@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kompendium WPF - Contact Manager (Wersja PRO)</title>
+  <title>WPF: Contact Manager - Notatki z Tłumaczeniem</title>
   <style>
       :root {
-          --primary: #68217a; /* WPF Purple */
+          --primary: #68217a;
           --secondary: #512bd4;
           --bg: #f8fafc;
-          --text: #0f172a;
+          --text: #333;
+          --box-bg: #ffffff;
           --code-bg: #1e1e1e;
+          --code-text: #d4d4d4;
+          --accent: #0ea5e9;
       }
 
       body {
@@ -23,364 +26,294 @@
       }
 
       nav {
-          width: 280px;
+          width: 300px;
           height: 100vh;
-          background: var(--code-bg);
+          background: #2d2d30;
           color: white;
           position: fixed;
           padding: 20px;
           overflow-y: auto;
+          box-sizing: border-box;
       }
 
-      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #555; padding-bottom: 10px; color: #fff; }
       nav ul { list-style: none; padding: 0; }
-      nav li { margin-bottom: 10px; }
-      nav a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
-      nav a:hover { color: white; padding-left: 5px; }
+      nav li { margin-bottom: 12px; }
+      nav a { color: #aaa; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+      nav a:hover { color: #fff; padding-left: 5px; }
 
       main {
-          margin-left: 320px;
+          margin-left: 300px;
           padding: 40px;
-          max-width: 950px;
+          max-width: 1000px;
+          width: 100%;
+          box-sizing: border-box;
       }
 
       h1 { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
-      h2 { color: var(--secondary); margin-top: 40px; border-left: 5px solid var(--primary); padding-left: 15px; }
+      h2 { color: var(--secondary); margin-top: 50px; border-left: 5px solid var(--primary); padding-left: 15px; }
 
       .task-box {
-          background: white;
+          background: var(--box-bg);
           border: 1px solid #e2e8f0;
           border-radius: 8px;
-          padding: 20px;
+          padding: 30px;
           margin-top: 20px;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      }
+
+      .explanation {
+          font-size: 1rem;
+          margin-bottom: 20px;
+      }
+
+      .explanation h4 {
+          color: var(--accent);
+          margin-top: 0;
+          margin-bottom: 10px;
+          font-size: 1.1rem;
+      }
+
+      .explanation p {
+          margin-top: 0;
+      }
+
+      .code-header {
+          background: #2d2d30;
+          color: #9cdcfe;
+          padding: 8px 15px;
+          font-family: Consolas, monospace;
+          font-size: 0.85rem;
+          border-top-left-radius: 6px;
+          border-top-right-radius: 6px;
+          border-bottom: 1px solid #444;
+          display: inline-block;
+          margin-top: 15px;
+          width: 100%;
+          box-sizing: border-box;
       }
 
       pre {
           background: var(--code-bg);
-          color: #d4d4d4;
-          padding: 15px;
-          border-radius: 6px;
+          color: var(--code-text);
+          padding: 20px;
+          border-bottom-left-radius: 6px;
+          border-bottom-right-radius: 6px;
           overflow-x: auto;
           font-family: 'Consolas', monospace;
-          font-size: 0.9rem;
-          line-height: 1.4;
+          font-size: 0.95rem;
+          margin-top: 0;
+          line-height: 1.5;
+          box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
       }
 
-      .explanation {
-          background: #f3e8ff;
-          border-left: 4px solid var(--primary);
+      .comment { color: #6a9955; font-style: italic; }
+      .keyword { color: #569cd6; }
+      .string { color: #ce9178; }
+      .class-name { color: #4ec9b0; }
+
+      .alert {
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
           padding: 15px;
           margin: 15px 0;
-          font-size: 0.95rem;
-      }
-
-      .requirement {
-          display: inline-block;
-          background: #dcfce7;
-          color: #166534;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          font-weight: bold;
-          margin-bottom: 5px;
+          font-size: 0.9rem;
+          color: #856404;
       }
   </style>
 </head>
 <body>
 
 <nav>
-  <h2>Nawigacja WPF</h2>
+  <h2>Spis Treści</h2>
   <ul>
-    <li><a href="#window">1. Okno i Układ (Grid)</a></li>
-    <li><a href="#data">2. Klasy i INotifyPropertyChanged</a></li>
-    <li><a href="#add-contact">3. Okno Dodawania (Dialog)</a></li>
-    <li><a href="#datagrid">4. ListBox i DataGrid</a></li>
-    <li><a href="#context-menu">5. Menu Kontekstowe</a></li>
-    <li><a href="#validation">6. Walidacja (IValidation)</a></li>
-    <li><a href="#converters">7. Konwertery (IValueConverter)</a></li>
+    <li><a href="#podstawy-okna">1. Ustawienia Okna i Layout</a></li>
+    <li><a href="#dane">2. Powiadomienia (INotifyPropertyChanged)</a></li>
+    <li><a href="#enum-combobox">3. Bindowanie Enuma (ObjectDataProvider)</a></li>
+    <li><a href="#listbox">4. Kolory ListBoxa (AlternationIndex)</a></li>
+    <li><a href="#walidacja">5. Zaawansowana Walidacja (IValidation)</a></li>
   </ul>
 </nav>
 
 <main>
-  <h1>Rozszerzone Notatki WPF: Contact Manager</h1>
-  <p>Ten plik zawiera dogłębną analizę zarówno części laboratoryjnej, jak i zaawansowanej części domowej (Home Part) zadania. Znajdziesz tu pełne implementacje walidacji, konwerterów oraz stylowania[cite: 10, 633, 634].</p>
+  <h1>WPF: Contact Manager - Zrozumieć Kod</h1>
+  <p>Zamiast wklejać gotowce, przeanalizujmy, dlaczego używamy konkretnych mechanizmów zdefiniowanych w wymaganiach zadania (PDF).</p>
 
-  <h2 id="window">1. Okno Główne i Układ Okna</h2>
+  <h2 id="podstawy-okna">1. Ustawienia Okna i Podział (Layout)</h2>
   <div class="task-box">
-    <span class="requirement">Parametry Okna [cite: 12, 13, 14, 16]</span>
     <div class="explanation">
-      Główne okno musi zaczynać na środku ekranu, mieć tytuł "Contact Manager" oraz konkretne wymiary początkowe i minimalne[cite: 13, 16, 84, 85].
+      <h4>Po co nam Grid i RowDefinitions?</h4>
+      <p>Wymaganie z PDF mówi jasno: "Pasek menu na górze okna, reszta okna podzielona na zakładki". W WPF nie używamy pozycjonowania pikselowego. Używamy <code>&lt;Grid&gt;</code>, który działa jak niewidzialna tabela.</p>
+      <p>Dzielimy okno na dwa wiersze:</p>
+      <ul>
+        <li><code>Height="Auto"</code> - Pierwszy wiersz dopasuje swoją wysokość do zawartości (czyli będzie miał dokładnie taką wysokość jak Pasek Menu).</li>
+        <li><code>Height="*"</code> - Znak gwiazdki to "weź całą resztę wolnego miejsca". Tu wrzucimy zakładki (TabControl).</li>
+      </ul>
     </div>
+
+    <div class="code-header">Plik: MainWindow.xaml (Fragment Głównego Układu)</div>
     <pre><code>&lt;Window x:Class="ContactManager.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Contact Manager"
         Height="600" Width="800"
         MinWidth="500" MinHeight="500"
         WindowStartupLocation="CenterScreen"&gt;
 
     &lt;Grid&gt;
-        &lt;!-- Podział okna na Pasek Menu (Auto) oraz zawartość (*) [cite: 111, 117] --&gt;
+        <span class="comment">&lt;!-- Definicja naszej tabeli (2 wiersze) --&gt;</span>
         &lt;Grid.RowDefinitions&gt;
             &lt;RowDefinition Height="Auto"/&gt;
             &lt;RowDefinition Height="*"/&gt;
         &lt;/Grid.RowDefinitions&gt;
 
-        &lt;!-- Menu z opcjami Import/Export (Home Part) [cite: 637, 638] --&gt;
+        <span class="comment">&lt;!-- Wiersz 0: Menu --&gt;</span>
         &lt;Menu Grid.Row="0"&gt;
             &lt;MenuItem Header="File"&gt;
-                &lt;MenuItem Header="Import" Click="MenuItem_Import" /&gt;
-                &lt;MenuItem Header="Export" Click="MenuItem_Export" /&gt;
-                &lt;Separator /&gt;
                 &lt;MenuItem Header="Exit" Click="MenuItem_Exit" /&gt;
-            &lt;/MenuItem&gt;
-            &lt;MenuItem Header="Contacts"&gt;
-                &lt;MenuItem Header="Add contact" Click="MenuItem_AddContact" /&gt;
-                &lt;MenuItem Header="Clear contacts" Click="MenuItem_ClearContacts" /&gt;
             &lt;/MenuItem&gt;
         &lt;/Menu&gt;
 
-        &lt;!-- Zakładki --&gt;
+        <span class="comment">&lt;!-- Wiersz 1: Zakładki zajmujące resztę ekranu --&gt;</span>
         &lt;TabControl Grid.Row="1"&gt;
-            &lt;TabItem Header="List"&gt;&lt;ListBox/&gt;&lt;/TabItem&gt;
-            &lt;TabItem Header="Grid"&gt;&lt;DataGrid/&gt;&lt;/TabItem&gt;
-            &lt;TabItem Header="Validation settings"&gt;&lt;!-- Zablokowane domyślnie [cite: 646] --&gt;&lt;/TabItem&gt;
+            &lt;TabItem Header="List"&gt; &lt;ListBox/&gt; &lt;/TabItem&gt;
+            &lt;TabItem Header="Grid"&gt; &lt;DataGrid/&gt; &lt;/TabItem&gt;
         &lt;/TabControl&gt;
     &lt;/Grid&gt;
 &lt;/Window&gt;</code></pre>
   </div>
 
-  <h2 id="data">2. Klasy Danych i INotifyPropertyChanged</h2>
+  <h2 id="dane">2. Powiadomienia Widoku (INotifyPropertyChanged)</h2>
   <div class="task-box">
-    <span class="requirement">Odświeżanie interfejsu (Wskazówka: INotifyPropertyChanged) [cite: 703]</span>
     <div class="explanation">
-      Samo użycie <code>ObservableCollection</code> powiadamia widok tylko o <em>dodaniu lub usunięciu</em> elementu z listy. Aby widok aktualizował się, gdy zmieni się <em>właściwość</em> pojedynczego kontaktu (np. poprawisz nazwisko w edytorze), klasa musi implementować interfejs <code>INotifyPropertyChanged</code>.
-      <br><br>
-
+      <h4>Dlaczego ObservableCollection nie wystarcza?</h4>
+      <p>To najczęstszy błąd w WPF. <code>ObservableCollection&lt;Contact&gt;</code> mówi interfejsowi graficznemu <strong>tylko</strong> o tym, że dodano lub usunięto element z listy. Nie ma pojęcia o tym, że edytowałeś nazwisko istniejącego kontaktu w DataGridzie!</p>
+      <p>Aby WPF wiedział, że zmieniła się zawartość konkretnego obiektu, klasa <code>Contact</code> musi zaimplementować interfejs <code>INotifyPropertyChanged</code>. Kiedy zmieniasz właściwość <code>Surname</code>, klasa "krzyczy" do widoku (wywołując <code>OnPropertyChanged</code>): <em>"Hej, zmieniłem się, odrysuj mnie!"</em>.</p>
     </div>
-    <pre><code>// C#: Contact.cs
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
-public class Contact : INotifyPropertyChanged
+    <div class="code-header">Plik: Contact.cs</div>
+    <pre><code><span class="keyword">using</span> System.ComponentModel;
+<span class="keyword">using</span> System.Runtime.CompilerServices;
+
+<span class="keyword">public class</span> <span class="class-name">Contact</span> : <span class="class-name">INotifyPropertyChanged</span>
 {
-    private string name;
-    private string surname;
-    // ... reszta pół ...
+    <span class="keyword">private string</span> name;
 
-    public string Name
+    <span class="comment">// Właściwość z powiadomieniem</span>
+    <span class="keyword">public string</span> Name
     {
-        get =&gt; name;
-        set { name = value; OnPropertyChanged(); }
+        <span class="keyword">get</span> { <span class="keyword">return</span> name; }
+        <span class="keyword">set</span>
+        {
+            name = value;
+            <span class="comment">// Informujemy interfejs (np. ListBox), że Name się zmieniło!</span>
+            OnPropertyChanged();
+        }
     }
 
-    public string Surname
+    <span class="comment">// Standardowa implementacja interfejsu (kopiuj-wklej)</span>
+    <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
+    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propertyName = <span class="keyword">null</span>)
     {
-        get =&gt; surname;
-        set { surname = value; OnPropertyChanged(); }
-    }
-
-    public Gender Gender { get; set; }
-
-    // Implementacja interfejsu
-    public event PropertyChangedEventHandler PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propertyName));
     }
 }</code></pre>
   </div>
 
-  <h2 id="add-contact">3. Okno Dodawania Kontaktu (Dialog)</h2>
+  <h2 id="enum-combobox">3. Magia: ComboBox ze zmiennymi typu Enum</h2>
   <div class="task-box">
-    <span class="requirement">Restrykcje wyglądu [cite: 247, 248, 249, 250]</span>
     <div class="explanation">
-      Okno dodawania nowego kontaktu musi blokować okno główne[cite: 45]. Aby wyglądało odpowiednio czysto, dokument wymaga usunięcia systemowych ramek i dodania czarnego obramowania[cite: 249, 250].
+      <h4>Jak wyciągnąć "Male" i "Female" do listy rozwijanej?</h4>
+      <p>W oknie dodawania kontaktu musimy wybrać płeć (Gender). W C# masz przygotowany typ <code>enum Gender { Male, Female }</code>. Jak wrzucić to do XAML-a bez pisania brzydkiego kodu w C#?</p>
+      <p>Rozwiązaniem z PDFa jest <strong>ObjectDataProvider</strong>. To specjalne narzędzie w <code>Window.Resources</code>, które "wyciąga" wszystkie wartości z Enuma i tworzy z nich gotową do użycia tablicę, którą podpinamy pod właściwość <code>ItemsSource</code> naszego ComboBoxa.</p>
     </div>
-    <pre><code>&lt;!-- XAML: AddContactWindow.xaml [cite: 241] --&gt;
-&lt;Window x:Class="ContactManager.AddContactWindow"
-        Title="Add contact" Height="250" Width="350"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
-        ShowInTaskbar="False"
-        WindowStyle="None"
-        BorderBrush="Black" BorderThickness="3"&gt; &lt;!-- [cite: 247, 248, 249, 250, 251] --&gt;
 
-    &lt;!-- Resource z Enumem [cite: 387] --&gt;
-    &lt;Window.Resources&gt;
-        &lt;ObjectDataProvider x:Key="GenderList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
-            &lt;ObjectDataProvider.MethodParameters&gt;
-                &lt;x:Type TypeName="local:Gender"/&gt; &lt;!-- [cite: 389] --&gt;
-            &lt;/ObjectDataProvider.MethodParameters&gt;
-        &lt;/ObjectDataProvider&gt;
-    &lt;/Window.Resources&gt;
+    <div class="code-header">Plik: AddContactWindow.xaml (Ładowanie Enuma)</div>
+    <pre><code>&lt;Window.Resources&gt;
+    <span class="comment">&lt;!-- Pobiera wartości (GetValues) z typu Enum, a dokładnie z naszego local:Gender --&gt;</span>
+    &lt;ObjectDataProvider x:Key="GenderList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
+        &lt;ObjectDataProvider.MethodParameters&gt;
+            &lt;x:Type TypeName="local:Gender"/&gt;
+        &lt;/ObjectDataProvider.MethodParameters&gt;
+    &lt;/ObjectDataProvider&gt;
+&lt;/Window.Resources&gt;
 
-    &lt;Grid&gt;
-        &lt;!-- Tu pola tekstowe i ComboBox z podpiętym GenderList --&gt;
-        &lt;TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/&gt; &lt;!-- [cite: 361] --&gt;
-
-        &lt;ComboBox ItemsSource="{Binding Source={StaticResource GenderList}}"
-                  SelectedItem="{Binding Path=Gender}" /&gt; &lt;!-- [cite: 404, 405] --&gt;
-
-        &lt;StackPanel Orientation="Horizontal" HorizontalAlignment="Center"&gt;
-            &lt;Button Width="100" Height="30" Click="AddContact"&gt;Add contact&lt;/Button&gt; &lt;!-- [cite: 325] --&gt;
-            &lt;Button Width="100" Height="30" Click="Cancel" Margin="15,0,0,0"&gt;Cancel&lt;/Button&gt; &lt;!-- [cite: 326] --&gt;
-        &lt;/StackPanel&gt;
-    &lt;/Grid&gt;
-&lt;/Window&gt;</code></pre>
-    <pre><code>// C#: Code-behind (AddContactWindow.xaml.cs)
-public partial class AddContactWindow : Window
-{
-    public Contact NewContact { get; private set; } // [cite: 332]
-
-    public AddContactWindow()
-    {
-        InitializeComponent();
-        NewContact = new Contact(); // [cite: 344]
-        DataContext = NewContact; // [cite: 346]
-    }
-
-    private void AddContact(object sender, RoutedEventArgs e)
-    {
-        DialogResult = true; // Zwraca true do okna głównego [cite: 414]
-        Close(); // [cite: 416]
-    }
-
-    private void Cancel(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false; // [cite: 425]
-        Close(); // [cite: 427]
-    }
-}</code></pre>
+&lt;Grid&gt;
+    <span class="comment">&lt;!-- ComboBox z podpiętą listą wartości Enum oraz powiązaniem wyboru z właściwością obiektu --&gt;</span>
+    &lt;ComboBox ItemsSource="{Binding Source={StaticResource GenderList}}"
+              SelectedItem="{Binding Path=Gender}" /&gt;
+&lt;/Grid&gt;</code></pre>
   </div>
 
-  <h2 id="datagrid">4. ListBox (Zmienne Kolory) i DataGrid</h2>
+  <h2 id="listbox">4. Kolorowanie co drugiego wiersza (AlternationIndex)</h2>
   <div class="task-box">
-    <span class="requirement">Zmienne tło (AlternationIndex) i DataGrid [cite: 593, 628]</span>
     <div class="explanation">
-      Tło dla parzystych i nieparzystych pozycji różni się kolorami. Służy do tego <code>AlternationIndex</code> powiązany z <code>Triggerami</code> w stylach list[cite: 592, 593]. DataGrid musi pozwalać na dodawanie rekordów bezpośrednio z tabeli[cite: 628].
+      <h4>Dlaczego używamy Style Triggers?</h4>
+      <p>Zadanie wymaga, by parzyste i nieparzyste wiersze na liście kontaktów miały różne tła. Nie możemy robić tego ręcznie (nadając klasom tło przy dodawaniu elementu w kodzie C#), bo jak usuniemy jeden element ze środka listy, kolory się zepsują.</p>
+      <p>Rozwiązanie WPF to <code>AlternationCount="2"</code> wstawione do ListBoxa. Mówi to liście: <em>Odliczaj wiersze 0, 1, 0, 1, 0, 1...</em>. Następnie w stylach używamy <strong>Triggara</strong> (wyzwalacza), który mówi: <em>Jeśli AlternationIndex wynosi 0, zrób tło różowe. Jeśli 1, zrób niebieskie</em>.</p>
     </div>
-    <pre><code>&lt;!-- XAML: Wewnątrz ListBox --&gt;
-&lt;ListBox ItemsSource="{Binding Source={StaticResource ContactsViewSource}}"
-         AlternationCount="2"&gt; &lt;!-- Konieczne do działania zmiennych kolorów! [cite: 625] --&gt;
+
+    <div class="code-header">Plik: MainWindow.xaml (Wewnątrz ListBox)</div>
+    <pre><code><span class="comment">&lt;!-- Kluczowe: AlternationCount włącza liczenie 0, 1, 0, 1... --&gt;</span>
+&lt;ListBox ItemsSource="{Binding Contacts}" AlternationCount="2"&gt;
+
     &lt;ListBox.ItemContainerStyle&gt;
         &lt;Style TargetType="ListBoxItem"&gt;
             &lt;Style.Triggers&gt;
+                <span class="comment">&lt;!-- Wyzwalacz dla wierszy parzystych (0) --&gt;</span>
                 &lt;Trigger Property="ItemsControl.AlternationIndex" Value="0"&gt;
-                    &lt;Setter Property="Background" Value="#FFAFC5FF" /&gt; &lt;!-- [cite: 610] --&gt;
+                    &lt;Setter Property="Background" Value="#FFAFC5FF" /&gt;
                 &lt;/Trigger&gt;
+
+                <span class="comment">&lt;!-- Wyzwalacz dla wierszy nieparzystych (1) --&gt;</span>
                 &lt;Trigger Property="ItemsControl.AlternationIndex" Value="1"&gt;
-                    &lt;Setter Property="Background" Value="#FF75A1FF" /&gt; &lt;!-- [cite: 612] --&gt;
-                &lt;/Trigger&gt;
-                &lt;!-- Część domowa: Specjalny kolor dla ZAZNACZONEGO elementu [cite: 641] --&gt;
-                &lt;Trigger Property="IsSelected" Value="True"&gt;
-                    &lt;Setter Property="Background" Value="#FFFDCF6C" /&gt;
+                    &lt;Setter Property="Background" Value="#FF75A1FF" /&gt;
                 &lt;/Trigger&gt;
             &lt;/Style.Triggers&gt;
         &lt;/Style&gt;
     &lt;/ListBox.ItemContainerStyle&gt;
-&lt;/ListBox&gt;
 
-&lt;!-- DataGrid, który sam tworzy kolumny i pozwala na wstawianie wierszy [cite: 630, 631] --&gt;
-&lt;DataGrid ItemsSource="{Binding}" AutoGenerateColumns="True" CanUserAddRows="True" /&gt;</code></pre>
+&lt;/ListBox&gt;</code></pre>
   </div>
 
-  <h2 id="context-menu">5. Menu Kontekstowe (Prawy Przycisk)</h2>
+  <h2 id="walidacja">5. Zaawansowana Walidacja (Część domowa)</h2>
   <div class="task-box">
-    <span class="requirement">Usuwanie kontaktu przez prawy przycisk myszy [cite: 643, 644]</span>
     <div class="explanation">
-      Aby po kliknięciu prawym przyciskiem myszy na kontakt pojawiło się menu "Delete contact", należy dodać <code>ContextMenu</code> do struktury <code>DataTemplate</code> naszego ListBoxa[cite: 643, 644].
+      <h4>Dlaczego tworzymy interfejs IValidation?</h4>
+      <p>W zadaniu domowym (Home Part) musisz napisać aplikację w taki sposób, by w przyszłości można było dodawać nowe reguły sprawdzania (np. długości hasła) przez pliki <code>.dll</code>, bez modyfikowania głównego kodu programu.</p>
+      <p>Aby to się udało, plik DLL i Twój program muszą mówić tym samym językiem. Służy do tego interfejs <code>IValidation</code>. Każda nowa reguła walidacji musi go wdrożyć (posiadać Nazwę i Opis błędu) oraz dziedziczyć po bazowej klasie WPF <code>ValidationRule</code>.</p>
     </div>
-    <pre><code>&lt;!-- XAML: Wewnątrz DataTemplate dla ListBoxItem --&gt;
-&lt;Grid&gt;
-    &lt;Grid.ContextMenu&gt;
-        &lt;ContextMenu&gt;
-            &lt;!-- Zdarzenie usuwania wiążemy z kodem --&gt;
-            &lt;MenuItem Header="Delete contact" Click="MenuItem_DeleteContact" /&gt;
-        &lt;/ContextMenu&gt;
-    &lt;/Grid.ContextMenu&gt;
 
-    &lt;!-- Tu zawartość kafelka (zdjęcie, imię, nazwisko) --&gt;
-&lt;/Grid&gt;</code></pre>
-    <pre><code>// C#: Code-behind (Usuwanie elementu)
-private void MenuItem_DeleteContact(object sender, RoutedEventArgs e)
+    <div class="code-header">Plik: IValidation.cs i PhoneNumberRule.cs</div>
+    <pre><code><span class="comment">// KROK 1: Współdzielony interfejs, który będzie w pliku DLL</span>
+<span class="keyword">public interface</span> <span class="class-name">IValidation</span>
 {
-    // Pobranie kontekstu klikniętego elementu menu
-    if (sender is MenuItem menuItem && menuItem.DataContext is Contact contactToDelete)
-    {
-        Contacts.Remove(contactToDelete);
-    }
-}</code></pre>
-  </div>
-
-  <h2 id="validation">6. System Walidacji (Interfejsy i Pliki DLL)</h2>
-  <div class="task-box">
-    <span class="requirement">Reguły sprawdzające i Interfejs IValidation [cite: 655, 664, 665]</span>
-    <div class="explanation">
-      Zadanie wymaga, by można było dodawać reguły walidacji (np. sprawdzanie długości czy formatu XXX-XXX-XXX) bez rekompilacji, używając bibliotek DLL[cite: 663, 664]. Aby to było możliwe, aplikacja i pliki DLL muszą współdzielić interfejs <code>IValidation</code>[cite: 665]. Reguły dziedziczą też po wbudowanej klasie WPF: <code>ValidationRule</code>[cite: 664, 674].
-      <br><br>
-
-    </div>
-    <pre><code>// C#: Struktura interfejsu (współdzielona np. w projekcie ClassLibrary) [cite: 665]
-public interface IValidation
-{
-    string Name { get; } // [cite: 666]
-    string Description { get; } // [cite: 668]
+    <span class="keyword">string</span> Name { <span class="keyword">get</span>; }
+    <span class="keyword">string</span> Description { <span class="keyword">get</span>; }
 }
 
-// C#: Przykład Reguły (Sprawdzanie Długości) [cite: 656, 673, 674]
-public class MinLengthValidationRule : ValidationRule, IValidation
+<span class="comment">// KROK 2: Przykładowa reguła (Dziedziczy z ValidationRule i z IValidation)</span>
+<span class="keyword">public class</span> <span class="class-name">PhoneValidationRule</span> : <span class="class-name">ValidationRule</span>, <span class="class-name">IValidation</span>
 {
-    public string Name =&gt; "Minimum 5 znaków";
-    public string Description =&gt; "Tekst musi posiadać co najmniej 5 znaków.";
+    <span class="keyword">public string</span> Name =&gt; <span class="string">"Format Telefonu"</span>;
+    <span class="keyword">public string</span> Description =&gt; <span class="string">"Numer musi być w formacie XXX-XXX-XXX."</span>;
 
-    public override ValidationResult Validate(object value, CultureInfo cultureInfo) // [cite: 684]
+    <span class="comment">// Główna funkcja, którą wywołuje WPF przy sprawdzaniu tekstu</span>
+    <span class="keyword">public override</span> ValidationResult Validate(<span class="keyword">object</span> value, CultureInfo cultureInfo)
     {
-        string text = value as string;
-        if (text == null || text.Length &lt; 5)
+        <span class="keyword">string</span> phone = value <span class="keyword">as string</span>;
+
+        <span class="comment">// Prosta walidacja używająca wyrażeń regularnych (RegEx)</span>
+        <span class="keyword">if</span> (!System.Text.RegularExpressions.Regex.IsMatch(phone, <span class="string">@"^\d{3}-\d{3}-\d{3}$"</span>))
         {
-            return new ValidationResult(false, Description); // Błąd walidacji
+            <span class="comment">// Zwracamy informację o błędzie z naszym opisem!</span>
+            <span class="keyword">return new</span> ValidationResult(<span class="keyword">false</span>, Description);
         }
-        return ValidationResult.ValidResult; // Walidacja pomyślna [cite: 691]
+
+        <span class="comment">// Jeśli kod dotarł tutaj, wszystko jest OK</span>
+        <span class="keyword">return</span> ValidationResult.ValidResult;
     }
 }</code></pre>
   </div>
 
-  <h2 id="converters">7. Konwertery (Blokada Zakładek)</h2>
-  <div class="task-box">
-    <span class="requirement">Zarządzanie widocznością za pomocą mechanizmu konwerterów [cite: 647, 700]</span>
-    <div class="explanation">
-      Zakładka "Validation settings" jest zablokowana. Użytkownik odblokowuje ją przyciskiem[cite: 646, 647]. Konwerter w WPF to klasa implementująca interfejs <code>IValueConverter</code>, która potrafi zmienić (np.) stan logiczny <code>bool</code> (True/False) na <code>Visibility</code> (Visible/Collapsed).
-    </div>
-    <pre><code>// C#: BoolToVisibilityConverter.cs
-using System.Windows.Data;
-using System.Windows;
-
-public class BoolToVisibilityConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is bool isUnlocked && isUnlocked)
-            return Visibility.Visible;
-
-        return Visibility.Collapsed;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}</code></pre>
-    <pre><code>&lt;!-- XAML: Wewnątrz Window.Resources --&gt;
-&lt;local:BoolToVisibilityConverter x:Key="BoolToVisConverter" /&gt;
-
-&lt;!-- XAML: Użycie w kontrolce (np. we wnętrzu TabItem) --&gt;
-&lt;!-- Zmienna "IsValidationUnlocked" pochodzi z klasy C# okna głównego --&gt;
-&lt;Grid Visibility="{Binding IsValidationUnlocked, Converter={StaticResource BoolToVisConverter}}"&gt;
-    &lt;!-- Zawartość konfiguracji walidacji --&gt;
-&lt;/Grid&gt;</code></pre>
-  </div>
 </main>
 
 </body>
