@@ -139,119 +139,130 @@
 </nav>
 
 <main>
-  <h1>WPF: Contact Manager - Zrozumieć Kod</h1>
-  <p>Zamiast wklejać gotowce, przeanalizujmy, dlaczego używamy konkretnych mechanizmów zdefiniowanych w wymaganiach zadania (PDF).</p>
+  <h1>WPF: Contact Manager - Głęboka Analiza</h1>
+  <p>XAML potrafi być przytłaczający. Rozłóżmy go na czynniki pierwsze, żebyś rozumiał każdą linijkę, którą wpisujesz.</p>
 
-  <h2 id="podstawy-okna">1. Ustawienia Okna i Podział (Layout)</h2>
+  <h2 id="podstawy-okna">1. Ustawienia Okna i Układ (Grid) w XAML</h2>
   <div class="task-box">
     <div class="explanation">
-      <h4>Po co nam Grid i RowDefinitions?</h4>
-      <p>Wymaganie z PDF mówi jasno: "Pasek menu na górze okna, reszta okna podzielona na zakładki". W WPF nie używamy pozycjonowania pikselowego. Używamy <code>&lt;Grid&gt;</code>, który działa jak niewidzialna tabela.</p>
+      <h4>Anatomia Taga &lt;Window&gt; i &lt;Grid&gt;</h4>
+      <p>W pliku PDF jasno sprecyzowano wymiary okna[cite: 85]. Tłumaczymy to na atrybuty w XAML:</p>
+      <ul>
+        <li><code>x:Class</code> - Mówi kompilatorowi: <i>"Hej, interfejs graficzny z tego pliku połącz z logiką w pliku C# o nazwie ContactManager.MainWindow"</i>.</li>
+        <li><code>xmlns</code> - To przestrzenie nazw (XML Namespaces). Pozwalają WPF-owi zrozumieć, czym są tagi takie jak Grid czy Button. Bez nich plik to tylko zwykły tekst.</li>
+        <li><code>WindowStartupLocation="CenterScreen"</code> - Automatycznie wylicza środek monitora przy uruchomieniu[cite: 84].</li>
+      </ul>
+      <p>Następnie używamy <code>&lt;Grid&gt;</code>. Grid w WPF to niewidzialna szachownica . Atrybut <code>Height="Auto"</code> w wierszu oznacza: <i>Daj mi tylko tyle miejsca na wysokość, ile zajmuje mój element wewnątrz (np. menu)</i>. Atrybut <code>Height="*"</code> (gwiazdka) oznacza: <i>Zabierz dla mnie absolutnie całą resztę wolnego miejsca na ekranie</i>[cite: 111, 112].</p>
     </div>
-    <div class="code-header">Plik: MainWindow.xaml (Fragment Głównego Układu)</div>
-    <pre><code>&lt;Window x:Class="ContactManager.MainWindow"
-        Title="Contact Manager"
-        Height="600" Width="800"
-        MinWidth="500" MinHeight="500"
-        WindowStartupLocation="CenterScreen"&gt;
 
-    &lt;Grid&gt;
-        <span class="comment">&lt;!-- Definicja naszej tabeli (2 wiersze) --&gt;</span>
-        &lt;Grid.RowDefinitions&gt;
-            &lt;RowDefinition Height="Auto"/&gt;
-            &lt;RowDefinition Height="*"/&gt;
-        &lt;/Grid.RowDefinitions&gt;
+    <div class="code-header">Plik: MainWindow.xaml (Dokładne tłumaczenie)</div>
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"ContactManager.MainWindow"</span>
+        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
+        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
+        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Contact Manager"</span>
+        <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"600"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"800"</span>
+        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"500"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"500"</span>
+        <span class="xml-attr">WindowStartupLocation</span><span class="xml-punct">=</span><span class="xml-val">"CenterScreen"</span><span class="xml-punct">&gt;</span>
 
-        <span class="comment">&lt;!-- Wiersz 0: Menu --&gt;</span>
-        &lt;Menu Grid.Row="0"&gt;
-            &lt;MenuItem Header="File"&gt;
-                &lt;MenuItem Header="Exit" Click="MenuItem_Exit" /&gt;
-            &lt;/MenuItem&gt;
-        &lt;/Menu&gt;
+    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+        <span class="comment">&lt;!-- Deklarujemy dwa wiersze. Jeden na menu (Auto), drugi na resztę (*) --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-        <span class="comment">&lt;!-- Wiersz 1: Zakładki zajmujące resztę ekranu --&gt;</span>
-        &lt;TabControl Grid.Row="1"&gt;
-            &lt;TabItem Header="List"&gt; &lt;ListBox/&gt; &lt;/TabItem&gt;
-            &lt;TabItem Header="Grid"&gt; &lt;DataGrid/&gt; &lt;/TabItem&gt;
-        &lt;/TabControl&gt;
-    &lt;/Grid&gt;
-&lt;/Window&gt;</code></pre>
+        <span class="comment">&lt;!-- Atrybut Grid.Row="0" nakazuje menu wpaść do pierwszego zadeklarowanego wyżej wiersza --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Menu</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"File"</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Exit"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"MenuItem_Exit"</span> <span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">MenuItem</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Menu</span><span class="xml-punct">&gt;</span>
+
+        <span class="comment">&lt;!-- Grid.Row="1" oznacza, że zakładki wpadną do wiersza zajmującego całą resztę okna --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">TabControl</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">TabItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"List"</span><span class="xml-punct">&gt;</span> <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span><span class="xml-punct">/&gt;</span> <span class="xml-punct">&lt;/</span><span class="xml-elem">TabItem</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">TabItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Grid"</span><span class="xml-punct">&gt;</span> <span class="xml-punct">&lt;</span><span class="xml-elem">DataGrid</span><span class="xml-punct">/&gt;</span> <span class="xml-punct">&lt;/</span><span class="xml-elem">TabItem</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">TabControl</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
   </div>
 
-  <h2 id="dane">2. Powiadomienia Widoku (INotifyPropertyChanged)</h2>
+  <h2 id="enum-combobox">3. Ładowanie Enumów przez ObjectDataProvider w XAML</h2>
   <div class="task-box">
     <div class="explanation">
-      <h4>Dlaczego ObservableCollection nie wystarcza?</h4>
-      <p>Samo użycie <code>ObservableCollection&lt;Contact&gt;</code> informuje widok tylko o tym, że element został dodany lub usunięty z listy. Nie powiadamia o edycji wartości (np. zmianie nazwiska). Używamy do tego interfejsu <code>INotifyPropertyChanged</code>.</p>
+      <h4>Co tu się dzieje pod maską?</h4>
+      <p>W zadaniu dodawania kontaktu musimy przypisać <code>Gender</code> (płeć), która w C# jest zdefiniowana jako <code>enum Gender { Male, Female }</code>. W starych technologiach w C# dodawalibyśmy do ComboBoxa elementy pętlą: <code>comboBox.Items.Add(Gender.Male)</code>. W WPF robimy to "czyściej" – wyłącznie w XAML[cite: 371, 372].</p>
+      <ul>
+        <li><code>&lt;Window.Resources&gt;</code> - To taki schowek okna. Obiekty wrzucone tutaj (zdefiniowane przez <code>x:Key</code>) są ładowane do pamięci raz i mogą być używane przez każdą kontrolkę wewnątrz okna[cite: 378, 380].</li>
+        <li><code>ObjectDataProvider</code> - To narzędzie, które zachowuje się jak kod C# wewnątrz XAML. Mówimy mu: "Weź typ <code>System:Enum</code> i uruchom jego wbudowaną metodę <code>GetValues</code>[cite: 381, 383]. Jako argument podaj nasz typ (<code>local:Gender</code>)".</li>
+        <li><code>{StaticResource GenderList}</code> - To polecenie nakazuje ComboBoxowi: "Znajdź w schowku (Resources) element o kluczu GenderList i wyciągnij z niego dane".</li>
+      </ul>
+      <p>Czym jest atrybut <code>UpdateSourceTrigger=PropertyChanged</code> przy TextBoxie? Normalnie dane przesyłane są z TextBoxa do kodu C# dopiero, gdy klikniesz poza TextBox (utraci focus). Ten atrybut zmusza XAML do aktualizowania danych przy <strong>każdym wciśnięciu klawisza</strong> klawiatury[cite: 368, 369].</p>
     </div>
-    <div class="code-header">Plik: Contact.cs</div>
-    <pre><code><span class="keyword">using</span> System.ComponentModel;
-<span class="keyword">using</span> System.Runtime.CompilerServices;
 
-<span class="keyword">public class</span> <span class="class-name">Contact</span> : <span class="class-name">INotifyPropertyChanged</span>
-{
-    <span class="keyword">private string</span> name;
+    <div class="code-header">Plik: AddContactWindow.xaml (Zrozumienie DataProvidera i Bindowania)</div>
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
+    <span class="comment">&lt;!-- Deklaracja "Wtyczki" do wyciągania Enumów. Nazywamy ją GenderList (x:Key) --&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">ObjectDataProvider</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"GenderList"</span>
+                        <span class="xml-attr">MethodName</span><span class="xml-punct">=</span><span class="xml-val">"GetValues"</span>
+                        <span class="xml-attr">ObjectType</span><span class="xml-punct">=</span><span class="xml-val">"{x:Type TypeName=System:Enum}"</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">ObjectDataProvider.MethodParameters</span><span class="xml-punct">&gt;</span>
+            <span class="comment">&lt;!-- Przekazanie naszego konkretnego Enuma z C# --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">x:Type</span> <span class="xml-attr">TypeName</span><span class="xml-punct">=</span><span class="xml-val">"local:Gender"</span><span class="xml-punct">/&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">ObjectDataProvider.MethodParameters</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">ObjectDataProvider</span><span class="xml-punct">&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
 
-    <span class="keyword">public string</span> Name
-    {
-        <span class="keyword">get</span> { <span class="keyword">return</span> name; }
-        <span class="keyword">set</span>
-        {
-            name = value;
-            OnPropertyChanged();
-        }
-    }
+<span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+    <span class="comment">&lt;!-- Zwróć uwagę na UpdateSourceTrigger - natychmiastowo aktualizuje właściwość 'Name' w obiekcie --&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBox</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Name, UpdateSourceTrigger=PropertyChanged}"</span> <span class="xml-punct">/&gt;</span>
 
-    <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
-    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propertyName = <span class="keyword">null</span>)
-    {
-        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propertyName));
-    }
-}</code></pre>
+    <span class="comment">&lt;!-- Podpinamy zawartość (ItemsSource) pod zasób ze schowka. Wybór użytkownika zapisze się w 'Gender' --&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">ComboBox</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Source={StaticResource GenderList}}"</span>
+              <span class="xml-attr">SelectedItem</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Path=Gender}"</span> <span class="xml-punct">/&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span></code></pre>
   </div>
 
-  <h2 id="enum-combobox">3. Magia: ComboBox ze zmiennymi typu Enum</h2>
+  <h2 id="listbox">4. Magia Stylów: Triggery i AlternationIndex w XAML</h2>
   <div class="task-box">
     <div class="explanation">
-      <h4>Jak wyciągnąć "Male" i "Female" do listy rozwijanej?</h4>
-      <p>Aby uniknąć brzydkiego kodu w C#, korzystamy z <strong>ObjectDataProvider</strong>, ładując nasz Enum bezpośrednio do <code>Window.Resources</code> i bindując jako <code>ItemsSource</code>.</p>
+      <h4>Jak dynamicznie zmieniać tło wierszy w Liście?</h4>
+      <p>Zadanie wymaga, by element z indeksem 0 miał różowe tło, indeks 1 niebieskie tło, potem znów 2 różowe, itd. (zmienne tło co drugi wiersz) [cite: 39, 61]. Osiągnięcie tego w kodzie C# byłoby niezwykle skomplikowane i zepsułoby się natychmiast po usunięciu jakiegokolwiek kontaktu ze środka listy.</p>
+      <ul>
+        <li><code>AlternationCount="2"</code> wstawione do głównego <code>&lt;ListBox&gt;</code> informuje WPF: <i>Stwórz wewnętrzny licznik elementów i zapętlaj go od 0 do 1 (bo wpisaliśmy 2 stany)</i>[cite: 593].</li>
+        <li><code>&lt;Style TargetType="ListBoxItem"&gt;</code> definiuje zachowanie KAŻDEGO pojedynczego wiersza w Liście. Mówimy mu: to są instrukcje jak masz wyglądać[cite: 591].</li>
+        <li><code>&lt;Trigger&gt;</code> - To tzw. "Wyzwalacz". Jest to system "Jeżeli -> To" (If/Then) wbudowany w XAML. Tłumacząc linijkę niżej na ludzki język: <i>"Jeżeli (Property) wewnętrzny indeks naprzemienny (AlternationIndex) przyjmie wartość 0 (Value), to wykonaj Settera. Setter mówi: zmień Tło (Background) na #FFAFC5FF"</i>[cite: 594].</li>
+      </ul>
     </div>
-    <div class="code-header">Plik: AddContactWindow.xaml</div>
-    <pre><code>&lt;Window.Resources&gt;
-    &lt;ObjectDataProvider x:Key="GenderList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
-        &lt;ObjectDataProvider.MethodParameters&gt;
-            &lt;x:Type TypeName="local:Gender"/&gt;
-        &lt;/ObjectDataProvider.MethodParameters&gt;
-    &lt;/ObjectDataProvider&gt;
-&lt;/Window.Resources&gt;
 
-&lt;Grid&gt;
-    &lt;ComboBox ItemsSource="{Binding Source={StaticResource GenderList}}"
-              SelectedItem="{Binding Path=Gender}" /&gt;
-&lt;/Grid&gt;</code></pre>
-  </div>
+    <div class="code-header">Plik: MainWindow.xaml (Dokładna budowa Style.Triggers)</div>
+    <pre><code><span class="comment">&lt;!-- Kluczowe: AlternationCount="2" zmusza WPF do liczenia wierszy jako 0, 1, 0, 1... --&gt;</span>
+<span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Contacts}"</span> <span class="xml-attr">AlternationCount</span><span class="xml-punct">=</span><span class="xml-val">"2"</span><span class="xml-punct">&gt;</span>
 
-  <h2 id="listbox">4. Kolorowanie co drugiego wiersza (AlternationIndex)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Dlaczego używamy Style Triggers?</h4>
-      <p>By wiersze automatycznie kolorowały się na zmianę (niezależnie od tego, jak sortujemy czy usuwamy dane ze środka), ustawiamy w <code>ListBox</code> atrybut <code>AlternationCount="2"</code>. Resztę załatwia <code>Trigger</code>.</p>
-    </div>
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code>&lt;ListBox ItemsSource="{Binding Contacts}" AlternationCount="2"&gt;
-    &lt;ListBox.ItemContainerStyle&gt;
-        &lt;Style TargetType="ListBoxItem"&gt;
-            &lt;Style.Triggers&gt;
-                &lt;Trigger Property="ItemsControl.AlternationIndex" Value="0"&gt;
-                    &lt;Setter Property="Background" Value="#FFAFC5FF" /&gt;
-                &lt;/Trigger&gt;
-                &lt;Trigger Property="ItemsControl.AlternationIndex" Value="1"&gt;
-                    &lt;Setter Property="Background" Value="#FF75A1FF" /&gt;
-                &lt;/Trigger&gt;
-            &lt;/Style.Triggers&gt;
-        &lt;/Style&gt;
-    &lt;/ListBox.ItemContainerStyle&gt;
-&lt;/ListBox&gt;</code></pre>
+    <span class="comment">&lt;!-- ItemContainerStyle oznacza: Zastosuj te zasady do OPAKOWANIA każdego elementu --&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemContainerStyle</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Style</span> <span class="xml-attr">TargetType</span><span class="xml-punct">=</span><span class="xml-val">"ListBoxItem"</span><span class="xml-punct">&gt;</span>
+
+            <span class="comment">&lt;!-- Triggers to nasza lista warunków (If / Then) --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Style.Triggers</span><span class="xml-punct">&gt;</span>
+
+                <span class="comment">&lt;!-- IF (AlternationIndex == 0) --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">Trigger</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"ItemsControl.AlternationIndex"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"0"</span><span class="xml-punct">&gt;</span>
+                    <span class="comment">&lt;!-- THEN: Ustaw Tło (Background) na Różowe --&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Background"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"#FFAFC5FF"</span> <span class="xml-punct">/&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">Trigger</span><span class="xml-punct">&gt;</span>
+
+                <span class="comment">&lt;!-- IF (AlternationIndex == 1) --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">Trigger</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"ItemsControl.AlternationIndex"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
+                    <span class="comment">&lt;!-- THEN: Ustaw Tło (Background) na Niebieskie --&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Background"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"#FF75A1FF"</span> <span class="xml-punct">/&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">Trigger</span><span class="xml-punct">&gt;</span>
+
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">Style.Triggers</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Style</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemContainerStyle</span><span class="xml-punct">&gt;</span>
+
+<span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span></code></pre>
   </div>
 
   <h2 id="walidacja">5. Zaawansowana Walidacja (IValidation)</h2>
