@@ -580,8 +580,12 @@
   <div class="task-box">
     <div class="explanation">
       <h4>Krok 1: Model Danych (Zadanie)</h4>
-      <p>Każde zadanie na naszej liście musi mieć swój tekst (Title) oraz status ukończenia (IsCompleted). Ponieważ kliknięcie CheckBoxa zmienia status <code>IsCompleted</code>, a my chcemy, żeby interfejs od razu na to zareagował (np. przekreślając tekst), <strong>musimy</strong> użyć <code>INotifyPropertyChanged</code>.</p>
+      <p>Wyobraź sobie, że klasa <code>ToDoItem</code> to pojedyncza karteczka z zadaniem. Ma swój tekst (<code>Title</code>) i informację, czy jest odhaczona (<code>IsCompleted</code>).</p>
+      <p><strong>Dlaczego używamy INotifyPropertyChanged?</strong> Przeglądarka (czy okno WPF) jest "ślepa" na zmiany zmiennych w tle. Kiedy zmienisz <code>IsCompleted</code> na <code>true</code>, okno o tym nie wie. Ten interfejs działa jak megafon. Kiedy włączamy checkboxa, uruchamia się <code>OnPropertyChanged()</code>, co krzyczy do interfejsu: <em>"Hej! Mój status się zmienił, odrysuj mnie na nowo!"</em>.</p>
     </div>
+
+
+
     <div class="code-header">Plik: ToDoItem.cs</div>
     <pre><code><span class="keyword">using</span> System.ComponentModel;
 <span class="keyword">using</span> System.Runtime.CompilerServices;
@@ -600,9 +604,15 @@
     <span class="keyword">public bool</span> IsCompleted
     {
         <span class="keyword">get</span> =&gt; isCompleted;
-        <span class="keyword">set</span> { isCompleted = value; OnPropertyChanged(); } <span class="comment">// Tu następuje magia!</span>
+        <span class="keyword">set</span>
+        {
+            isCompleted = value;
+            <span class="comment">// Kiedy zaznaczasz checkboxa, ta linijka alarmuje XAML o zmianie!</span>
+            OnPropertyChanged();
+        }
     }
 
+    <span class="comment">// Wymagany kod interfejsu (kopiuj-wklej)</span>
     <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
     <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propName = <span class="keyword">null</span>)
     {
@@ -613,69 +623,90 @@
 
   <div class="task-box">
     <div class="explanation">
-      <h4>Krok 2: Widok (XAML) - CheckBox i Przekreślanie</h4>
-      <p>Nasz interfejs składa się z pola do wpisywania nowego zadania (TextBox) oraz przycisku "Dodaj". Poniżej znajduje się <code>ListBox</code>. Najważniejsza część to <code>DataTemplate</code>. Wiążemy <code>IsChecked</code> CheckBoxa z naszą właściwością <code>IsCompleted</code>. Następnie używamy <code>DataTrigger</code>, który mówi: <em>"Jeśli zadanie jest ukończone, ustaw styl tekstu na przekreślony"</em>.</p>
+      <h4>Krok 2: Widok (XAML) - Zrozumieć "Ścianę Kodu"</h4>
+      <p>Najtrudniejszy element to <code>&lt;DataTemplate&gt;</code>. Działa on jak <strong>foremka do ciastek</strong>. Ponieważ <code>ListBox</code> to lista, która może mieć 5, 50 albo 1000 elementów, nie piszemy kodu dla każdego z nich osobno. Tworzymy jedną "foremkę" (DataTemplate), a WPF wycina z niej wygląd dla każdego zadania na liście.</p>
+      <p>Druga magia to <code>&lt;DataTrigger&gt;</code>. Działa to jak system IF-THEN: <em>"JEŚLI zadanie ma IsCompleted=True, WTEDY weź element nazwany 'TaskText' i przekreśl go"</em>.</p>
     </div>
+
+
+
     <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code>&lt;Window x:Class="ToDoApp.MainWindow"
-        Title="My To-Do List" Height="450" Width="400"&gt;
-    &lt;Grid Margin="10"&gt;
-        &lt;Grid.RowDefinitions&gt;
-            &lt;RowDefinition Height="Auto"/&gt; <span class="comment">&lt;!-- Pasek dodawania --&gt;</span>
-            &lt;RowDefinition Height="*"/&gt;    <span class="comment">&lt;!-- Lista zadań --&gt;</span>
-        &lt;/Grid.RowDefinitions&gt;
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"ToDoApp.MainWindow"</span>
+        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"My To-Do List"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"450"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"400"</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">&gt;</span>
 
-        <span class="comment">&lt;!-- Pasek dodawania zadania --&gt;</span>
-        &lt;Grid Grid.Row="0" Margin="0,0,0,10"&gt;
-            &lt;Grid.ColumnDefinitions&gt;
-                &lt;ColumnDefinition Width="*"/&gt;
-                &lt;ColumnDefinition Width="Auto"/&gt;
-            &lt;/Grid.ColumnDefinitions&gt;
+        <span class="comment">&lt;!-- 1. PODZIAŁ OKNA NA GÓRĘ I DÓŁ --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Auto: zajmuje tylko tyle miejsca ile trzeba na wpisanie zadania --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- Gwiazdka (*): bierze CAŁĄ resztę okna na listę --&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
 
-            &lt;TextBox x:Name="NewTaskTextBox" Grid.Column="0" Margin="0,0,10,0" Padding="5" FontSize="16"/&gt;
-            &lt;Button Grid.Column="1" Content="Dodaj" Click="AddBtn_Click" Width="80" Padding="5"/&gt;
-        &lt;/Grid&gt;
+        <span class="comment">&lt;!-- 2. PASEK DODAWANIA (Zajmuje Grid.Row="0") --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,0,10"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- TextBox rozpycha się na maksa --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Przycisk 'Dodaj' bierze tylko szerokość swojego tekstu --&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
 
-        <span class="comment">&lt;!-- Lista Zadań --&gt;</span>
-        &lt;ListBox Grid.Row="1" ItemsSource="{Binding Tasks}" HorizontalContentAlignment="Stretch"&gt;
-            &lt;ListBox.ItemTemplate&gt;
-                &lt;DataTemplate&gt;
-                    &lt;Grid Margin="0,5"&gt;
-                        &lt;Grid.ColumnDefinitions&gt;
-                            &lt;ColumnDefinition Width="Auto"/&gt;
-                            &lt;ColumnDefinition Width="*"/&gt;
-                            &lt;ColumnDefinition Width="Auto"/&gt;
-                        &lt;/Grid.ColumnDefinitions&gt;
+            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBox</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"NewTaskTextBox"</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span> <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"5"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"Dodaj"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"AddBtn_Click"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"80"</span><span class="xml-punct">/&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
 
-                        <span class="comment">&lt;!-- CheckBox powiązany z IsCompleted --&gt;</span>
-                        &lt;CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/&gt;
+        <span class="comment">&lt;!-- 3. LISTA ZADAŃ (Zajmuje Grid.Row="1") --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Tasks}"</span> <span class="xml-attr">HorizontalContentAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Stretch"</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
+                <span class="comment">&lt;!-- TO JEST NASZA "FOREMKA" NA POJEDYNCZE ZADANIE --&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,5"</span><span class="xml-punct">&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Miejsce na mały kwadracik CheckBoxa --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- Długi tekst zadania --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Czerwony krzyżyk do usuwania --&gt;</span>
+                        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
 
-                        <span class="comment">&lt;!-- Tekst zadania. Zauważ, że nazwaliśmy go x:Name="TaskText", by Trigger mógł na niego działać --&gt;</span>
-                        &lt;TextBlock x:Name="TaskText" Grid.Column="1" Text="{Binding Title}" Margin="10,0,0,0" FontSize="16" VerticalAlignment="Center"/&gt;
+                        <span class="comment">&lt;!-- CheckBox powiązany z IsCompleted. Jak go klikniesz, poleci info do klasy C# --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">CheckBox</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span>
+                                  <span class="xml-attr">IsChecked</span><span class="xml-punct">=</span><span class="xml-val">"{Binding IsCompleted, UpdateSourceTrigger=PropertyChanged}"</span>
+                                  <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span><span class="xml-punct">/&gt;</span>
 
-                        <span class="comment">&lt;!-- Przycisk usuwania konkretnego zadania --&gt;</span>
-                        &lt;Button Grid.Column="2" Content="X" Foreground="Red" FontWeight="Bold" Width="25" Click="DeleteBtn_Click"/&gt;
-                    &lt;/Grid&gt;
+                        <span class="comment">&lt;!-- Tekst zadania. Zauważ, że daliśmy mu imię (x:Name="TaskText").
+                             Bez tego imienia WPF nie wiedziałby, co ma przekreślić! --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span>
+                                   <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,0,0"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
 
-                    <span class="comment">&lt;!-- Magia: Przekreślenie tekstu po zaznaczeniu CheckBoxa --&gt;</span>
-                    &lt;DataTemplate.Triggers&gt;
-                        &lt;DataTrigger Binding="{Binding IsCompleted}" Value="True"&gt;
-                            &lt;Setter TargetName="TaskText" Property="TextDecorations" Value="Strikethrough"/&gt;
-                            &lt;Setter TargetName="TaskText" Property="Foreground" Value="Gray"/&gt;
-                        &lt;/DataTrigger&gt;
-                    &lt;/DataTemplate.Triggers&gt;
-                &lt;/DataTemplate&gt;
-            &lt;/ListBox.ItemTemplate&gt;
-        &lt;/ListBox&gt;
-    &lt;/Grid&gt;
-&lt;/Window&gt;</code></pre>
+                        <span class="comment">&lt;!-- Przycisk usuwania --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"2"</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"X"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"Red"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"DeleteBtn_Click"</span><span class="xml-punct">/&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+
+                    <span class="comment">&lt;!-- WYZWALACZE (TRIGGERS): Reagują na to, co robisz --&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate.Triggers</span><span class="xml-punct">&gt;</span>
+                        <span class="comment">&lt;!-- TŁUMACZENIE: Jeśli zmienna 'IsCompleted' w C# ulegnie zmianie na 'True'... --&gt;</span>
+                        <span class="xml-punct">&lt;</span><span class="xml-elem">DataTrigger</span> <span class="xml-attr">Binding</span><span class="xml-punct">=</span><span class="xml-val">"{Binding IsCompleted}"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"True"</span><span class="xml-punct">&gt;</span>
+
+                            <span class="comment">&lt;!-- ...TO zrób dwie rzeczy obiektowi o nazwie "TaskText" (naszemu tekstowi): --&gt;</span>
+                            <span class="comment">&lt;!-- 1. Przekreśl go (Strikethrough) --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">TargetName</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"TextDecorations"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"Strikethrough"</span><span class="xml-punct">/&gt;</span>
+
+                            <span class="comment">&lt;!-- 2. Zmień kolor na szary --&gt;</span>
+                            <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">TargetName</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Foreground"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"Gray"</span><span class="xml-punct">/&gt;</span>
+                        <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTrigger</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate.Triggers</span><span class="xml-punct">&gt;</span>
+
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
   </div>
 
   <div class="task-box">
     <div class="explanation">
-      <h4>Krok 3: Logika pod spodem (Code-behind)</h4>
-      <p>W kodzie C# inicjalizujemy naszą <code>ObservableCollection</code>, ustawiamy <code>DataContext</code> i obsługujemy kliknięcia przycisków dodawania oraz usuwania.</p>
+      <h4>Krok 3: Logika (C#) - Skąd XAML bierze dane?</h4>
+      <p>Sam XAML to tylko "pusta muszla". W kodzie C# używamy <code>DataContext = this;</code>, żeby powiedzieć XAML-owi: <em>"Szukaj zmiennych, takich jak `Tasks`, w tym pliku"</em>. Oraz oczywiście obsługujemy klikanie przycisków.</p>
     </div>
+
+
+
     <div class="code-header">Plik: MainWindow.xaml.cs</div>
     <pre><code><span class="keyword">using</span> System.Collections.ObjectModel;
 <span class="keyword">using</span> System.Windows;
@@ -683,7 +714,8 @@
 
 <span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window
 {
-    <span class="comment">// Główna lista obserwowalna przez UI</span>
+    <span class="comment">// Pamiętaj: ObservableCollection to specjalna lista, która informuje ListBox, </span>
+    <span class="comment">// gdy dodasz nowy element (lub usuniesz stary). Zwykłe List&lt;T&gt; by tu nie zadziałało!</span>
     <span class="keyword">public</span> ObservableCollection&lt;ToDoItem&gt; Tasks { <span class="keyword">get</span>; <span class="keyword">set</span>; }
 
     <span class="keyword">public</span> MainWindow()
@@ -691,27 +723,33 @@
         InitializeComponent();
         Tasks = <span class="keyword">new</span> ObservableCollection&lt;ToDoItem&gt;();
 
-        <span class="comment">// Ustawiamy okno jako główne źródło danych dla swoich kontrolek</span>
+        <span class="comment">// BARDZO WAŻNE: Mówimy oknu, że jego źródłem danych bindowania (DataContext) jest ta klasa.</span>
         DataContext = <span class="keyword">this</span>;
     }
 
-    <span class="comment">// Dodawanie nowego zadania</span>
+    <span class="comment">// Co się dzieje, gdy klikniesz "Dodaj"?</span>
     <span class="keyword">private void</span> AddBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
     {
+        <span class="comment">// Sprawdzamy, czy ktoś nie wpisał pustego tekstu</span>
         <span class="keyword">if</span> (!<span class="keyword">string</span>.IsNullOrWhiteSpace(NewTaskTextBox.Text))
         {
+            <span class="comment">// Dodajemy element do naszej listy. ListBox w XAML automatycznie to wyłapie!</span>
             Tasks.Add(<span class="keyword">new</span> ToDoItem { Title = NewTaskTextBox.Text, IsCompleted = <span class="keyword">false</span> });
-            NewTaskTextBox.Clear(); <span class="comment">// Czyścimy pole po dodaniu</span>
+
+            <span class="comment">// Wyczyszczenie okienka po dodaniu</span>
+            NewTaskTextBox.Clear();
         }
     }
 
-    <span class="comment">// Usuwanie wybranego zadania (przez przycisk X na elemencie)</span>
+    <span class="comment">// Co się dzieje, gdy klikniesz "X" obok zadania?</span>
     <span class="keyword">private void</span> DeleteBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
     {
-        <span class="comment">// W WPF, 'sender' to kliknięty przycisk. Używamy jego DataContextu, </span>
-        <span class="comment">// żeby dowiedzieć się, do którego ToDoItem jest przypięty.</span>
+        <span class="comment">// Ponieważ mamy wiele przycisków "X" na liście, zmienna 'sender' pozwala </span>
+        <span class="comment">// nam namierzyć konkretnie ten JEDEN przycisk, który kliknięto.</span>
+        <span class="comment">// Następnie sprawdzamy, jaki obiekt (ToDoItem) jest do niego przypięty (DataContext).</span>
         <span class="keyword">if</span> (sender <span class="keyword">is</span> Button btn && btn.DataContext <span class="keyword">is</span> ToDoItem itemToDelete)
         {
+            <span class="comment">// Usuwamy zadanie z listy, a ListBox w UI automatycznie znika ten wiersz</span>
             Tasks.Remove(itemToDelete);
         }
     }
