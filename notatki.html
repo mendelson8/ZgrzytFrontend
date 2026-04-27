@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WPF Masterclass & Boilerplates</title>
+  <title>WPF: Contact Manager - Notatki z Tłumaczeniem</title>
   <style>
       :root {
-          --primary: #68217a; /* WPF Purple */
-          --secondary: #007acc; /* VS Blue */
-          --bg: #1e1e1e;
-          --text: #d4d4d4;
-          --box-bg: #2d2d30;
-          --border: #3e3e42;
-          --accent: #4ec9b0;
+          --primary: #68217a;
+          --secondary: #512bd4;
+          --bg: #f8fafc;
+          --text: #333;
+          --box-bg: #ffffff;
+          --code-bg: #1e1e1e;
+          --code-text: #d4d4d4;
+          --accent: #0ea5e9;
       }
 
       body {
@@ -21,44 +22,71 @@
           color: var(--text);
           line-height: 1.6;
           margin: 0;
-          padding: 0;
+          display: flex;
       }
 
-      .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 40px 20px;
+      nav {
+          width: 300px;
+          height: 100vh;
+          background: #2d2d30;
+          color: white;
+          position: fixed;
+          padding: 20px;
+          overflow-y: auto;
+          box-sizing: border-box;
       }
 
-      h1 { color: #fff; border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
-      h2 { color: var(--accent); margin-top: 50px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-      h3 { color: var(--secondary); margin-top: 30px; }
+      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #555; padding-bottom: 10px; color: #fff; }
+      nav ul { list-style: none; padding: 0; }
+      nav li { margin-bottom: 12px; }
+      nav a { color: #aaa; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+      nav a:hover { color: #fff; padding-left: 5px; }
+
+      main {
+          margin-left: 300px;
+          padding: 40px;
+          max-width: 1000px;
+          width: 100%;
+          box-sizing: border-box;
+      }
+
+      h1 { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
+      h2 { color: var(--secondary); margin-top: 50px; border-left: 5px solid var(--primary); padding-left: 15px; }
 
       .task-box {
           background: var(--box-bg);
-          border: 1px solid var(--border);
+          border: 1px solid #e2e8f0;
           border-radius: 8px;
-          padding: 25px;
+          padding: 30px;
           margin-top: 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
       }
 
       .explanation {
-          background: #252526;
-          border-left: 4px solid var(--secondary);
-          padding: 15px;
-          margin: 15px 0;
-          font-size: 0.95rem;
+          font-size: 1rem;
+          margin-bottom: 20px;
+      }
+
+      .explanation h4 {
+          color: var(--accent);
+          margin-top: 0;
+          margin-bottom: 10px;
+          font-size: 1.1rem;
+      }
+
+      .explanation p {
+          margin-top: 0;
       }
 
       .code-header {
-          background: #007acc;
-          color: #fff;
+          background: #2d2d30;
+          color: #9cdcfe;
           padding: 8px 15px;
           font-family: Consolas, monospace;
           font-size: 0.85rem;
           border-top-left-radius: 6px;
           border-top-right-radius: 6px;
+          border-bottom: 1px solid #444;
           display: inline-block;
           margin-top: 15px;
           width: 100%;
@@ -66,157 +94,176 @@
       }
 
       pre {
-          background: #1e1e1e;
-          color: #d4d4d4;
+          background: var(--code-bg);
+          color: var(--code-text);
           padding: 20px;
-          border: 1px solid var(--border);
-          border-top: none;
           border-bottom-left-radius: 6px;
           border-bottom-right-radius: 6px;
           overflow-x: auto;
           font-family: 'Consolas', monospace;
           font-size: 0.95rem;
           margin-top: 0;
+          line-height: 1.5;
+          box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
       }
 
-      .comment { color: #6a9955; }
-      .string { color: #ce9178; }
+      .comment { color: #6a9955; font-style: italic; }
       .keyword { color: #569cd6; }
-      .class { color: #4ec9b0; }
+      .string { color: #ce9178; }
+      .class-name { color: #4ec9b0; }
 
-      ul { padding-left: 20px; }
-      li { margin-bottom: 8px; }
+      .alert {
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          padding: 15px;
+          margin: 15px 0;
+          font-size: 0.9rem;
+          color: #856404;
+      }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Kompendium WPF: Od Podstaw po Architekturę PRO</h1>
-  <p>Ten dokument analizuje i rozkłada na czynniki pierwsze mechanizmy aplikacji okienkowych. Znajdziesz tu pełne omówienie teoretyczne poparte nowym, autorskim zadaniem, które wykorzystuje wszystkie techniki z dostarczonego tutoriala[cite: 1, 4].</p>
+<nav>
+  <h2>Spis Treści</h2>
+  <ul>
+    <li><a href="#podstawy-okna">1. Ustawienia Okna i Layout</a></li>
+    <li><a href="#dane">2. Powiadomienia (INotifyPropertyChanged)</a></li>
+    <li><a href="#enum-combobox">3. Bindowanie Enuma (ObjectDataProvider)</a></li>
+    <li><a href="#listbox">4. Kolory ListBoxa (AlternationIndex)</a></li>
+    <li><a href="#walidacja">5. Zaawansowana Walidacja (IValidation)</a></li>
+  </ul>
+</nav>
 
-  <h2>Zadanie Praktyczne: Inventory Manager (Zarządca Magazynu)</h2>
-  <div class="explanation">
-    <strong>Cel zadania:</strong> Zbudowanie aplikacji do zarządzania sprzętem firmowym, wzorowanej na systemie "Contact Manager"[cite: 8, 10]. Wymaga to połączenia XAML (widok) oraz C# (logika), z wykorzystaniem bindowania danych, konwerterów, walidacji oraz okien modalnych[cite: 37, 432, 647, 654].
-  </div>
+<main>
+  <h1>WPF: Contact Manager - Zrozumieć Kod</h1>
+  <p>Zamiast wklejać gotowce, przeanalizujmy, dlaczego używamy konkretnych mechanizmów zdefiniowanych w wymaganiach zadania (PDF).</p>
 
-  <h3>1. Główne Okno i Siatka (Grid)</h3>
+  <h2 id="podstawy-okna">1. Ustawienia Okna i Podział (Layout)</h2>
   <div class="task-box">
-    <p>Aplikacja wymaga paska menu na górze okna[cite: 14]. Reszta okna jest podzielona na zakładki[cite: 15]. Minimalny rozmiar okna to 500x500, a początkowy to 800x600[cite: 13, 85]. Okno musi pojawiać się na środku ekranu[cite: 16, 84].</p>
-    <p><strong>Wyjaśnienie:</strong> Używamy kontrolki <code>&lt;Grid&gt;</code>, aby podzielić okno na wiersze. Pierwszy wiersz (Menu) ustawiamy na <code>Height="Auto"</code>, aby zajął tylko tyle miejsca, ile potrzebuje[cite: 111]. Drugi wiersz ustawiamy na <code>Height="*"</code>, co oznacza, że zakładki (TabControl) zajmą całą pozostałą dostępną przestrzeń[cite: 112].</p>
+    <div class="explanation">
+      <h4>Po co nam Grid i RowDefinitions?</h4>
+      <p>Wymaganie z PDF mówi jasno: "Pasek menu na górze okna, reszta okna podzielona na zakładki". W WPF nie używamy pozycjonowania pikselowego. Używamy <code>&lt;Grid&gt;</code>, który działa jak niewidzialna tabela.</p>
+      <p>Dzielimy okno na dwa wiersze:</p>
+      <ul>
+        <li><code>Height="Auto"</code> - Pierwszy wiersz dopasuje swoją wysokość do zawartości (czyli będzie miał dokładnie taką wysokość jak Pasek Menu).</li>
+        <li><code>Height="*"</code> - Znak gwiazdki to "weź całą resztę wolnego miejsca". Tu wrzucimy zakładki (TabControl).</li>
+      </ul>
+    </div>
 
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code>&lt;Window x:Class="InventoryManager.MainWindow"
-        Title="Inventory Manager"
-        Height="600" Width="800" MinWidth="500" MinHeight="500"
+    <div class="code-header">Plik: MainWindow.xaml (Fragment Głównego Układu)</div>
+    <pre><code>&lt;Window x:Class="ContactManager.MainWindow"
+        Title="Contact Manager"
+        Height="600" Width="800"
+        MinWidth="500" MinHeight="500"
         WindowStartupLocation="CenterScreen"&gt;
 
     &lt;Grid&gt;
+        <span class="comment">&lt;!-- Definicja naszej tabeli (2 wiersze) --&gt;</span>
         &lt;Grid.RowDefinitions&gt;
-            &lt;RowDefinition Height="Auto"/&gt; <span class="comment">&lt;!-- Miejsce na pasek menu --&gt;</span>
-            &lt;RowDefinition Height="*"/&gt;    <span class="comment">&lt;!-- Miejsce na resztę aplikacji --&gt;</span>
+            &lt;RowDefinition Height="Auto"/&gt;
+            &lt;RowDefinition Height="*"/&gt;
         &lt;/Grid.RowDefinitions&gt;
 
-        <span class="comment">&lt;!-- Pasek Menu na górze okna [cite: 14] --&gt;</span>
+        <span class="comment">&lt;!-- Wiersz 0: Menu --&gt;</span>
         &lt;Menu Grid.Row="0"&gt;
             &lt;MenuItem Header="File"&gt;
-                &lt;MenuItem Header="Exit" Click="MenuItem_Exit"/&gt; <span class="comment">&lt;!-- Zamyka aplikację [cite: 21] --&gt;</span>
-            &lt;/MenuItem&gt;
-            &lt;MenuItem Header="Inventory"&gt;
-                &lt;MenuItem Header="Add Item" Click="MenuItem_AddItem"/&gt;
+                &lt;MenuItem Header="Exit" Click="MenuItem_Exit" /&gt;
             &lt;/MenuItem&gt;
         &lt;/Menu&gt;
 
-        <span class="comment">&lt;!-- Reszta okna podzielona na zakładki [cite: 15] --&gt;</span>
+        <span class="comment">&lt;!-- Wiersz 1: Zakładki zajmujące resztę ekranu --&gt;</span>
         &lt;TabControl Grid.Row="1"&gt;
-            &lt;TabItem Header="Item List"&gt; &lt;ListBox x:Name="ItemListBox"/&gt; &lt;/TabItem&gt;
-            &lt;TabItem Header="Data Grid"&gt; &lt;DataGrid/&gt; &lt;/TabItem&gt;
+            &lt;TabItem Header="List"&gt; &lt;ListBox/&gt; &lt;/TabItem&gt;
+            &lt;TabItem Header="Grid"&gt; &lt;DataGrid/&gt; &lt;/TabItem&gt;
         &lt;/TabControl&gt;
     &lt;/Grid&gt;
 &lt;/Window&gt;</code></pre>
   </div>
 
-  <h3>2. Klasy Danych i Powiadomienia UI</h3>
+  <h2 id="dane">2. Powiadomienia Widoku (INotifyPropertyChanged)</h2>
   <div class="task-box">
-    <p>Wymagane jest przechowywanie danych i natychmiastowe aktualizowanie widoku po ich edycji[cite: 37, 38]. Stosujemy tu klasę zaimplementowaną z interfejsem <code>INotifyPropertyChanged</code>[cite: 703].</p>
-    <p><strong>Wyjaśnienie:</strong> Samo użycie <code>ObservableCollection</code> powiadamia tylko o zmianach w samej kolekcji (np. dodaniu lub usunięciu elementu)[cite: 205]. Jeśli jednak zmienimy właściwość istniejącego obiektu (np. cenę produktu), widok o tym nie wie. Wywołanie <code>OnPropertyChanged()</code> informuje interfejs graficzny o konieczności odświeżenia konkretnego pola.</p>
+    <div class="explanation">
+      <h4>Dlaczego ObservableCollection nie wystarcza?</h4>
+      <p>To najczęstszy błąd w WPF. <code>ObservableCollection&lt;Contact&gt;</code> mówi interfejsowi graficznemu <strong>tylko</strong> o tym, że dodano lub usunięto element z listy. Nie ma pojęcia o tym, że edytowałeś nazwisko istniejącego kontaktu w DataGridzie!</p>
+      <p>Aby WPF wiedział, że zmieniła się zawartość konkretnego obiektu, klasa <code>Contact</code> musi zaimplementować interfejs <code>INotifyPropertyChanged</code>. Kiedy zmieniasz właściwość <code>Surname</code>, klasa "krzyczy" do widoku (wywołując <code>OnPropertyChanged</code>): <em>"Hej, zmieniłem się, odrysuj mnie!"</em>.</p>
+    </div>
 
-    <div class="code-header">Plik: Product.cs</div>
+    <div class="code-header">Plik: Contact.cs</div>
     <pre><code><span class="keyword">using</span> System.ComponentModel;
 <span class="keyword">using</span> System.Runtime.CompilerServices;
 
-<span class="keyword">public enum</span> Category { Electronics, Furniture, Stationery }
-
-<span class="keyword">public class</span> <span class="class">Product</span> : <span class="class">INotifyPropertyChanged</span>
+<span class="keyword">public class</span> <span class="class-name">Contact</span> : <span class="class-name">INotifyPropertyChanged</span>
 {
     <span class="keyword">private string</span> name;
 
+    <span class="comment">// Właściwość z powiadomieniem</span>
     <span class="keyword">public string</span> Name
     {
-        <span class="keyword">get</span> =&gt; name;
-        <span class="keyword">set</span> { name = value; OnPropertyChanged(); } <span class="comment">// Natychmiastowe powiadomienie widoku [cite: 38]</span>
+        <span class="keyword">get</span> { <span class="keyword">return</span> name; }
+        <span class="keyword">set</span>
+        {
+            name = value;
+            <span class="comment">// Informujemy interfejs (np. ListBox), że Name się zmieniło!</span>
+            OnPropertyChanged();
+        }
     }
 
-    <span class="keyword">public</span> Category ItemCategory { <span class="keyword">get</span>; <span class="keyword">set</span>; }
-
+    <span class="comment">// Standardowa implementacja interfejsu (kopiuj-wklej)</span>
     <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
-    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propName = <span class="keyword">null</span>)
+    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propertyName = <span class="keyword">null</span>)
     {
-        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propName));
+        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propertyName));
     }
 }</code></pre>
   </div>
 
-  <h3>3. Okno Modalne i Bindowanie Enumów</h3>
+  <h2 id="enum-combobox">3. Magia: ComboBox ze zmiennymi typu Enum</h2>
   <div class="task-box">
-    <p>Otwarcie okna dodawania blokuje i "wyszarza" okno główne[cite: 45]. W formularzu, wybór wartości typu <code>enum</code> następuje przez <code>ComboBox</code>[cite: 47].</p>
-    <p><strong>Wyjaśnienie:</strong> Funkcja <code>ShowDialog()</code> wyświetla okno w trybie modalnym, co blokuje interakcję z innymi oknami aplikacji do czasu jego zamknięcia[cite: 432, 433]. Aby załadować wartości Enum (np. Kategorie) wprost do XAML-a, używamy <code>ObjectDataProvider</code>[cite: 377]. Ten obiekt wystawia metody i właściwości na zewnątrz [cite: 381], wywołując metodę <code>GetValues</code> z systemowej klasy Enum[cite: 383].</p>
+    <div class="explanation">
+      <h4>Jak wyciągnąć "Male" i "Female" do listy rozwijanej?</h4>
+      <p>W oknie dodawania kontaktu musimy wybrać płeć (Gender). W C# masz przygotowany typ <code>enum Gender { Male, Female }</code>. Jak wrzucić to do XAML-a bez pisania brzydkiego kodu w C#?</p>
+      <p>Rozwiązaniem z PDFa jest <strong>ObjectDataProvider</strong>. To specjalne narzędzie w <code>Window.Resources</code>, które "wyciąga" wszystkie wartości z Enuma i tworzy z nich gotową do użycia tablicę, którą podpinamy pod właściwość <code>ItemsSource</code> naszego ComboBoxa.</p>
+    </div>
 
-    <div class="code-header">Plik: MainWindow.xaml.cs (Otwieranie okna)</div>
-    <pre><code><span class="keyword">private void</span> MenuItem_AddItem(<span class="keyword">object</span> sender, RoutedEventArgs e)
-{
-    Opacity = 0.5; <span class="comment">// "Wyszarzenie" okna głównego [cite: 45, 436]</span>
-
-    <span class="keyword">var</span> addWindow = <span class="keyword">new</span> AddProductWindow();
-    <span class="keyword">if</span> (addWindow.ShowDialog() == <span class="keyword">true</span>) <span class="comment">// Blokuje okno i czeka na wynik [cite: 432, 434]</span>
-    {
-        Products.Add(addWindow.NewProduct);
-    }
-
-    Opacity = 1.0;
-}</code></pre>
-
-    <div class="code-header">Plik: AddProductWindow.xaml (Bindowanie Enum)</div>
+    <div class="code-header">Plik: AddContactWindow.xaml (Ładowanie Enuma)</div>
     <pre><code>&lt;Window.Resources&gt;
-    <span class="comment">&lt;!-- Pobiera wartości z Enuma 'Category' za pomocą ObjectDataProvider [cite: 381, 382] --&gt;</span>
-    &lt;ObjectDataProvider x:Key="CategoryList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
+    <span class="comment">&lt;!-- Pobiera wartości (GetValues) z typu Enum, a dokładnie z naszego local:Gender --&gt;</span>
+    &lt;ObjectDataProvider x:Key="GenderList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
         &lt;ObjectDataProvider.MethodParameters&gt;
-            &lt;x:Type TypeName="local:Category"/&gt;
+            &lt;x:Type TypeName="local:Gender"/&gt;
         &lt;/ObjectDataProvider.MethodParameters&gt;
     &lt;/ObjectDataProvider&gt;
 &lt;/Window.Resources&gt;
 
 &lt;Grid&gt;
-    <span class="comment">&lt;!-- ComboBox wyświetla wartości Enum i binduje wybór do obiektu [cite: 47, 404, 405] --&gt;</span>
-    &lt;ComboBox ItemsSource="{Binding Source={StaticResource CategoryList}}"
-              SelectedItem="{Binding Path=ItemCategory}" /&gt;
+    <span class="comment">&lt;!-- ComboBox z podpiętą listą wartości Enum oraz powiązaniem wyboru z właściwością obiektu --&gt;</span>
+    &lt;ComboBox ItemsSource="{Binding Source={StaticResource GenderList}}"
+              SelectedItem="{Binding Path=Gender}" /&gt;
 &lt;/Grid&gt;</code></pre>
   </div>
 
-  <h3>4. Wygląd Listy: AlternationIndex i ContextMenu</h3>
+  <h2 id="listbox">4. Kolorowanie co drugiego wiersza (AlternationIndex)</h2>
   <div class="task-box">
-    <p>Parzyste i nieparzyste pozycje na liście mają różny kolor tła[cite: 39]. Kliknięcie prawym przyciskiem myszy na element rozwija menu z opcją usunięcia[cite: 643]. Należy to osiągnąć tak, by funkcja była odporna na sortowanie i usuwanie elementów ze środka[cite: 40].</p>
-    <p><strong>Wyjaśnienie:</strong> Właściwość <code>AlternationIndex</code> pozwala na nakładanie różnych kolorów tła na naprzemienne elementy listy[cite: 593, 594]. Opcja <code>AlternationCount="2"</code> w <code>ListBox</code> włącza ten mechanizm, a styl (Trigger) reaguje na wartości 0 lub 1[cite: 609, 611, 625]. Menu kontekstowe podpinamy wprost do grida w <code>DataTemplate</code>.</p>
+    <div class="explanation">
+      <h4>Dlaczego używamy Style Triggers?</h4>
+      <p>Zadanie wymaga, by parzyste i nieparzyste wiersze na liście kontaktów miały różne tła. Nie możemy robić tego ręcznie (nadając klasom tło przy dodawaniu elementu w kodzie C#), bo jak usuniemy jeden element ze środka listy, kolory się zepsują.</p>
+      <p>Rozwiązanie WPF to <code>AlternationCount="2"</code> wstawione do ListBoxa. Mówi to liście: <em>Odliczaj wiersze 0, 1, 0, 1, 0, 1...</em>. Następnie w stylach używamy <strong>Triggara</strong> (wyzwalacza), który mówi: <em>Jeśli AlternationIndex wynosi 0, zrób tło różowe. Jeśli 1, zrób niebieskie</em>.</p>
+    </div>
 
-    <div class="code-header">Plik: MainWindow.xaml (Style ListBoxa)</div>
-    <pre><code>&lt;ListBox ItemsSource="{Binding Products}" AlternationCount="2"&gt;
+    <div class="code-header">Plik: MainWindow.xaml (Wewnątrz ListBox)</div>
+    <pre><code><span class="comment">&lt;!-- Kluczowe: AlternationCount włącza liczenie 0, 1, 0, 1... --&gt;</span>
+&lt;ListBox ItemsSource="{Binding Contacts}" AlternationCount="2"&gt;
 
     &lt;ListBox.ItemContainerStyle&gt;
         &lt;Style TargetType="ListBoxItem"&gt;
             &lt;Style.Triggers&gt;
-                <span class="comment">&lt;!-- Różne tła dla wierszy parzystych i nieparzystych [cite: 39, 610, 612] --&gt;</span>
+                <span class="comment">&lt;!-- Wyzwalacz dla wierszy parzystych (0) --&gt;</span>
                 &lt;Trigger Property="ItemsControl.AlternationIndex" Value="0"&gt;
                     &lt;Setter Property="Background" Value="#FFAFC5FF" /&gt;
                 &lt;/Trigger&gt;
+
+                <span class="comment">&lt;!-- Wyzwalacz dla wierszy nieparzystych (1) --&gt;</span>
                 &lt;Trigger Property="ItemsControl.AlternationIndex" Value="1"&gt;
                     &lt;Setter Property="Background" Value="#FF75A1FF" /&gt;
                 &lt;/Trigger&gt;
@@ -224,85 +271,50 @@
         &lt;/Style&gt;
     &lt;/ListBox.ItemContainerStyle&gt;
 
-    &lt;ListBox.ItemTemplate&gt;
-        &lt;DataTemplate&gt;
-            &lt;Grid&gt;
-                <span class="comment">&lt;!-- Menu kontekstowe do usuwania elementu [cite: 643, 644] --&gt;</span>
-                &lt;Grid.ContextMenu&gt;
-                    &lt;ContextMenu&gt;
-                        &lt;MenuItem Header="Delete item" Click="MenuItem_Delete"/&gt;
-                    &lt;/ContextMenu&gt;
-                &lt;/Grid.ContextMenu&gt;
-
-                &lt;TextBlock Text="{Binding Name}" /&gt;
-            &lt;/Grid&gt;
-        &lt;/DataTemplate&gt;
-    &lt;/ListBox.ItemTemplate&gt;
-
 &lt;/ListBox&gt;</code></pre>
   </div>
 
-  <h3>5. Konwertery (IValueConverter) i Odblokowywanie Zawartości</h3>
+  <h2 id="walidacja">5. Zaawansowana Walidacja (Część domowa)</h2>
   <div class="task-box">
-    <p>Zakładka ustawień jest domyślnie zablokowana (ukryta)[cite: 645, 646]. Mechanizm konwerterów służy do blokowania/odblokowywania widoczności tej zawartości[cite: 647].</p>
-    <p><strong>Wyjaśnienie:</strong> W WPF nie można bezpośrednio powiązać zmiennej typu <code>bool</code> (True/False) z właściwością <code>Visibility</code>, ponieważ <code>Visibility</code> używa typu wyliczeniowego (Visible, Collapsed, Hidden). Konwerter implementujący interfejs <code>IValueConverter</code> pośredniczy między tymi typami, tłumacząc np. <code>true</code> na <code>Visibility.Visible</code>.</p>
+    <div class="explanation">
+      <h4>Dlaczego tworzymy interfejs IValidation?</h4>
+      <p>W zadaniu domowym (Home Part) musisz napisać aplikację w taki sposób, by w przyszłości można było dodawać nowe reguły sprawdzania (np. długości hasła) przez pliki <code>.dll</code>, bez modyfikowania głównego kodu programu.</p>
+      <p>Aby to się udało, plik DLL i Twój program muszą mówić tym samym językiem. Służy do tego interfejs <code>IValidation</code>. Każda nowa reguła walidacji musi go wdrożyć (posiadać Nazwę i Opis błędu) oraz dziedziczyć po bazowej klasie WPF <code>ValidationRule</code>.</p>
+    </div>
 
-    <div class="code-header">Plik: BoolToVisibilityConverter.cs</div>
-    <pre><code><span class="keyword">using</span> System.Windows.Data;
-<span class="keyword">using</span> System.Windows;
-
-<span class="keyword">public class</span> <span class="class">BoolToVisibilityConverter</span> : <span class="class">IValueConverter</span>
-{
-    <span class="keyword">public object</span> Convert(<span class="keyword">object</span> value, Type targetType, <span class="keyword">object</span> parameter, CultureInfo culture)
-    {
-        <span class="keyword">if</span> (value <span class="keyword">is bool</span> isUnlocked && isUnlocked)
-            <span class="keyword">return</span> Visibility.Visible;
-
-        <span class="keyword">return</span> Visibility.Collapsed;
-    }
-
-    <span class="keyword">public object</span> ConvertBack(<span class="keyword">object</span> value, Type targetType, <span class="keyword">object</span> parameter, CultureInfo culture)
-    {
-        <span class="keyword">throw new</span> NotImplementedException();
-    }
-}</code></pre>
-  </div>
-
-  <h3>6. System Walidacji i IValidation</h3>
-  <div class="task-box">
-    <p>Należy zaimplementować reguły sprawdzające poprawność wprowadzanych danych, takie jak format XXX-XXX-XXX[cite: 654, 658]. System musi pozwalać na dodawanie reguł z plików DLL bez rekompilacji, wdrażając klasę bazową <code>ValidationRule</code> oraz interfejs <code>IValidation</code>[cite: 663, 664].</p>
-    <p><strong>Wyjaśnienie:</strong> Rozdzielenie reguł do plików DLL wymaga wspólnego kontraktu (interfejsu)[cite: 671]. Klasa implementująca <code>ValidationRule</code> posiada metodę <code>Validate</code>. Jeśli sprawdzana wartość jest niepoprawna, metoda zwraca obiekt <code>ValidationResult</code> z flagą <code>false</code> i opisem błędu, co uruchamia w XAML szablon <code>Validation.ErrorTemplate</code>[cite: 664, 684, 691, 706].</p>
-
-    <div class="code-header">Plik: SerialNumberValidationRule.cs</div>
-    <pre><code><span class="comment">// Współdzielony interfejs [cite: 665-670]</span>
-<span class="keyword">public interface</span> <span class="class">IValidation</span>
+    <div class="code-header">Plik: IValidation.cs i PhoneNumberRule.cs</div>
+    <pre><code><span class="comment">// KROK 1: Współdzielony interfejs, który będzie w pliku DLL</span>
+<span class="keyword">public interface</span> <span class="class-name">IValidation</span>
 {
     <span class="keyword">string</span> Name { <span class="keyword">get</span>; }
     <span class="keyword">string</span> Description { <span class="keyword">get</span>; }
 }
 
-<span class="comment">// Reguła formatu XXX-XXX [cite: 658, 673, 674]</span>
-<span class="keyword">public class</span> <span class="class">SerialValidationRule</span> : <span class="class">ValidationRule</span>, <span class="class">IValidation</span>
+<span class="comment">// KROK 2: Przykładowa reguła (Dziedziczy z ValidationRule i z IValidation)</span>
+<span class="keyword">public class</span> <span class="class-name">PhoneValidationRule</span> : <span class="class-name">ValidationRule</span>, <span class="class-name">IValidation</span>
 {
-    <span class="keyword">public string</span> Name =&gt; <span class="string">"Format Numeru Seryjnego"</span>;
-    <span class="keyword">public string</span> Description =&gt; <span class="string">"Numer musi być w formacie XXX-XXX."</span>;
+    <span class="keyword">public string</span> Name =&gt; <span class="string">"Format Telefonu"</span>;
+    <span class="keyword">public string</span> Description =&gt; <span class="string">"Numer musi być w formacie XXX-XXX-XXX."</span>;
 
+    <span class="comment">// Główna funkcja, którą wywołuje WPF przy sprawdzaniu tekstu</span>
     <span class="keyword">public override</span> ValidationResult Validate(<span class="keyword">object</span> value, CultureInfo cultureInfo)
     {
-        <span class="keyword">string</span> serial = value <span class="keyword">as string</span>;
+        <span class="keyword">string</span> phone = value <span class="keyword">as string</span>;
 
-        <span class="keyword">if</span> (!System.Text.RegularExpressions.Regex.IsMatch(serial, <span class="string">@"^\d{3}-\d{3}$"</span>))
+        <span class="comment">// Prosta walidacja używająca wyrażeń regularnych (RegEx)</span>
+        <span class="keyword">if</span> (!System.Text.RegularExpressions.Regex.IsMatch(phone, <span class="string">@"^\d{3}-\d{3}-\d{3}$"</span>))
         {
-            <span class="comment">// Błąd walidacji [cite: 681]</span>
+            <span class="comment">// Zwracamy informację o błędzie z naszym opisem!</span>
             <span class="keyword">return new</span> ValidationResult(<span class="keyword">false</span>, Description);
         }
 
-        <span class="keyword">return</span> ValidationResult.ValidResult; <span class="comment">// Walidacja pomyślna [cite: 691]</span>
+        <span class="comment">// Jeśli kod dotarł tutaj, wszystko jest OK</span>
+        <span class="keyword">return</span> ValidationResult.ValidResult;
     }
 }</code></pre>
   </div>
 
-</div>
+</main>
 
 </body>
 </html>
