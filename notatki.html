@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kompendium: Zadanie OtoPromotor</title>
+  <title>Kompendium WPF - Contact Manager (Wersja PRO)</title>
   <style>
       :root {
-          --primary: #2563eb;
-          --secondary: #1e40af;
-          --accent: #e11d48;
+          --primary: #68217a; /* WPF Purple */
+          --secondary: #512bd4;
           --bg: #f8fafc;
           --text: #0f172a;
-          --code-bg: #1e293b;
+          --code-bg: #1e1e1e;
       }
 
       body {
-          font-family: 'Segoe UI', system-ui, sans-serif;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           background-color: var(--bg);
           color: var(--text);
           line-height: 1.6;
@@ -24,7 +23,7 @@
       }
 
       nav {
-          width: 250px;
+          width: 280px;
           height: 100vh;
           background: var(--code-bg);
           color: white;
@@ -33,16 +32,16 @@
           overflow-y: auto;
       }
 
-      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
       nav ul { list-style: none; padding: 0; }
       nav li { margin-bottom: 10px; }
       nav a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
       nav a:hover { color: white; padding-left: 5px; }
 
       main {
-          margin-left: 290px;
+          margin-left: 320px;
           padding: 40px;
-          max-width: 900px;
+          max-width: 950px;
       }
 
       h1 { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
@@ -59,17 +58,18 @@
 
       pre {
           background: var(--code-bg);
-          color: #f8f8f2;
+          color: #d4d4d4;
           padding: 15px;
           border-radius: 6px;
           overflow-x: auto;
           font-family: 'Consolas', monospace;
           font-size: 0.9rem;
+          line-height: 1.4;
       }
 
       .explanation {
-          background: #f0f9ff;
-          border-left: 4px solid #0ea5e9;
+          background: #f3e8ff;
+          border-left: 4px solid var(--primary);
           padding: 15px;
           margin: 15px 0;
           font-size: 0.95rem;
@@ -90,559 +90,298 @@
 <body>
 
 <nav>
-  <h2>Nawigacja</h2>
+  <h2>Nawigacja WPF</h2>
   <ul>
-    <li><a href="#colors">1. Zmienne CSS i Zaznaczenie</a></li>
-    <li><a href="#logo">2. Panel Logo (Flex & Font)</a></li>
-    <li><a href="#filters">3. Panel Filtrów (Form & Select)</a></li>
-    <li><a href="#grid">4. Siatka Kafelków (Grid)</a></li>
-    <li><a href="#semantics">5. Semantyka (Figure & Abbr)</a></li>
-    <li><a href="#boilerplate">6. GOTOWIEC (Full Code)</a></li>
+    <li><a href="#window">1. Okno i Układ (Grid)</a></li>
+    <li><a href="#data">2. Klasy i INotifyPropertyChanged</a></li>
+    <li><a href="#add-contact">3. Okno Dodawania (Dialog)</a></li>
+    <li><a href="#datagrid">4. ListBox i DataGrid</a></li>
+    <li><a href="#context-menu">5. Menu Kontekstowe</a></li>
+    <li><a href="#validation">6. Walidacja (IValidation)</a></li>
+    <li><a href="#converters">7. Konwertery (IValueConverter)</a></li>
   </ul>
 </nav>
 
 <main>
-  <h1>Notatki: Interfejs OtoPromotor</h1>
-  <p>Zadanie sprawdza nowoczesne techniki CSS (zmienne, Grid, Flexbox) i poprawną semantykę HTML (formularze, adnotacje zdjęć).</p>
+  <h1>Rozszerzone Notatki WPF: Contact Manager</h1>
+  <p>Ten plik zawiera dogłębną analizę zarówno części laboratoryjnej, jak i zaawansowanej części domowej (Home Part) zadania. Znajdziesz tu pełne implementacje walidacji, konwerterów oraz stylowania[cite: 10, 633, 634].</p>
 
-  <h2 id="colors">1. Zmienne CSS i Kolorystyka (1.5 pkt)</h2>
+  <h2 id="window">1. Okno Główne i Układ Okna</h2>
   <div class="task-box">
-    <span class="requirement">Zarządzanie z jednego miejsca, kolory granatowy/jasnoszary, odwrócenie przy zaznaczeniu.</span>
+    <span class="requirement">Parametry Okna [cite: 12, 13, 14, 16]</span>
     <div class="explanation">
-      Aby zarządzać kolorami z jednego miejsca, definiujemy tzw. <strong>CSS Custom Properties</strong> (zmienne) w pseudo-klasie <code>:root</code>. Do stylowania zaznaczonego tekstu używamy selektora <code>::selection</code>.
+      Główne okno musi zaczynać na środku ekranu, mieć tytuł "Contact Manager" oraz konkretne wymiary początkowe i minimalne[cite: 13, 16, 84, 85].
     </div>
-    <pre><code>/* Definiujemy zmienne na samej górze CSS */
-:root {
-    --main-color: #000080; /* Granatowy */
-    --bg-color: #d3d3d3;   /* Jasnoszary */
-}
+    <pre><code>&lt;Window x:Class="ContactManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Contact Manager"
+        Height="600" Width="800"
+        MinWidth="500" MinHeight="500"
+        WindowStartupLocation="CenterScreen"&gt;
 
-body {
-    color: var(--main-color);
-    background-color: var(--bg-color);
-}
+    &lt;Grid&gt;
+        &lt;!-- Podział okna na Pasek Menu (Auto) oraz zawartość (*) [cite: 111, 117] --&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height="Auto"/&gt;
+            &lt;RowDefinition Height="*"/&gt;
+        &lt;/Grid.RowDefinitions&gt;
 
-/* Pseudo-element działający przy zaznaczaniu tekstu myszką */
-::selection {
-    background-color: var(--main-color);
-    color: var(--bg-color);
-}</code></pre>
+        &lt;!-- Menu z opcjami Import/Export (Home Part) [cite: 637, 638] --&gt;
+        &lt;Menu Grid.Row="0"&gt;
+            &lt;MenuItem Header="File"&gt;
+                &lt;MenuItem Header="Import" Click="MenuItem_Import" /&gt;
+                &lt;MenuItem Header="Export" Click="MenuItem_Export" /&gt;
+                &lt;Separator /&gt;
+                &lt;MenuItem Header="Exit" Click="MenuItem_Exit" /&gt;
+            &lt;/MenuItem&gt;
+            &lt;MenuItem Header="Contacts"&gt;
+                &lt;MenuItem Header="Add contact" Click="MenuItem_AddContact" /&gt;
+                &lt;MenuItem Header="Clear contacts" Click="MenuItem_ClearContacts" /&gt;
+            &lt;/MenuItem&gt;
+        &lt;/Menu&gt;
+
+        &lt;!-- Zakładki --&gt;
+        &lt;TabControl Grid.Row="1"&gt;
+            &lt;TabItem Header="List"&gt;&lt;ListBox/&gt;&lt;/TabItem&gt;
+            &lt;TabItem Header="Grid"&gt;&lt;DataGrid/&gt;&lt;/TabItem&gt;
+            &lt;TabItem Header="Validation settings"&gt;&lt;!-- Zablokowane domyślnie [cite: 646] --&gt;&lt;/TabItem&gt;
+        &lt;/TabControl&gt;
+    &lt;/Grid&gt;
+&lt;/Window&gt;</code></pre>
   </div>
 
-  <h2 id="logo">2. Panel Logo (1.5 pkt)</h2>
+  <h2 id="data">2. Klasy Danych i INotifyPropertyChanged</h2>
   <div class="task-box">
-    <span class="requirement">Flexbox, łamanie wiersza, własna czcionka.</span>
+    <span class="requirement">Odświeżanie interfejsu (Wskazówka: INotifyPropertyChanged) [cite: 703]</span>
     <div class="explanation">
-      Hasło ZAWSZE podzielone na 2 wiersze oznacza użycie tagu <code>&lt;br&gt;</code>.
-      Zmiana układu (obok siebie -> pod sobą) to klasyczny przypadek dla <strong>Flexboxa</strong> i tzw. <strong>Media Queries</strong>. Własną czcionkę ładujemy przez <code>@font-face</code>.
+      Samo użycie <code>ObservableCollection</code> powiadamia widok tylko o <em>dodaniu lub usunięciu</em> elementu z listy. Aby widok aktualizował się, gdy zmieni się <em>właściwość</em> pojedynczego kontaktu (np. poprawisz nazwisko w edytorze), klasa musi implementować interfejs <code>INotifyPropertyChanged</code>.
+      <br><br>
+
     </div>
-    <pre><code>/* Ładowanie czcionki z pliku */
-@font-face {
-    font-family: 'Caveat';
-    src: url('caveat-regular.woff2') format('woff2'); /* dostosuj format */
-}
+    <pre><code>// C#: Contact.cs
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-.logo-panel {
-    display: flex;
-    align-items: center; /* Wyrównanie w pionie */
-    justify-content: center;
-    gap: 20px;
-}
+public class Contact : INotifyPropertyChanged
+{
+    private string name;
+    private string surname;
+    // ... reszta pół ...
 
-.motto {
-    font-family: 'Caveat', cursive;
-}
+    public string Name
+    {
+        get =&gt; name;
+        set { name = value; OnPropertyChanged(); }
+    }
 
-/* Responsywność: Gdy ekran jest węższy niż 768px, układamy pionowo */
-@media (max-width: 768px) {
-    .logo-panel {
-        flex-direction: column;
-        text-align: center;
+    public string Surname
+    {
+        get =&gt; surname;
+        set { surname = value; OnPropertyChanged(); }
+    }
+
+    public Gender Gender { get; set; }
+
+    // Implementacja interfejsu
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }</code></pre>
   </div>
 
-  <h2 id="filters">3. Panel Filtrów (2.5 pkt)</h2>
+  <h2 id="add-contact">3. Okno Dodawania Kontaktu (Dialog)</h2>
   <div class="task-box">
-    <span class="requirement">Select, disabled selected, optgroup, value kodowanie, reset form.</span>
+    <span class="requirement">Restrykcje wyglądu [cite: 247, 248, 249, 250]</span>
     <div class="explanation">
-      To pułapka na wiele punktów!
-      1. Aby przycisk "Wyczyść" działał naturalnie bez JS, wszystko musi być wewnątrz tagu <code>&lt;form&gt;</code>, a przycisk musi mieć <code>type="reset"</code>.
-      2. Niewybieralny tytuł robimy flagami <code>disabled selected hidden</code>.
-      3. "Zakodowane wartości" oznaczają, że wpisujesz kod w atrybut <code>value="1"</code>.
-      4. Kategorie robimy tagiem <code>&lt;optgroup label="..."&gt;</code>.
+      Okno dodawania nowego kontaktu musi blokować okno główne[cite: 45]. Aby wyglądało odpowiednio czysto, dokument wymaga usunięcia systemowych ramek i dodania czarnego obramowania[cite: 249, 250].
     </div>
+    <pre><code>&lt;!-- XAML: AddContactWindow.xaml [cite: 241] --&gt;
+&lt;Window x:Class="ContactManager.AddContactWindow"
+        Title="Add contact" Height="250" Width="350"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStyle="None"
+        BorderBrush="Black" BorderThickness="3"&gt; &lt;!-- [cite: 247, 248, 249, 250, 251] --&gt;
 
-    <pre><code>&lt;form class="filters-panel"&gt;
+    &lt;!-- Resource z Enumem [cite: 387] --&gt;
+    &lt;Window.Resources&gt;
+        &lt;ObjectDataProvider x:Key="GenderList" MethodName="GetValues" ObjectType="{x:Type TypeName=System:Enum}"&gt;
+            &lt;ObjectDataProvider.MethodParameters&gt;
+                &lt;x:Type TypeName="local:Gender"/&gt; &lt;!-- [cite: 389] --&gt;
+            &lt;/ObjectDataProvider.MethodParameters&gt;
+        &lt;/ObjectDataProvider&gt;
+    &lt;/Window.Resources&gt;
 
-    &lt;select name="academic-title"&gt;
-        &lt;!-- Niewybieralny, domyślny tytuł --&gt;
-        &lt;option value="" disabled selected hidden&gt;Tytuł/stopień naukowy&lt;/option&gt;
+    &lt;Grid&gt;
+        &lt;!-- Tu pola tekstowe i ComboBox z podpiętym GenderList --&gt;
+        &lt;TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/&gt; &lt;!-- [cite: 361] --&gt;
 
-        &lt;!-- Wartość dla maszyny (value="2"), tekst dla człowieka (Doktor) --&gt;
-        &lt;option value="2"&gt;Doktor&lt;/option&gt;
-        &lt;option value="3"&gt;Profesor&lt;/option&gt;
-    &lt;/select&gt;
+        &lt;ComboBox ItemsSource="{Binding Source={StaticResource GenderList}}"
+                  SelectedItem="{Binding Path=Gender}" /&gt; &lt;!-- [cite: 404, 405] --&gt;
 
-    &lt;select name="topic"&gt;
-        &lt;option value="" disabled selected hidden&gt;Obszar zainteresowań&lt;/option&gt;
+        &lt;StackPanel Orientation="Horizontal" HorizontalAlignment="Center"&gt;
+            &lt;Button Width="100" Height="30" Click="AddContact"&gt;Add contact&lt;/Button&gt; &lt;!-- [cite: 325] --&gt;
+            &lt;Button Width="100" Height="30" Click="Cancel" Margin="15,0,0,0"&gt;Cancel&lt;/Button&gt; &lt;!-- [cite: 326] --&gt;
+        &lt;/StackPanel&gt;
+    &lt;/Grid&gt;
+&lt;/Window&gt;</code></pre>
+    <pre><code>// C#: Code-behind (AddContactWindow.xaml.cs)
+public partial class AddContactWindow : Window
+{
+    public Contact NewContact { get; private set; } // [cite: 332]
 
-        &lt;!-- Kategorie (niewybieralne) grupujące opcje --&gt;
-        &lt;optgroup label="Matematyka"&gt;
-            &lt;option value="1"&gt;Obliczenia numeryczne&lt;/option&gt;
-        &lt;/optgroup&gt;
-    &lt;/select&gt;
+    public AddContactWindow()
+    {
+        InitializeComponent();
+        NewContact = new Contact(); // [cite: 344]
+        DataContext = NewContact; // [cite: 346]
+    }
 
-    &lt;!-- Przycisk przywracający domyślne opcje formularza --&gt;
-    &lt;button type="reset"&gt;Wyczyść&lt;/button&gt;
+    private void AddContact(object sender, RoutedEventArgs e)
+    {
+        DialogResult = true; // Zwraca true do okna głównego [cite: 414]
+        Close(); // [cite: 416]
+    }
 
-&lt;/form&gt;</code></pre>
+    private void Cancel(object sender, RoutedEventArgs e)
+    {
+        DialogResult = false; // [cite: 425]
+        Close(); // [cite: 427]
+    }
+}</code></pre>
   </div>
 
-  <h2 id="grid">4. Siatka i Kafelki (2.5 pkt)</h2>
+  <h2 id="datagrid">4. ListBox (Zmienne Kolory) i DataGrid</h2>
   <div class="task-box">
-    <span class="requirement">Siatka 4 kolumn, przerywane zaokrąglone ramki, zdjęcia równej wysokości, padding/gap.</span>
+    <span class="requirement">Zmienne tło (AlternationIndex) i DataGrid [cite: 593, 628]</span>
     <div class="explanation">
-      Użycie <code>display: grid</code> z opcją <code>repeat(4, 1fr)</code> automatycznie dzieli przestrzeń na 4 równe kolumny. Przezroczystość zdjęć i ich jednakową wysokość bez niszczenia proporcji (spłaszczania) załatwia <code>object-fit: cover</code>.
+      Tło dla parzystych i nieparzystych pozycji różni się kolorami. Służy do tego <code>AlternationIndex</code> powiązany z <code>Triggerami</code> w stylach list[cite: 592, 593]. DataGrid musi pozwalać na dodawanie rekordów bezpośrednio z tabeli[cite: 628].
     </div>
+    <pre><code>&lt;!-- XAML: Wewnątrz ListBox --&gt;
+&lt;ListBox ItemsSource="{Binding Source={StaticResource ContactsViewSource}}"
+         AlternationCount="2"&gt; &lt;!-- Konieczne do działania zmiennych kolorów! [cite: 625] --&gt;
+    &lt;ListBox.ItemContainerStyle&gt;
+        &lt;Style TargetType="ListBoxItem"&gt;
+            &lt;Style.Triggers&gt;
+                &lt;Trigger Property="ItemsControl.AlternationIndex" Value="0"&gt;
+                    &lt;Setter Property="Background" Value="#FFAFC5FF" /&gt; &lt;!-- [cite: 610] --&gt;
+                &lt;/Trigger&gt;
+                &lt;Trigger Property="ItemsControl.AlternationIndex" Value="1"&gt;
+                    &lt;Setter Property="Background" Value="#FF75A1FF" /&gt; &lt;!-- [cite: 612] --&gt;
+                &lt;/Trigger&gt;
+                &lt;!-- Część domowa: Specjalny kolor dla ZAZNACZONEGO elementu [cite: 641] --&gt;
+                &lt;Trigger Property="IsSelected" Value="True"&gt;
+                    &lt;Setter Property="Background" Value="#FFFDCF6C" /&gt;
+                &lt;/Trigger&gt;
+            &lt;/Style.Triggers&gt;
+        &lt;/Style&gt;
+    &lt;/ListBox.ItemContainerStyle&gt;
+&lt;/ListBox&gt;
 
-    <pre><code>/* --- SIATKA --- */
-.promoters-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Dokładnie 4 kolumny */
-    gap: 30px; /* Odpowiednie rozdzielenie (światło między kafelkami) */
+&lt;!-- DataGrid, który sam tworzy kolumny i pozwala na wstawianie wierszy [cite: 630, 631] --&gt;
+&lt;DataGrid ItemsSource="{Binding}" AutoGenerateColumns="True" CanUserAddRows="True" /&gt;</code></pre>
+  </div>
+
+  <h2 id="context-menu">5. Menu Kontekstowe (Prawy Przycisk)</h2>
+  <div class="task-box">
+    <span class="requirement">Usuwanie kontaktu przez prawy przycisk myszy [cite: 643, 644]</span>
+    <div class="explanation">
+      Aby po kliknięciu prawym przyciskiem myszy na kontakt pojawiło się menu "Delete contact", należy dodać <code>ContextMenu</code> do struktury <code>DataTemplate</code> naszego ListBoxa[cite: 643, 644].
+    </div>
+    <pre><code>&lt;!-- XAML: Wewnątrz DataTemplate dla ListBoxItem --&gt;
+&lt;Grid&gt;
+    &lt;Grid.ContextMenu&gt;
+        &lt;ContextMenu&gt;
+            &lt;!-- Zdarzenie usuwania wiążemy z kodem --&gt;
+            &lt;MenuItem Header="Delete contact" Click="MenuItem_DeleteContact" /&gt;
+        &lt;/ContextMenu&gt;
+    &lt;/Grid.ContextMenu&gt;
+
+    &lt;!-- Tu zawartość kafelka (zdjęcie, imię, nazwisko) --&gt;
+&lt;/Grid&gt;</code></pre>
+    <pre><code>// C#: Code-behind (Usuwanie elementu)
+private void MenuItem_DeleteContact(object sender, RoutedEventArgs e)
+{
+    // Pobranie kontekstu klikniętego elementu menu
+    if (sender is MenuItem menuItem && menuItem.DataContext is Contact contactToDelete)
+    {
+        Contacts.Remove(contactToDelete);
+    }
+}</code></pre>
+  </div>
+
+  <h2 id="validation">6. System Walidacji (Interfejsy i Pliki DLL)</h2>
+  <div class="task-box">
+    <span class="requirement">Reguły sprawdzające i Interfejs IValidation [cite: 655, 664, 665]</span>
+    <div class="explanation">
+      Zadanie wymaga, by można było dodawać reguły walidacji (np. sprawdzanie długości czy formatu XXX-XXX-XXX) bez rekompilacji, używając bibliotek DLL[cite: 663, 664]. Aby to było możliwe, aplikacja i pliki DLL muszą współdzielić interfejs <code>IValidation</code>[cite: 665]. Reguły dziedziczą też po wbudowanej klasie WPF: <code>ValidationRule</code>[cite: 664, 674].
+      <br><br>
+
+    </div>
+    <pre><code>// C#: Struktura interfejsu (współdzielona np. w projekcie ClassLibrary) [cite: 665]
+public interface IValidation
+{
+    string Name { get; } // [cite: 666]
+    string Description { get; } // [cite: 668]
 }
 
-/* --- KAFELEK --- */
-.card {
-    border: 2px dashed var(--main-color); /* Przerywana ramka */
-    border-radius: 15px; /* Zaokrąglone rogi */
-    padding: 20px; /* Światło wewnątrz kafelka */
-}
+// C#: Przykład Reguły (Sprawdzanie Długości) [cite: 656, 673, 674]
+public class MinLengthValidationRule : ValidationRule, IValidation
+{
+    public string Name =&gt; "Minimum 5 znaków";
+    public string Description =&gt; "Tekst musi posiadać co najmniej 5 znaków.";
 
-/* --- ZDJĘCIA RÓWNEJ WYSOKOŚCI --- */
-.card img {
-    width: 100%;
-    height: 250px; /* Sztywna wysokość dla wszystkich */
-    object-fit: cover; /* Przycina, ale NIE ZNIEKSZTAŁCA proporcji! */
-    border-radius: 8px;
+    public override ValidationResult Validate(object value, CultureInfo cultureInfo) // [cite: 684]
+    {
+        string text = value as string;
+        if (text == null || text.Length &lt; 5)
+        {
+            return new ValidationResult(false, Description); // Błąd walidacji
+        }
+        return ValidationResult.ValidResult; // Walidacja pomyślna [cite: 691]
+    }
 }</code></pre>
   </div>
 
-  <h2 id="semantics">5. Semantyka Tytułów i Skrótów (1.5 pkt)</h2>
+  <h2 id="converters">7. Konwertery (Blokada Zakładek)</h2>
   <div class="task-box">
-    <span class="requirement">Związanie zdjęcia z podpisem, rozwijany skrót po najechaniu.</span>
+    <span class="requirement">Zarządzanie widocznością za pomocą mechanizmu konwerterów [cite: 647, 700]</span>
     <div class="explanation">
-      To jest moment, w którym prowadzący sprawdza, czy znasz tagi HTML5. Zamiast pakować zdjęcie i nazwisko w puste <code>&lt;div&gt;</code>, należy użyć <code>&lt;figure&gt;</code> oraz <code>&lt;figcaption&gt;</code>. Do skrótów służy tag <code>&lt;abbr&gt;</code>.
+      Zakładka "Validation settings" jest zablokowana. Użytkownik odblokowuje ją przyciskiem[cite: 646, 647]. Konwerter w WPF to klasa implementująca interfejs <code>IValueConverter</code>, która potrafi zmienić (np.) stan logiczny <code>bool</code> (True/False) na <code>Visibility</code> (Visible/Collapsed).
     </div>
-    <pre><code>&lt;!-- Poprawne semantycznie połączenie zdjęcia z osobą --&gt;
-&lt;figure class="card"&gt;
-    &lt;img src="promotor1.jpg" alt="Zdjęcie dr. Jana Kowalskiego"&gt;
+    <pre><code>// C#: BoolToVisibilityConverter.cs
+using System.Windows.Data;
+using System.Windows;
 
-    &lt;figcaption&gt;
-        &lt;h3&gt;dr Jan Kowalski&lt;/h3&gt;
-    &lt;/figcaption&gt;
+public class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isUnlocked && isUnlocked)
+            return Visibility.Visible;
 
-    &lt;!-- Słowa kluczowe ze skrótami --&gt;
-    &lt;div class="keywords"&gt;
-        Zainteresowania:
-        &lt;!-- Tag abbr z atrybutem title robi automatyczny tooltip (podpowiedź) --&gt;
-        &lt;abbr title="Artificial Intelligence"&gt;AI&lt;/abbr&gt;,
-        &lt;abbr title="Machine Learning"&gt;ML&lt;/abbr&gt;
-    &lt;/div&gt;
-&lt;/figure&gt;</code></pre>
-  </div>
+        return Visibility.Collapsed;
+    }
 
-  <h2 id="boilerplate">6. GOTOWIEC: Pełne Rozwiązanie</h2>
-  <div class="task-box">
-    <p>Połączony HTML i CSS spełniający wszystkie wymogi. Zapisz jako <code>index.html</code> i oddaj prowadzącemu.</p>
-    <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="pl"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;OtoPromotor&lt;/title&gt;
-    &lt;style&gt;
-        /* --- ZARZĄDZANIE KOLORAMI --- */
-        :root {
-            --navy-color: #000080;
-            --bg-color: #f0f0f0;
-        }
-
-        @font-face {
-            font-family: 'Caveat';
-            src: url('caveat-regular.woff2') format('woff2'); /* Załóż, że plik jest w folderze */
-        }
-
-        body {
-            color: var(--navy-color);
-            background-color: var(--bg-color);
-            font-family: Arial, sans-serif;
-            margin: 0; padding: 20px;
-        }
-
-        ::selection {
-            background-color: var(--navy-color);
-            color: var(--bg-color);
-        }
-
-        /* --- PANEL 1: LOGO --- */
-        .logo-panel {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 40px;
-            padding: 20px;
-        }
-
-        .logo-panel img {
-            max-width: 150px;
-        }
-
-        .motto {
-            font-family: 'Caveat', cursive;
-            font-size: 24px;
-        }
-
-        @media (max-width: 768px) {
-            .logo-panel {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-
-        /* --- PANEL 2: FILTRY --- */
-        .filters-panel {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            padding: 20px;
-            border: 1px solid var(--navy-color);
-            border-radius: 8px;
-        }
-
-        .filters-panel select, .filters-panel button {
-            padding: 10px;
-            border: 1px solid var(--navy-color);
-            color: var(--navy-color);
-            background: white;
-            border-radius: 5px;
-        }
-
-        .filters-panel button {
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* --- PANEL 3: KAFELKI --- */
-        .promoters-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 30px;
-        }
-
-        .card {
-            border: 2px dashed var(--navy-color);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 0; /* reset domyślnego marginesu figure */
-            background: white;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--navy-color);
-        }
-
-        .card figcaption h3 {
-            margin: 10px 0 5px 0;
-            text-align: center;
-        }
-
-        .keywords {
-            font-size: 0.9em;
-            text-align: center;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            margin-top: auto; /* Wypycha na sam dół kafelka */
-        }
-
-        abbr {
-            text-decoration: underline dotted;
-            cursor: help;
-        }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-
-    &lt;!-- PANEL 1 --&gt;
-    &lt;header class="logo-panel"&gt;
-        &lt;img src="logo.png" alt="OtoPromotor Logo"&gt;
-        &lt;div class="motto"&gt;
-            Czym się różni seminarium od proseminarium?&lt;br&gt;
-            Tym samym czym motor od promotora
-        &lt;/div&gt;
-    &lt;/header&gt;
-
-    &lt;!-- PANEL 2 --&gt;
-    &lt;form class="filters-panel"&gt;
-        &lt;select name="academic-title"&gt;
-            &lt;option value="" disabled selected hidden&gt;Tytuł/stopień naukowy/zawodowy&lt;/option&gt;
-            &lt;option value="1"&gt;Magister&lt;/option&gt;
-            &lt;option value="2"&gt;Doktor&lt;/option&gt;
-            &lt;option value="3"&gt;Profesor&lt;/option&gt;
-        &lt;/select&gt;
-
-        &lt;select name="thesis-type"&gt;
-            &lt;option value="" disabled selected hidden&gt;Praca dyplomowa&lt;/option&gt;
-            &lt;option value="1"&gt;Licencjacka&lt;/option&gt;
-            &lt;option value="2"&gt;Inżynierska&lt;/option&gt;
-            &lt;option value="3"&gt;Magisterska&lt;/option&gt;
-        &lt;/select&gt;
-
-        &lt;select name="topic"&gt;
-            &lt;option value="" disabled selected hidden&gt;Obszar zainteresowań&lt;/option&gt;
-            &lt;optgroup label="Informatyka"&gt;
-                &lt;option value="1"&gt;Sztuczna Inteligencja&lt;/option&gt;
-                &lt;option value="2"&gt;Sieci Komputerowe&lt;/option&gt;
-            &lt;/optgroup&gt;
-            &lt;optgroup label="Matematyka"&gt;
-                &lt;option value="3"&gt;Obliczenia numeryczne&lt;/option&gt;
-            &lt;/optgroup&gt;
-        &lt;/select&gt;
-
-        &lt;button type="reset"&gt;Wyczyść&lt;/button&gt;
-    &lt;/form&gt;
-
-    &lt;!-- PANEL 3 --&gt;
-    &lt;main class="promoters-grid"&gt;
-
-        &lt;!-- Wzór 1 Kafelka (Kopiuj i wklej 4 razy) --&gt;
-        &lt;figure class="card"&gt;
-            &lt;img src="https://via.placeholder.com/300x200" alt="dr inż. Anna Nowak"&gt;
-            &lt;figcaption&gt;
-                &lt;h3&gt;dr inż. Anna Nowak&lt;/h3&gt;
-            &lt;/figcaption&gt;
-            &lt;div class="keywords"&gt;
-                &lt;abbr title="Artificial Intelligence"&gt;AI&lt;/abbr&gt;,
-                &lt;abbr title="Machine Learning"&gt;ML&lt;/abbr&gt;, Python
-            &lt;/div&gt;
-        &lt;/figure&gt;
-
-        &lt;!-- Dodaj kolejne 3 &lt;figure&gt; na zaliczeniu... --&gt;
-
-    &lt;/main&gt;
-
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-  </div>
-  <h2 id="youtube-clone">7. Projekt Praktyczny: Klon YouTube</h2>
-  <p>Odtworzenie interfejsu YouTube to ostateczny test Twojej wiedzy z CSS. Łączymy tu pozycjonowanie stałe (Fixed), Flexboxa (do pasków i detali) oraz Grida (do siatki filmów).</p>
-
-
-
-  <h3>A. Architektura i Wyjaśnienia (Snippety)</h3>
-
-  <div class="task-box">
-    <span class="requirement">Nawigacja (Header) - Zawsze na górze</span>
-    <div class="explanation">
-      Górny pasek YouTube'a składa się z 3 sekcji (Logo, Szukajka, Profil). Idealnie pasuje tu <code>flex</code> z <code>justify-content: space-between</code>. Aby pasek nie znikał przy scrollowaniu, używamy <code>position: fixed</code>.
-    </div>
-    <pre><code>/* Pasek nawigacji przypięty do góry */
-.yt-header {
-    display: flex;
-    justify-content: space-between; /* Rozsuwa 3 elementy maksymalnie na boki */
-    align-items: center; /* Centruje w pionie */
-    position: fixed; /* Przykleja do ekranu */
-    top: 0; left: 0; width: 100%;
-    height: 60px;
-    background: white;
-    z-index: 100; /* Zawsze nad filmami */
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
 }</code></pre>
-  </div>
+    <pre><code>&lt;!-- XAML: Wewnątrz Window.Resources --&gt;
+&lt;local:BoolToVisibilityConverter x:Key="BoolToVisConverter" /&gt;
 
-  <div class="task-box">
-    <span class="requirement">Pasek boczny (Sidebar) - Przypięty do lewej</span>
-    <div class="explanation">
-      Podobnie jak Header, pasek boczny nie scrolluje się razem z filmami. Musi być przypięty do lewej krawędzi i zajmować całą wysokość ekranu (<code>100vh</code>).
-    </div>
-    <pre><code>.yt-sidebar {
-    width: 240px;
-    position: fixed;
-    top: 60px; /* Zaczyna się POD Headerem */
-    left: 0;
-    height: calc(100vh - 60px); /* 100% wysokości ekranu minus wysokość Headera */
-    background: #f8f8f8;
-}</code></pre>
-  </div>
-
-  <div class="task-box">
-    <span class="requirement">Magiczna Siatka Filmów (Auto-fill & Minmax)</span>
-    <div class="explanation">
-      To jest najpotężniejsza linijka w CSS Grid. Zamiast pisać Media Queries dla telefonów, tabletów i PC, używamy <code>repeat(auto-fill, minmax(300px, 1fr))</code>. Mówimy systemowi: "Wciskaj tyle kolumn, ile wlezie, ale żadna nie może być węższa niż 300px. Jeśli zostanie wolne miejsce, rozciągnij je (1fr)".
-    </div>
-
-    <pre><code>.yt-video-grid {
-    margin-left: 240px; /* Robimy miejsce na boczny pasek! */
-    margin-top: 60px;   /* Robimy miejsce na górny pasek! */
-    padding: 24px;
-
-    display: grid;
-    /* MAGIA RESPONSYWNOŚCI BEZ MEDIA QUERIES: */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-}</code></pre>
-  </div>
-
-  <div class="task-box">
-    <span class="requirement">Kafelek Filmu (Zagnieżdżony Flexbox)</span>
-    <div class="explanation">
-      Każdy film ma miniaturkę, a pod spodem avatar twórcy obok tytułu i nazwy kanału. Sytuacja, gdzie masz obrazek obok bloku tekstu, to klasyczny <code>display: flex</code> wewnątrz karty filmu.
-    </div>
-    <pre><code>.video-info {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.channel-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%; /* Robi idealne kółko z kwadratowego obrazka */
-}</code></pre>
-  </div>
-
-  <h3>B. GOTOWIEC: Pełny Klon YouTube</h3>
-  <div class="task-box">
-    <p>Połączony kod. Przeklej do pustego pliku <code>youtube.html</code> i zobacz, jak działa siatka podczas zmniejszania okna przeglądarki!</p>
-
-    <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="pl"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;YouTube Clone&lt;/title&gt;
-    &lt;style&gt;
-        /* --- RESET I ZMIENNE --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Roboto', Arial, sans-serif; background: #f9f9f9; color: #0f0f0f; }
-
-        /* --- HEADER --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 60px;
-            padding: 0 20px;
-            background: white;
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            z-index: 100;
-        }
-        .header-logo { font-weight: bold; font-size: 20px; letter-spacing: -1px; }
-        .header-search input { padding: 8px 16px; width: 400px; border: 1px solid #ccc; border-radius: 20px; }
-        .header-profile { width: 32px; height: 32px; background: #000; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; }
-
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: 240px;
-            background: white;
-            position: fixed;
-            top: 60px; left: 0;
-            height: calc(100vh - 60px);
-            padding: 12px;
-        }
-        .sidebar-item { padding: 10px 15px; border-radius: 10px; cursor: pointer; }
-        .sidebar-item:hover { background: #f2f2f2; }
-
-        /* --- GŁÓWNA SIATKA (GRID) --- */
-        .main-content {
-            margin-left: 240px;
-            margin-top: 60px;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px 16px; /* 20px pionowo, 16px poziomo */
-        }
-
-        /* --- KAFELEK FILMU --- */
-        .video-card { cursor: pointer; }
-        .video-thumbnail {
-            width: 100%;
-            aspect-ratio: 16 / 9; /* Wymusza proporcje wideo! */
-            background: #ddd;
-            border-radius: 12px;
-            object-fit: cover;
-        }
-
-        .video-details { display: flex; gap: 12px; margin-top: 12px; }
-        .channel-avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background: #999;
-            flex-shrink: 0; /* Zabrania avatarowi kurczyć się z braku miejsca */
-        }
-        .video-text { display: flex; flex-direction: column; gap: 4px; }
-        .video-title { font-size: 16px; font-weight: bold; line-height: 1.4; }
-        .video-meta { font-size: 14px; color: #606060; }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-
-    &lt;header class="header"&gt;
-        &lt;div class="header-logo"&gt;▶ YouTube&lt;/div&gt;
-        &lt;div class="header-search"&gt;
-            &lt;input type="text" placeholder="Szukaj"&gt;
-        &lt;/div&gt;
-        &lt;div class="header-profile"&gt;K&lt;/div&gt;
-    &lt;/header&gt;
-
-    &lt;nav class="sidebar"&gt;
-        &lt;div class="sidebar-item"&gt;Główna&lt;/div&gt;
-        &lt;div class="sidebar-item"&gt;Shorts&lt;/div&gt;
-        &lt;div class="sidebar-item"&gt;Subskrypcje&lt;/div&gt;
-    &lt;/nav&gt;
-
-    &lt;main class="main-content"&gt;
-        &lt;!-- Wklej ten blok kilka razy, żeby zobaczyć jak działa siatka --&gt;
-        &lt;article class="video-card"&gt;
-            &lt;img src="https://via.placeholder.com/600x337" class="video-thumbnail" alt="Miniaturka"&gt;
-            &lt;div class="video-details"&gt;
-                &lt;div class="channel-avatar"&gt;&lt;/div&gt;
-                &lt;div class="video-text"&gt;
-                    &lt;h3 class="video-title"&gt;Jak zrobić klon YouTube w 10 minut (HTML & CSS)&lt;/h3&gt;
-                    &lt;div class="video-meta"&gt;Front-end Inżynier&lt;/div&gt;
-                    &lt;div class="video-meta"&gt;10 tys. wyświetleń • 2 dni temu&lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/article&gt;
-
-        &lt;!-- Miejsce na kolejne filmy... --&gt;
-        &lt;article class="video-card"&gt;
-            &lt;img src="https://via.placeholder.com/600x337" class="video-thumbnail" alt="Miniaturka"&gt;
-            &lt;div class="video-details"&gt;
-                &lt;div class="channel-avatar"&gt;&lt;/div&gt;
-                &lt;div class="video-text"&gt;
-                    &lt;h3 class="video-title"&gt;CSS Grid vs Flexbox - Ostateczne Starcie&lt;/h3&gt;
-                    &lt;div class="video-meta"&gt;Kodujemy&lt;/div&gt;
-                    &lt;div class="video-meta"&gt;50 tys. wyświetleń • 1 rok temu&lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/article&gt;
-    &lt;/main&gt;
-
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
+&lt;!-- XAML: Użycie w kontrolce (np. we wnętrzu TabItem) --&gt;
+&lt;!-- Zmienna "IsValidationUnlocked" pochodzi z klasy C# okna głównego --&gt;
+&lt;Grid Visibility="{Binding IsValidationUnlocked, Converter={StaticResource BoolToVisConverter}}"&gt;
+    &lt;!-- Zawartość konfiguracji walidacji --&gt;
+&lt;/Grid&gt;</code></pre>
   </div>
 </main>
-
 
 </body>
 </html>
