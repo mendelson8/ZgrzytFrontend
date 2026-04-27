@@ -561,6 +561,153 @@
 &lt;/Window&gt;</code></pre>
   </div>
 
+  <h1 style="margin-top: 60px;">Dodatek: Jak zrobić To-Do List w WPF</h1>
+  <p>Zbudowanie prostej listy zadań to świetny sposób na utrwalenie wiedzy. Wykorzystamy tu dynamiczną kolekcję, bindowanie właściwości <code>IsCompleted</code> pod CheckBoxa oraz magię <strong>DataTriggera</strong> do przekreślania wykonanych zadań.</p>
+
+  <h2 id="todo-list">9. Projekt: Prosta Lista Zadań (To-Do List)</h2>
+
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Krok 1: Model Danych (Zadanie)</h4>
+      <p>Każde zadanie na naszej liście musi mieć swój tekst (Title) oraz status ukończenia (IsCompleted). Ponieważ kliknięcie CheckBoxa zmienia status <code>IsCompleted</code>, a my chcemy, żeby interfejs od razu na to zareagował (np. przekreślając tekst), <strong>musimy</strong> użyć <code>INotifyPropertyChanged</code>.</p>
+    </div>
+    <div class="code-header">Plik: ToDoItem.cs</div>
+    <pre><code><span class="keyword">using</span> System.ComponentModel;
+<span class="keyword">using</span> System.Runtime.CompilerServices;
+
+<span class="keyword">public class</span> <span class="class-name">ToDoItem</span> : <span class="class-name">INotifyPropertyChanged</span>
+{
+    <span class="keyword">private string</span> title;
+    <span class="keyword">private bool</span> isCompleted;
+
+    <span class="keyword">public string</span> Title
+    {
+        <span class="keyword">get</span> =&gt; title;
+        <span class="keyword">set</span> { title = value; OnPropertyChanged(); }
+    }
+
+    <span class="keyword">public bool</span> IsCompleted
+    {
+        <span class="keyword">get</span> =&gt; isCompleted;
+        <span class="keyword">set</span> { isCompleted = value; OnPropertyChanged(); } <span class="comment">// Tu następuje magia!</span>
+    }
+
+    <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
+    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propName = <span class="keyword">null</span>)
+    {
+        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propName));
+    }
+}</code></pre>
+  </div>
+
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Krok 2: Widok (XAML) - CheckBox i Przekreślanie</h4>
+      <p>Nasz interfejs składa się z pola do wpisywania nowego zadania (TextBox) oraz przycisku "Dodaj". Poniżej znajduje się <code>ListBox</code>. Najważniejsza część to <code>DataTemplate</code>. Wiążemy <code>IsChecked</code> CheckBoxa z naszą właściwością <code>IsCompleted</code>. Następnie używamy <code>DataTrigger</code>, który mówi: <em>"Jeśli zadanie jest ukończone, ustaw styl tekstu na przekreślony"</em>.</p>
+    </div>
+    <div class="code-header">Plik: MainWindow.xaml</div>
+    <pre><code>&lt;Window x:Class="ToDoApp.MainWindow"
+        Title="My To-Do List" Height="450" Width="400"&gt;
+    &lt;Grid Margin="10"&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height="Auto"/&gt; <span class="comment">&lt;!-- Pasek dodawania --&gt;</span>
+            &lt;RowDefinition Height="*"/&gt;    <span class="comment">&lt;!-- Lista zadań --&gt;</span>
+        &lt;/Grid.RowDefinitions&gt;
+
+        <span class="comment">&lt;!-- Pasek dodawania zadania --&gt;</span>
+        &lt;Grid Grid.Row="0" Margin="0,0,0,10"&gt;
+            &lt;Grid.ColumnDefinitions&gt;
+                &lt;ColumnDefinition Width="*"/&gt;
+                &lt;ColumnDefinition Width="Auto"/&gt;
+            &lt;/Grid.ColumnDefinitions&gt;
+
+            &lt;TextBox x:Name="NewTaskTextBox" Grid.Column="0" Margin="0,0,10,0" Padding="5" FontSize="16"/&gt;
+            &lt;Button Grid.Column="1" Content="Dodaj" Click="AddBtn_Click" Width="80" Padding="5"/&gt;
+        &lt;/Grid&gt;
+
+        <span class="comment">&lt;!-- Lista Zadań --&gt;</span>
+        &lt;ListBox Grid.Row="1" ItemsSource="{Binding Tasks}" HorizontalContentAlignment="Stretch"&gt;
+            &lt;ListBox.ItemTemplate&gt;
+                &lt;DataTemplate&gt;
+                    &lt;Grid Margin="0,5"&gt;
+                        &lt;Grid.ColumnDefinitions&gt;
+                            &lt;ColumnDefinition Width="Auto"/&gt;
+                            &lt;ColumnDefinition Width="*"/&gt;
+                            &lt;ColumnDefinition Width="Auto"/&gt;
+                        &lt;/Grid.ColumnDefinitions&gt;
+
+                        <span class="comment">&lt;!-- CheckBox powiązany z IsCompleted --&gt;</span>
+                        &lt;CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/&gt;
+
+                        <span class="comment">&lt;!-- Tekst zadania. Zauważ, że nazwaliśmy go x:Name="TaskText", by Trigger mógł na niego działać --&gt;</span>
+                        &lt;TextBlock x:Name="TaskText" Grid.Column="1" Text="{Binding Title}" Margin="10,0,0,0" FontSize="16" VerticalAlignment="Center"/&gt;
+
+                        <span class="comment">&lt;!-- Przycisk usuwania konkretnego zadania --&gt;</span>
+                        &lt;Button Grid.Column="2" Content="X" Foreground="Red" FontWeight="Bold" Width="25" Click="DeleteBtn_Click"/&gt;
+                    &lt;/Grid&gt;
+
+                    <span class="comment">&lt;!-- Magia: Przekreślenie tekstu po zaznaczeniu CheckBoxa --&gt;</span>
+                    &lt;DataTemplate.Triggers&gt;
+                        &lt;DataTrigger Binding="{Binding IsCompleted}" Value="True"&gt;
+                            &lt;Setter TargetName="TaskText" Property="TextDecorations" Value="Strikethrough"/&gt;
+                            &lt;Setter TargetName="TaskText" Property="Foreground" Value="Gray"/&gt;
+                        &lt;/DataTrigger&gt;
+                    &lt;/DataTemplate.Triggers&gt;
+                &lt;/DataTemplate&gt;
+            &lt;/ListBox.ItemTemplate&gt;
+        &lt;/ListBox&gt;
+    &lt;/Grid&gt;
+&lt;/Window&gt;</code></pre>
+  </div>
+
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Krok 3: Logika pod spodem (Code-behind)</h4>
+      <p>W kodzie C# inicjalizujemy naszą <code>ObservableCollection</code>, ustawiamy <code>DataContext</code> i obsługujemy kliknięcia przycisków dodawania oraz usuwania.</p>
+    </div>
+    <div class="code-header">Plik: MainWindow.xaml.cs</div>
+    <pre><code><span class="keyword">using</span> System.Collections.ObjectModel;
+<span class="keyword">using</span> System.Windows;
+<span class="keyword">using</span> System.Windows.Controls;
+
+<span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window
+{
+    <span class="comment">// Główna lista obserwowalna przez UI</span>
+    <span class="keyword">public</span> ObservableCollection&lt;ToDoItem&gt; Tasks { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    <span class="keyword">public</span> MainWindow()
+    {
+        InitializeComponent();
+        Tasks = <span class="keyword">new</span> ObservableCollection&lt;ToDoItem&gt;();
+
+        <span class="comment">// Ustawiamy okno jako główne źródło danych dla swoich kontrolek</span>
+        DataContext = <span class="keyword">this</span>;
+    }
+
+    <span class="comment">// Dodawanie nowego zadania</span>
+    <span class="keyword">private void</span> AddBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
+    {
+        <span class="keyword">if</span> (!<span class="keyword">string</span>.IsNullOrWhiteSpace(NewTaskTextBox.Text))
+        {
+            Tasks.Add(<span class="keyword">new</span> ToDoItem { Title = NewTaskTextBox.Text, IsCompleted = <span class="keyword">false</span> });
+            NewTaskTextBox.Clear(); <span class="comment">// Czyścimy pole po dodaniu</span>
+        }
+    }
+
+    <span class="comment">// Usuwanie wybranego zadania (przez przycisk X na elemencie)</span>
+    <span class="keyword">private void</span> DeleteBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
+    {
+        <span class="comment">// W WPF, 'sender' to kliknięty przycisk. Używamy jego DataContextu, </span>
+        <span class="comment">// żeby dowiedzieć się, do którego ToDoItem jest przypięty.</span>
+        <span class="keyword">if</span> (sender <span class="keyword">is</span> Button btn && btn.DataContext <span class="keyword">is</span> ToDoItem itemToDelete)
+        {
+            Tasks.Remove(itemToDelete);
+        }
+    }
+}</code></pre>
+  </div>
+
+
 </main>
 
 </body>
