@@ -17,7 +17,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-// Makro ponawiające próbę wywołania systemowego, jeśli zostało przerwane sygnałem
+// Makro ponawniajace probe wywolania systemowego, jesli zostalo przerwane sygnalem
 #ifndef TEMP_FAILURE_RETRY
 #define TEMP_FAILURE_RETRY(expression) \
     (__extension__({ \
@@ -28,7 +28,7 @@
     }))
 #endif
 
-// Makro do wygodnego zgłaszania błędów z numerem linii
+// Makro do wygodnego zglaszania bledow z numerem linii
 #define ERR(source) (perror(source), fprintf(stderr, "%s:%d\n", __FILE__, __LINE__), exit(EXIT_FAILURE))
 
 int sethandler(void (*f)(int), int sigNo) {

@@ -5,31 +5,31 @@ void usage(char *name) { fprintf(stderr, "USAGE: %s domain port\n", name); }
 int main(int argc, char **argv)
 {
     int fd;
-    if (argc != 3) { // Zmień na odpowiednią liczbę argumentów, jeśli zadanie tego wymaga
+    if (argc != 3) { // Zmien na odpowiednia liczbe argumentow, jesli zadanie tego wymaga
         usage(argv[0]);
         return EXIT_FAILURE;
     }
 
-    // 1. Nawiązanie połączenia (funkcja blokuje aż się połączy)
+    // 1. Nawiaznie polaczenia (funkcja blokuje az sie polaczy)
     fd = connect_tcp_socket(argv[1], argv[2]);
 
     // =========================================================================
-    // --- LOGIKA ZADANIA: PRZYGOTOWANIE I WYSŁANIE DANYCH ---
+    // --- LOGIKA ZADANIA: PRZYGOTOWANIE I WYSYLANIE DANYCH ---
     // char buffer[128] = "moja wiadomosc";
     // bulk_write(fd, buffer, strlen(buffer));
-    // (pamiętaj o htonl/htons dla typów binarnych int!)
+    // (pamietaj o htonl/htons dla typow binarnych int!)
     // =========================================================================
 
 
     // =========================================================================
-    // --- LOGIKA ZADANIA: ODBIÓR ODPOWIEDZI ---
+    // --- LOGIKA ZADANIA: ODBIOR ODPOWIEDZI ---
     // char response[128];
     // if (bulk_read(fd, response, oczekiwany_rozmiar) < 0) ERR("read");
-    // printf("Odpowiedź: %s\n", response);
+    // printf("Odpowiedz: %s\n", response);
     // =========================================================================
 
 
-    // Poprawne zamknięcie gniazda klienta
+    // Poprawne zamkniecie gniazda klienta
     if (TEMP_FAILURE_RETRY(close(fd)) < 0) ERR("close");
 
     return EXIT_SUCCESS;

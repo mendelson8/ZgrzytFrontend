@@ -134,10 +134,10 @@ int main(int argc, char **argv)
     doServer(tcp_listen_socket);
 
     // =========================================================================
-    // --- LOGIKA ZADANIA: WYPISANIE WYNIKÓW PO C-c (SIGINT) ---
+    // --- LOGIKA ZADANIA: WYPISANIE WYNIKOW PO C-c (SIGINT) ---
     // =========================================================================
 
-    // Poprawne zamknięcie gniazda
+    // Poprawne zamkniecie gniazda
     if (TEMP_FAILURE_RETRY(close(tcp_listen_socket)) < 0) ERR("close");
     fprintf(stderr, "Server terminated gracefully.\n");
     return EXIT_SUCCESS;
