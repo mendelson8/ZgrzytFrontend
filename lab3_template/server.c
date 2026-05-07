@@ -1,3 +1,64 @@
+MNIEJ WIECEJ PIERWSZY ETAP
+#include "common.h"
+
+void usage(char *name) {
+    fprintf(stderr, "USAGE: %s port\n", name);
+}
+
+int main(int argc, char **argv) {
+    // 1. Sprawdzenie argumentów (uruchamiamy przez: ./server 8888)
+    if (argc != 2) {
+        usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // 2. OTWIERANIE "DRZWI" SERWERA
+    // bind_tcp_socket(port, rozmiar_kolejki)
+    // Funkcja z Twojej biblioteki przygotowuje gniazdo i ustawia je w tryb nasłuchiwania.
+    // Argument 1 oznacza, że w kolejce może czekać max 1 klient (na tym etapie więcej nie potrzebujemy).
+    int listen_socket = bind_tcp_socket(atoi(argv[1]), 1);
+    printf("Serwer uruchomiony. Czekam na pierwszego klienta na porcie %s...\n", argv[1]);
+
+    // 3. AKCEPTACJA KLIENTA (Program zatrzymuje się tutaj i czeka!)
+    // add_new_client to wrapper na systemową funkcję accept().
+    // Gdy klient użyje connect(), serwer go wpuszcza i tworzy NOWE gniazdo (client_socket)
+    // służące tylko do rozmowy z tym konkretnym klientem.
+    int client_socket = add_new_client(listen_socket);
+    if (client_socket < 0) ERR("add_new_client");
+
+    printf("Klient pomyślnie podłączony!\n");
+
+    // 4. ODBIÓR DANYCH (Dokładnie 4 bajty)
+    char buffer[5]; // 4 bajty na dane + 1 bajt na znak końca stringa '\0'
+
+    // Używamy bulk_read, ponieważ daje nam gwarancję, że program poczeka,
+    // aż odczyta dokładnie tyle bajtów, o ile go poprosiliśmy (tutaj 4).
+    ssize_t size = bulk_read(client_socket, buffer, 4);
+
+    if (size < 0) {
+        ERR("read błąd");
+    } else if (size == 0) {
+        printf("Klient rozłączył się przed wysłaniem czegokolwiek.\n");
+    } else {
+        // Zabezpieczamy bufor zerem, żeby printf wiedział, gdzie kończy się tekst
+        buffer[size] = '\0';
+        printf("Otrzymano od klienta: %s\n", buffer);
+    }
+
+    // 5. GRZECZNE SPRZĄTANIE I WYJŚCIE
+    // Zamykamy rurę do klienta
+    if (TEMP_FAILURE_RETRY(close(client_socket)) < 0) ERR("close client");
+    // Zamykamy główne drzwi serwera
+    if (TEMP_FAILURE_RETRY(close(listen_socket)) < 0) ERR("close server");
+
+    printf("Zamykam serwer. Koniec Etapu 1.\n");
+    return EXIT_SUCCESS;
+}
+
+
+MNIEJ WIECEJ DRUGI ETAP
+
+
 #include "common.h"
 
 #define BACKLOG 5
