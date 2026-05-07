@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 // === FRAGMENT: BEZPIECZNA OBSŁUGA SYGNAŁÓW (np. Ctrl+C) ===
 // ============================================================================
 // volatile sig_atomic_t gwarantuje, ze zmiana tej zmiennej nie zostanie
-// przerwana w połowie przez system. Idealne do flag wyjscia z petli.
+// przerwana w polowie przez system. Idealne do flag wyjscia z petli.
 volatile sig_atomic_t work = 1;
 
 void usage(char *name) { fprintf(stderr, "USAGE: %s domain port\n", name); }
@@ -62,13 +62,13 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    // 1. Nawiazanie połaczenia z serwerem (funkcja z common.h)
+    // 1. Nawiazanie polaczenia z serwerem (funkcja z common.h)
     int fd = connect_tcp_socket(argv[1], argv[2]);
 
-    // 2. Podpięcie naszej funkcji stop_work pod skrot Ctrl+C (SIGINT)
+    // 2. Podpiecie naszej funkcji stop_work pod skrot Ctrl+C (SIGINT)
     sethandler(stop_work, SIGINT);
 
-    // srand odpalamy TYLKO RAZ na cały program. Jesli zadanie wymaga losowania, zostaw to.
+    // srand odpalamy TYLKO RAZ na caly program. Jesli zadanie wymaga losowania, zostaw to.
     srand(time(NULL));
 
     // Twoja lokalna tablica miast (specyficzne dla tego zadania)
@@ -78,12 +78,12 @@ int main(int argc, char **argv) {
     }
 
     // ============================================================================
-    // === FRAGMENT: INICJALIZACJA I KONFIGURACJA EPOLL (Kopiuj w całosci!) ===
+    // === FRAGMENT: INICJALIZACJA I KONFIGURACJA EPOLL (Kopiuj w calosci!) ===
     // ============================================================================
     int epoll_fd = epoll_create1(0); // Utworzenie "stroza"
     if (epoll_fd < 0) ERR("epoll_create1");
 
-    // events[X] -> X to maksymalna liczba rzeczy, które chcemy nasłuchiwac jednoczesnie
+    // events[X] -> X to maksymalna liczba rzeczy, ktore chcemy nasluchiwac jednoczesnie
     // Tutaj: 2 rzeczy (Klawiatura + Gniazdo sieciowe)
     struct epoll_event event, events[2];
 
@@ -94,47 +94,47 @@ int main(int argc, char **argv) {
 
     // --- REJESTRACJA GNIAZDA SERWERA (fd) ---
     event.events = EPOLLIN; // Interesuja nas dane przychodzace z sieci
-    event.data.fd = fd; // Zmienna z deskryptorem naszego połaczonego serwera
+    event.data.fd = fd; // Zmienna z deskryptorem naszego polaczonego serwera
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &event) == -1) ERR("epoll fd");
 
     // ============================================================================
     // === FRAGMENT: ZABEZPIECZENIE SYGNAŁÓW (Maska dla epoll_pwait) ===
     // ============================================================================
-    // Ten kod blokuje sygnal SIGINT (Ctrl+C) w całym programie po to, aby epoll
-    // mogł go odblokowac tylko w momencie, gdy program "spi". Zapobiega to błedom.
+    // Ten kod blokuje sygnal SIGINT (Ctrl+C) w calym programie po to, aby epoll
+    // mogl go odblokowac tylko w momencie, gdy program "spi". Zapobiega to bledom.
     sigset_t mask, oldmask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGINT); // Dodajemy Ctrl+C do maski
-    sigprocmask(SIG_BLOCK, &mask, &oldmask); // Nakładamy blokade, stara maske zapisujemy w oldmask
+    sigprocmask(SIG_BLOCK, &mask, &oldmask); // Nakladamy blokade, stara maske zapisujemy w oldmask
 
 
     // ============================================================================
     // === FRAGMENT: GŁÓWNA PĘTLA ZDARZEŃ EPOLL ===
     // ============================================================================
     while (work) {
-        // epoll_pwait USYPIA program dopóki nie nadejda dane.
-        // 2 -> liczba nasłuchiwanych deskryptorów.
+        // epoll_pwait USYPIA program dopoki nie nadejda dane.
+        // 2 -> liczba nasluchiwanych deskryptorow.
         // -1 -> timeout (czekaj w nieskonczonosc).
-        // &oldmask -> na ten ułamek sekundy odblokuj Ctrl+C.
+        // &oldmask -> na ten ulamek sekundy odblokuj Ctrl+C.
         int nfds = epoll_pwait(epoll_fd, events, 2, -1, &oldmask);
 
         if (nfds < 0) {
-            if (errno == EINTR) continue; // Pwait został przerwany przez Ctrl+C, wracamy do "while(work)"
+            if (errno == EINTR) continue; // Pwait zostal przerwany przez Ctrl+C, wracamy do "while(work)"
             ERR("epoll_pwait"); // Inny, krytyczny blad
         }
 
-        // Przechodzimy przez wszystkie zdarzenia, które nas obudziły (zazwyczaj nfds = 1)
+        // Przechodzimy przez wszystkie zdarzenia, ktore nas obudzily (zazwyczaj nfds = 1)
         for (int i = 0; i < nfds; i++) {
 
             // --------------------------------------------------------------------
-            // ZDARZENIE A: Użytkownik nacisnal Enter na klawiaturze
+            // ZDARZENIE A: Uzytkownik nacisnal Enter na klawiaturze
             // --------------------------------------------------------------------
             if (events[i].data.fd == STDIN_FILENO) {
                 char input[128]; // Lokalny bufor na wpisywany tekst
 
-                // Uzywamy fgets, bo jestesmy pewni, ze dane już tam sa (epoll nas o tym poinformowal)
+                // Uzywamy fgets, bo jestesmy pewni, ze dane juz tam sa (epoll nas o tym poinformowal)
                 if (fgets(input, sizeof(input), stdin) == NULL) {
-                    work = 0; // Użytkownik wcisnal Ctrl+D (EOF), konczymy
+                    work = 0; // Uzytkownik wcisnal Ctrl+D (EOF), konczymy
                     break;
                 }
 
@@ -144,12 +144,12 @@ int main(int argc, char **argv) {
                     break;
                 }
                 else if (input[0] == 'm') {
-                    // Jak wyciagnac ciag znaków z wiadomosci?
+                    // Jak wyciagnac ciag znakow z wiadomosci?
                     // input = "m ABC\n", chcemy przeslac samo "ABC\n" do serwera
                     char msg[5];
-                    // snprintf to najbezpieczniejszy sposób. %.3s ucina tekst do 3 znaków z wejscia
+                    // snprintf to najbezpieczniejszy sposob. %.3s ucina tekst do 3 znakow z wejscia
                     snprintf(msg, sizeof(msg), "%.3s\n", &input[2]);
-                    bulk_write(fd, msg, strlen(msg)); // Wysłanie do serwera
+                    bulk_write(fd, msg, strlen(msg)); // Wyslanie do serwera
                 }
                 else if (input[0] == 't') {
                     // Jak wyciagnac liczbe ze stringa? Zawsze uzywaj strtol zamiast atoi!
@@ -158,14 +158,14 @@ int main(int argc, char **argv) {
 
                     if (number < 1 || number > 20) {
                         printf("Bledny numer miasta\n");
-                        continue; // Błędne dane, wracamy do nasłuchiwania
+                        continue; // Bledne dane, wracamy do nasluchiwania
                     }
 
                     char side = (rand() % 2 == 0) ? 'p' : 'g';
                     cities[number] = side;
 
                     // Budowanie komunikatu formatowanego liczba (np. g05\n)
-                    // %c to pojedynczy znak, %02d to liczba dopełniona zerem do dwóch cyfr (np 5 -> 05)
+                    // %c to pojedynczy znak, %02d to liczba dopelniona zerem do dwoch cyfr (np 5 -> 05)
                     char msg[5];
                     snprintf(msg, sizeof(msg), "%c%02d\n", side, number);
                     bulk_write(fd, msg, strlen(msg));
@@ -179,32 +179,32 @@ int main(int argc, char **argv) {
             }
 
             // --------------------------------------------------------------------
-            // ZDARZENIE B: Przysły dane z sieci od Serwera
+            // ZDARZENIE B: Przysly dane z sieci od Serwera
             // --------------------------------------------------------------------
             else if (events[i].data.fd == fd) {
                 char response[5];
 
                 // WAZNE: Uzywamy standardowego read(), a NIE bulk_read().
-                // Dlaczego? bulk_read by nas zablokowal, jesli serwer wysłałby np. tylko 2 bajty,
-                // a my kazalibyśmy mu czekac na 4. Zwykły read() czyta tyle, ile przysło.
+                // Dlaczego? bulk_read by nas zablokowal, jesli serwer wyslalby np. tylko 2 bajty,
+                // a my kazalibysmy mu czekac na 4. Zwykly read() czyta tyle, ile przyslo.
                 ssize_t size = TEMP_FAILURE_RETRY(read(fd, response, 4));
 
                 if (size <= 0) {
-                    // size == 0 oznacza poprawne rozłaczenie, size < 0 oznacza bład sieciowy
-                    printf("Serwer rozłaczył sie.\n");
+                    // size == 0 oznacza poprawne rozlaczenie, size < 0 oznacza blad sieciowy
+                    printf("Serwer rozlaczyl sie.\n");
                     work = 0;
                     break;
                 }
 
-                // ZAWSZE zamykaj odebrane dane znakowkiem '\0', żeby moc uzywac np. printf("%s")
+                // ZAWSZE zamykaj odebrane dane znakowkiem '\0', zeby moc uzywac np. printf("%s")
                 response[size] = '\0';
 
-                // Parsowanie odpowiedzi serwera (zakładamy format YXX\n)
+                // Parsowanie odpowiedzi serwera (zakladamy format YXX\n)
                 if (size >= 3) {
                     char side = response[0];
                     int number = strtol(&response[1], NULL, 10);
 
-                    // Aktualizacja logiki aplikacji na podstawie tego, co przysło z sieci
+                    // Aktualizacja logiki aplikacji na podstawie tego, co przyslo z sieci
                     if (number >= 1 && number <= 20) {
                         cities[number] = side;
                         printf("\n[Z serwera]: Miasto %d przejete przez: %c\n", number, side);
@@ -217,14 +217,14 @@ int main(int argc, char **argv) {
     // ============================================================================
     // === FRAGMENT: CZYSZCZENIE ZASOBÓW PO ZAKONCZENIU (WYMAGANE NA LABACH) ===
     // ============================================================================
-    // W to miejsce program wchodzi tylko, gdy work == 0 (np. Ctrl+C lub rozłaczenie serwera)
+    // W to miejsce program wchodzi tylko, gdy work == 0 (np. Ctrl+C lub rozlaczenie serwera)
 
-    printf("\n--- Koniec działania. Stan konczowy miast ---\n");
+    printf("\n--- Koniec dzialania. Stan koncowy miast ---\n");
     for (int i = 1; i <= 20; i++) {
         printf("%d: %c \n", i, cities[i]);
     }
 
-    // Dobra praktyka jest dokładne posprzatanie deskryptorów i sygnałów
+    // Dobra praktyka jest dokladne posprzatanie deskryptorow i sygnalow
     if (TEMP_FAILURE_RETRY(close(fd)) < 0) ERR("close fd");
     if (TEMP_FAILURE_RETRY(close(epoll_fd)) < 0) ERR("close epoll");
     sigprocmask(SIG_UNBLOCK, &mask, NULL); // Zdejmujemy nasza blokade Ctrl+C ze srodowiska

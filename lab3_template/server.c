@@ -32,7 +32,7 @@ void doServer(int tcp_listen_socket)
     int nfds;
     sigset_t mask, empty_mask;
     sigemptyset(&mask);
-    sigemptyset(&empty_mask); // Wymuszenie czystej maski chroni przed zablokowaniem sygnałów
+    sigemptyset(&empty_mask); // Wymuszenie czystej maski chroni przed zablokowaniem sygnalow
     sigaddset(&mask, SIGINT);
     sigprocmask(SIG_BLOCK, &mask, NULL);
 
@@ -66,11 +66,11 @@ void doServer(int tcp_listen_socket)
                     char buffer[BUF_SIZE];
                     ssize_t size;
 
-                    // Zwykłe read, zdejmujemy z niego blokady żeby poprawnie obsłużyło rozłączenie
+                    // Zwykle read, zdejmujemy z niego blokady zeby poprawnie obsluzylo rozlaczenie
                     if ((size = TEMP_FAILURE_RETRY(read(client_fd, buffer, sizeof(buffer) - 1))) < 0)
                     {
                         if (errno != ECONNRESET) ERR("read");
-                        size = 0; // Traktuj jako rozłączenie, jeśli padł reset połączenia
+                        size = 0; // Traktuj jako rozlaczenie, jesli padl reset polaczenia
                     }
 
                     if (size == 0)
@@ -91,9 +91,9 @@ void doServer(int tcp_listen_socket)
 
                         // =========================================================
                         // --- LOGIKA ZADANIA: PRZETWARZANIE DANYCH I ODPOWIEDŹ ---
-                        // 1. Zrób obliczenia na podstawie 'buffer'
-                        // 2. Wyślij wynik: bulk_write(client_fd, ...);
-                        // 3. Jeśli to klient jednorazowy (jak w kalkulatorze):
+                        // 1. Zrob obliczenia na podstawie 'buffer'
+                        // 2. Wyslij wynik: bulk_write(client_fd, ...);
+                        // 3. Jesli to klient jednorazowy (jak w kalkulatorze):
                         //    epoll_ctl(epoll_descriptor, EPOLL_CTL_DEL, client_fd, NULL);
                         //    TEMP_FAILURE_RETRY(close(client_fd));
                         // =========================================================
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    // Zabezpieczenie przed przerwaniem działania przy pisaniu do rozłaczonego gniazda
+    // Zabezpieczenie przed przerwaniem dzialania przy pisaniu do rozlaczonego gniazda
     if (sethandler(SIG_IGN, SIGPIPE)) ERR("Setting SIGPIPE:");
     if (sethandler(sigint_handler, SIGINT)) ERR("Setting SIGINT:");
 
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     int new_flags = fcntl(tcp_listen_socket, F_GETFL) | O_NONBLOCK;
     fcntl(tcp_listen_socket, F_SETFL, new_flags);
 
-    // Główne wejscie w petle zdarzen
+    // Glowne wejscie w petle zdarzen
     doServer(tcp_listen_socket);
 
     // =========================================================================
@@ -152,8 +152,8 @@ int main(int argc, char **argv)
 #include <ctype.h>     // Do funkcji isdigit()
 #include <sys/epoll.h>
 
-#define MAX_CLIENTS 4  // Limit klientów z Etapu 2
-#define MAX_EVENTS 10  // Ile zdarzeń epoll może przetworzyć na raz
+#define MAX_CLIENTS 4  // Limit klientow z Etapu 2
+#define MAX_EVENTS 10  // Ile zdarzen epoll moze przetworzyc na raz
 #define MAX_CITIES 20  // Liczba miast z zadania
 
 // ============================================================================
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 volatile sig_atomic_t do_work = 1;
 
 void sigint_handler(int sig) {
-    do_work = 0; // Flaga łagodnego wyjścia po Ctrl+C
+    do_work = 0; // Flaga lagodnego wyjscia po Ctrl+C
 }
 
 void usage(char *name) {
@@ -184,19 +184,19 @@ int main(int argc, char **argv) {
 
     // --- TABLICA KLIENTÓW ---
     // Musimy wiedziec, kto jest polazczony, zeby robic Broadcast (rozsylanie)
-    // Wypełniamy tablice wartoscia -1, co oznacza "puste miejsce"
+    // Wypelniamy tablice wartoscia -1, co oznacza "puste miejsce"
     int active_clients[MAX_CLIENTS];
     for (int i = 0; i < MAX_CLIENTS; i++) {
         active_clients[i] = -1;
     }
 
     // ============================================================================
-    // === BEZPIECZEŃSTWO SIECIOWE: IGNOROWANIE SIGPIPE (Wymóg Etapu 4) ===
+    // === BEZPIECZEŃSTWO SIECIOWE: IGNOROWANIE SIGPIPE (Wymog Etapu 4) ===
     // ============================================================================
-    // Jesli serwer spróbuje wysłac dane (write) do klienta, który nagle odłaczył
-    // kabel, system wysle serwerowi sygnal SIGPIPE, który "zabija" program.
+    // Jesli serwer sprobuje wyslac dane (write) do klienta, ktory nagle odlaczyl
+    // kabel, system wysle serwerowi sygnal SIGPIPE, ktory "zabija" program.
     // Ignorujac ten sygnal, funkcja write() po prostu zwroci -1 i ustawi blad EPIPE,
-    // co pozwala nam łagodnie usunac klienta zamiast psuc cały serwer!
+    // co pozwala nam lagodnie usunac klienta zamiast psuc caly serwer!
     if (sethandler(SIG_IGN, SIGPIPE)) ERR("Setting SIGPIPE:");
     if (sethandler(sigint_handler, SIGINT)) ERR("Setting SIGINT:");
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
     // 1. Tworzymy i bindujemy gniazdo na podanym porcie
     int listen_socket = bind_tcp_socket(atoi(argv[1]), MAX_CLIENTS);
 
-    // 2. [DOBRA PRAKTYKA] Gniazdo nasłuchujace ustawiamy jako nieblokujace (O_NONBLOCK)
+    // 2. [DOBRA PRAKTYKA] Gniazdo nasluchujace ustawiamy jako nieblokujace (O_NONBLOCK)
     int new_flags = fcntl(listen_socket, F_GETFL) | O_NONBLOCK;
     fcntl(listen_socket, F_SETFL, new_flags);
 
@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
 
     struct epoll_event event, events[MAX_EVENTS];
 
-    // Dodajemy nasze główne gniazdo nasłuchujace do epolla
+    // Dodajemy nasze glowne gniazdo nasluchujace do epolla
     event.events = EPOLLIN;
     event.data.fd = listen_socket;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_socket, &event) == -1) ERR("epoll_ctl: listen_sock");
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
     sigaddset(&mask, SIGINT);
     sigprocmask(SIG_BLOCK, &mask, &oldmask);
 
-    printf("Serwer uruchomiony. Nasłuchuję na porcie %s...\n", argv[1]);
+    printf("Serwer uruchomiony. Nasluchiuje na porcie %s...\n", argv[1]);
 
     // ============================================================================
     // === GŁÓWNA PĘTLA SERWERA ===
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
         int nfds = epoll_pwait(epoll_fd, events, MAX_EVENTS, -1, &oldmask);
 
         if (nfds < 0) {
-            if (errno == EINTR) continue; // Wcisnięto Ctrl+C
+            if (errno == EINTR) continue; // Wcisnieto Ctrl+C
             ERR("epoll_pwait");
         }
 
@@ -246,13 +246,13 @@ int main(int argc, char **argv) {
             int current_fd = events[i].data.fd;
 
             // ********************************************************************
-            // *** ZDARZENIE 1: NOWE POŁĄCZENIE (Ktoś puka do serwera) ***
+            // *** ZDARZENIE 1: NOWE POŁĄCZENIE (Ktos puka do serwera) ***
             // ********************************************************************
             if (current_fd == listen_socket) {
                 int client_fd = add_new_client(listen_socket);
                 if (client_fd < 0) continue;
 
-                // Szukamy wolnego miejsca w tablicy klientów
+                // Szukamy wolnego miejsca w tablicy klientow
                 int free_slot = -1;
                 for (int c = 0; c < MAX_CLIENTS; c++) {
                     if (active_clients[c] == -1) {
@@ -279,49 +279,49 @@ int main(int argc, char **argv) {
             // ********************************************************************
             else {
                 char buffer[16];
-                // Uzywamy read, zeby obsłuzyc poprawne rozłaczenie
+                // Uzywamy read, zeby obsluzyc poprawne rozlaczenie
                 ssize_t size = TEMP_FAILURE_RETRY(read(current_fd, buffer, sizeof(buffer) - 1));
 
                 // --- ETAP 4: OBSŁUGA ROZŁĄCZENIA / BŁĘDU ---
                 if (size <= 0) {
-                    printf("[Serwer]: Klient rozłaczył sie (fd: %d)\n", current_fd);
+                    printf("[Serwer]: Klient rozlaczyl sie (fd: %d)\n", current_fd);
 
                     // Usuwamy klienta z Epolla
                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, current_fd, NULL);
                     TEMP_FAILURE_RETRY(close(current_fd));
 
-                    // Zwalniamy miejsce w tablicy klientów, zeby ktos inny mogł wejsc!
+                    // Zwalniamy miejsce w tablicy klientow, zeby ktos inny mogl wejsc!
                     for (int c = 0; c < MAX_CLIENTS; c++) {
                         if (active_clients[c] == current_fd) {
                             active_clients[c] = -1;
                             break;
                         }
                     }
-                    continue; // Koniec obsługi tego zdarzenia
+                    continue; // Koniec obslugi tego zdarzenia
                 }
 
                 buffer[size] = '\0';
                 printf("[Odebrano]: %s", buffer); // Wyswietlanie zgodnie z Etapem 1 i 2
 
                 // --- ETAP 4: WALIDACJA WIADOMOŚCI ---
-                // Format: "gXX\n" lub "pXX\n" (Dokładnie 4 znaki)
+                // Format: "gXX\n" lub "pXX\n" (Dokladnie 4 znaki)
                 int is_valid = 0;
                 int city_num = 0;
                 char new_owner = buffer[0];
 
                 if (size == 4 && (new_owner == 'g' || new_owner == 'p') && buffer[3] == '\n') {
                     if (isdigit(buffer[1]) && isdigit(buffer[2])) {
-                        // Reczne zamienienie dwóch znakow na liczbe (np. '0' i '5' -> 5)
+                        // Reczne zamienienie dwoch znakow na liczbe (np. '0' i '5' -> 5)
                         city_num = (buffer[1] - '0') * 10 + (buffer[2] - '0');
                         if (city_num >= 1 && city_num <= MAX_CITIES) {
-                            is_valid = 1; // Wiadomość jest w 100% poprawna
+                            is_valid = 1; // Wiadomosc jest w 100% poprawna
                         }
                     }
                 }
 
                 if (!is_valid) {
-                    // ETAP 4: Nieprawidłowy format = KICK klienta
-                    printf("[Serwer]: Błedny format wiadomosci. Rozłaczam klienta %d.\n", current_fd);
+                    // ETAP 4: Nieprawidlowy format = KICK klienta
+                    printf("[Serwer]: Bledny format wiadomosci. Rozlaczam klienta %d.\n", current_fd);
                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, current_fd, NULL);
                     TEMP_FAILURE_RETRY(close(current_fd));
                     for (int c = 0; c < MAX_CLIENTS; c++) {
@@ -330,24 +330,24 @@ int main(int argc, char **argv) {
                     continue;
                 }
 
-                // --- ETAP 3: AKTUALIZACJA I BROADCAST (Rozsyłanie) ---
-                // "Jesli właściciel miasta sie zmienil, naleza zaktualizowac tablice
-                // i rozeslac do wszystkich INNYCH polazczonych klientów"
+                // --- ETAP 3: AKTUALIZACJA I BROADCAST (Rozsylanie) ---
+                // "Jesli wlasciciel miasta sie zmienil, naleza zaktualizowac tablice
+                // i rozeslac do wszystkich INNYCH polazczonych klientow"
                 if (cities[city_num] != new_owner) {
                     cities[city_num] = new_owner; // Aktualizacja w bazie serwera
                     printf(" -> Miasto %d przejete przez: %c\n", city_num, new_owner);
 
-                    // Rozsyłamy do innych
+                    // Rozsylamy do innych
                     for (int c = 0; c < MAX_CLIENTS; c++) {
                         int target_fd = active_clients[c];
 
                         // Ignorujemy puste sloty oraz klienta, KTÓRY TO WYSŁAŁ (current_fd)
                         if (target_fd != -1 && target_fd != current_fd) {
 
-                            // Wysłanie wiadomosci (4 bajty).
-                            // Jesli klient nagle odłaczył kabel (EPIPE), bulk_write zwróci bład < 0.
+                            // Wyslanie wiadomosci (4 bajty).
+                            // Jesli klient nagle odlaczyl kabel (EPIPE), bulk_write zwroci blad < 0.
                             if (bulk_write(target_fd, buffer, 4) < 0) {
-                                printf("[Serwer]: Bład EPIPE przy wysyłaniu. Usuwam klienta %d\n", target_fd);
+                                printf("[Serwer]: Blad EPIPE przy wysylaniu. Usuwam klienta %d\n", target_fd);
                                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, target_fd, NULL);
                                 TEMP_FAILURE_RETRY(close(target_fd));
                                 active_clients[c] = -1; // Zwolnienie miejsca
@@ -367,18 +367,18 @@ int main(int argc, char **argv) {
         printf("Miasto %02d: %c\n", i, cities[i]);
     }
 
-    // Zamkniecie gniazd wszystkich pozostałych klientów
+    // Zamkniecie gniazd wszystkich pozostalych klientow
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (active_clients[i] != -1) {
             TEMP_FAILURE_RETRY(close(active_clients[i]));
         }
     }
 
-    // Zamkniecie własnych deskryptorów
+    // Zamkniecie wlasnych deskryptorow
     TEMP_FAILURE_RETRY(close(listen_socket));
     TEMP_FAILURE_RETRY(close(epoll_fd));
     sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
-    printf("Serwer zakonczył pracę poprawnie.\n");
+    printf("Serwer zakonczyl prace poprawnie.\n");
     return EXIT_SUCCESS;
 }
