@@ -834,6 +834,229 @@
 }</code></pre>
   </div>
 
+  <h1 style="margin-top: 60px;" id="canvas-interakcje">Dodatek PRO: Interaktywny Canvas i Zdarzenia Myszki</h1>
+  <p>Prowadzący wymaga od Was stworzenia aplikacji interaktywnej. Przejdziemy przez absolutne pozycjonowanie na Canvasie, przeciąganie obiektów myszką (Drag & Drop), dynamiczne menu kontekstowe oraz Data Binding.</p>
+
+  <h2 id="teoria-canvas">10.1. Teoria: Jak działa Canvas i Zdarzenia?</h2>
+  <div class="task-box">
+    <div class="explanation">
+      <h4>A. Kontrolka Canvas (Płótno)</h4>
+      <p>W przeciwieństwie do <code>&lt;Grid&gt;</code> czy <code>&lt;StackPanel&gt;</code>, <code>&lt;Canvas&gt;</code> nie układa elementów automatycznie. To czyste płótno. Ty decydujesz, w którym pikselu (X, Y) znajdzie się dany kształt (np. Rectangle, Ellipse).</p>
+
+
+      <h4>B. Zdarzenia Myszki (Mouse Events)</h4>
+      <p>Prowadzący wymienił zdarzenia: <code>MouseMove</code>, <code>MouseLeftButtonUp</code>, <code>MouseLeftButtonDown</code>. Dlaczego potrzebujemy ich aż trzech?</p>
+      <ul>
+        <li><strong>Down (Kliknięcie):</strong> Zapisujemy w pamięci, który kształt użytkownik "złapał".</li>
+        <li><strong>Move (Ruch):</strong> Jeśli użytkownik trzyma przycisk i rusza myszką, aktualizujemy pozycję (X, Y) złapanego kształtu.</li>
+        <li><strong>Up (Puszczenie):</strong> Użytkownik puścił przycisk, więc "upuszczamy" kształt (koniec przeciągania).</li>
+      </ul>
+
+      <h4>C. Interakcja z narysowanymi kształtami</h4>
+      <p>Skąd wiemy, czy kliknęliśmy w puste tło Canvasu, czy w narysowany kwadrat? Używamy właściwości <code>e.OriginalSource</code>. WPF mówi nam dzięki temu: <em>"Zdarzenie kliknięcia dotarło do Canvasu, ale oryginalnie myszka trafiła w ten niebieski kwadrat"</em>.</p>
+    </div>
+  </div>
+
+  <h2 id="projekt-canvas">10.2. Projekt: Shape Builder (Gotowiec)</h2>
+  <p>Poniższa aplikacja spełnia wszystkie wymagania z maila: pozwala kliknąć, by narysować kwadrat, złapać go i przesunąć (Drag & Drop), usunąć za pomocą menu kontekstowego, a na górze wyświetla licznik kształtów za pomocą Data Bindingu.</p>
+
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Część 1: XAML - Interfejs i Zdarzenia</h4>
+      <p>Dzielimy okno na górny pasek (wyświetlający bindowany status) oraz główny obszar <code>Canvas</code>. Do Canvasu podpinamy zdarzenia myszki.</p>
+    </div>
+
+    <div class="code-header">Plik: MainWindow.xaml</div>
+    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"CanvasApp.MainWindow"</span>
+        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
+        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
+        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Shape Builder"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"450"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"600"</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+
+        <span class="comment">&lt;!-- 1. DATA BINDING: Wyświetla zmienną 'StatusText' z klasy C# (np. ile jest kwadratów) --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding StatusText}"</span> <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"10"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"#333"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"White"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
+
+        <span class="comment">&lt;!-- 2. CANVAS: Nasłuchujemy 3 zdarzeń myszki.
+             Ważne: Tło MUSI być ustawione (nawet na Transparent), inaczej Canvas nie wykryje kliknięcia w puste miejsce! --&gt;</span>
+        <span class="xml-punct">&lt;</span><span class="xml-elem">Canvas</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"DrawCanvas"</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"White"</span>
+                <span class="xml-attr">MouseLeftButtonDown</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseDown"</span>
+                <span class="xml-attr">MouseMove</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseMove"</span>
+                <span class="xml-attr">MouseLeftButtonUp</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseUp"</span><span class="xml-punct">&gt;</span>
+
+            <span class="comment">&lt;!-- MENU KONTEKSTOWE KANWY (Gdy klikniesz Prawym Przyciskiem Myszki w puste tło) --&gt;</span>
+            <span class="xml-punct">&lt;</span><span class="xml-elem">Canvas.ContextMenu</span><span class="xml-punct">&gt;</span>
+                <span class="xml-punct">&lt;</span><span class="xml-elem">ContextMenu</span><span class="xml-punct">&gt;</span>
+                    <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Wyczyść płótno"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"ClearCanvas_Click"</span><span class="xml-punct">/&gt;</span>
+                <span class="xml-punct">&lt;/</span><span class="xml-elem">ContextMenu</span><span class="xml-punct">&gt;</span>
+            <span class="xml-punct">&lt;/</span><span class="xml-elem">Canvas.ContextMenu</span><span class="xml-punct">&gt;</span>
+        <span class="xml-punct">&lt;/</span><span class="xml-elem">Canvas</span><span class="xml-punct">&gt;</span>
+    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
+<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
+  </div>
+
+  <div class="task-box">
+    <div class="explanation">
+      <h4>Część 2: Logika w C# (Magia Interakcji)</h4>
+      <p>W tym pliku znajdziesz całą potęgę WPF. Pokazujemy tu, jak tworzyć kształty (Shapes) z poziomu kodu, jak zapamiętać przesunięcie myszki (Offset), aby przeciągany kwadrat nie "skakał" do rogu kursora, oraz jak dynamicznie dopinać do narysowanych kształtów własne Menu Kontekstowe. Zwróć też uwagę na wdrożenie `INotifyPropertyChanged` pod Data Binding.</p>
+
+
+    </div>
+
+    <div class="code-header">Plik: MainWindow.xaml.cs</div>
+    <pre><code><span class="keyword">using</span> System.ComponentModel;
+<span class="keyword">using</span> System.Runtime.CompilerServices;
+<span class="keyword">using</span> System.Windows;
+<span class="keyword">using</span> System.Windows.Controls;
+<span class="keyword">using</span> System.Windows.Input;
+<span class="keyword">using</span> System.Windows.Media;
+<span class="keyword">using</span> System.Windows.Shapes;
+
+<span class="keyword">namespace</span> CanvasApp
+{
+    <span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window, INotifyPropertyChanged
+    {
+        <span class="comment">// == ZMIENNE DO BINDOWANIA ==</span>
+        <span class="keyword">private string</span> statusText = <span class="string">"Kliknij na puste pole, aby narysować kwadrat!"</span>;
+        <span class="keyword">public string</span> StatusText
+        {
+            <span class="keyword">get</span> =&gt; statusText;
+            <span class="keyword">set</span> { statusText = value; OnPropertyChanged(); }
+        }
+
+        <span class="comment">// == ZMIENNE DO DRAG & DROP (PRZECIĄGANIA) ==</span>
+        <span class="keyword">private bool</span> isDragging = <span class="keyword">false</span>;     <span class="comment">// Czy aktualnie trzymamy przycisk myszy na kształcie?</span>
+        <span class="keyword">private</span> UIElement draggedShape;      <span class="comment">// Który dokładnie kształt ciągniemy?</span>
+        <span class="keyword">private</span> Point clickOffset;           <span class="comment">// Przesunięcie kursora wewnątrz kształtu (żeby nie skakał do rogu)</span>
+
+        <span class="keyword">public</span> MainWindow()
+        {
+            InitializeComponent();
+            DataContext = <span class="keyword">this</span>; <span class="comment">// Ustawienie kontekstu dla bindowania StatusText</span>
+        }
+
+        <span class="comment">// =========================================================</span>
+        <span class="comment">// 1. MOUSE DOWN (Kliknięcie lewym przyciskiem myszy)</span>
+        <span class="comment">// =========================================================</span>
+        <span class="keyword">private void</span> Canvas_MouseDown(<span class="keyword">object</span> sender, MouseButtonEventArgs e)
+        {
+            <span class="comment">// Sprawdzamy w co DOKŁADNIE uderzył kursor (OriginalSource)</span>
+            <span class="keyword">if</span> (e.OriginalSource <span class="keyword">is</span> Shape clickedShape)
+            {
+                <span class="comment">// SCENARIUSZ A: Kliknęliśmy w narysowany wcześniej kształt</span>
+                isDragging = <span class="keyword">true</span>;
+                draggedShape = clickedShape;
+
+                <span class="comment">// Zapisujemy, w którym miejscu kształtu złapaliśmy go myszką</span>
+                Point mousePos = e.GetPosition(DrawCanvas);
+                <span class="keyword">double</span> shapeLeft = Canvas.GetLeft(draggedShape);
+                <span class="keyword">double</span> shapeTop = Canvas.GetTop(draggedShape);
+                clickOffset = <span class="keyword">new</span> Point(mousePos.X - shapeLeft, mousePos.Y - shapeTop);
+
+                <span class="comment">// Złapany obiekt przenosimy na samą górę (żeby nie chował się pod innymi)</span>
+                Panel.SetZIndex(draggedShape, 999);
+
+                <span class="comment">// Przechwytujemy myszkę (nawet jak wyjedziemy szybko kursorem za kształt, dalej będziemy go trzymać)</span>
+                draggedShape.CaptureMouse();
+
+                StatusText = <span class="string">"Przesuwasz kształt..."</span>;
+            }
+            <span class="keyword">else</span>
+            {
+                <span class="comment">// SCENARIUSZ B: Kliknęliśmy w puste tło Canvasu - Rysujemy nowy kwadrat!</span>
+                Point clickPos = e.GetPosition(DrawCanvas);
+
+                Rectangle newRect = <span class="keyword">new</span> Rectangle
+                {
+                    Width = 50,
+                    Height = 50,
+                    Fill = Brushes.DodgerBlue,
+                    Stroke = Brushes.DarkBlue,
+                    StrokeThickness = 2
+                };
+
+                <span class="comment">// Ustawiamy pozycję nowego kwadratu w miejscu kliknięcia myszki (centrujemy go)</span>
+                Canvas.SetLeft(newRect, clickPos.X - 25);
+                Canvas.SetTop(newRect, clickPos.Y - 25);
+
+                <span class="comment">// DODAJEMY WŁASNE MENU KONTEKSTOWE DLA TEGO KONKRETNEGO KSZTAŁTU</span>
+                ContextMenu shapeMenu = <span class="keyword">new</span> ContextMenu();
+                MenuItem deleteItem = <span class="keyword">new</span> MenuItem { Header = <span class="string">"Usuń ten kształt"</span> };
+
+                <span class="comment">// Używamy wyrażenia lambda by podpiąć funkcję usunięcia wprost do zdarzenia Click</span>
+                deleteItem.Click += (s, args) =&gt;
+                {
+                    DrawCanvas.Children.Remove(newRect);
+                    StatusText = <span class="string">$"Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
+                };
+
+                shapeMenu.Items.Add(deleteItem);
+                newRect.ContextMenu = shapeMenu;
+
+                <span class="comment">// Wrzucamy kształt na płótno</span>
+                DrawCanvas.Children.Add(newRect);
+                StatusText = <span class="string">$"Dodano kwadrat! Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
+            }
+        }
+
+        <span class="comment">// =========================================================</span>
+        <span class="comment">// 2. MOUSE MOVE (Ruszanie myszką)</span>
+        <span class="comment">// =========================================================</span>
+        <span class="keyword">private void</span> Canvas_MouseMove(<span class="keyword">object</span> sender, MouseEventArgs e)
+        {
+            <span class="comment">// Jeśli trzymamy przycisk i mamy jakiś kształt w garści</span>
+            <span class="keyword">if</span> (isDragging && draggedShape != <span class="keyword">null</span>)
+            {
+                Point currentMousePos = e.GetPosition(DrawCanvas);
+
+                <span class="comment">// Wyliczamy nową pozycję (obecna myszka MINUS to przesunięcie wewnątrz kształtu)</span>
+                <span class="keyword">double</span> newLeft = currentMousePos.X - clickOffset.X;
+                <span class="keyword">double</span> newTop = currentMousePos.Y - clickOffset.Y;
+
+                <span class="comment">// Aktualizujemy położenie kształtu na płótnie</span>
+                Canvas.SetLeft(draggedShape, newLeft);
+                Canvas.SetTop(draggedShape, newTop);
+            }
+        }
+
+        <span class="comment">// =========================================================</span>
+        <span class="comment">// 3. MOUSE UP (Puszczenie lewego przycisku)</span>
+        <span class="comment">// =========================================================</span>
+        <span class="keyword">private void</span> Canvas_MouseUp(<span class="keyword">object</span> sender, MouseButtonEventArgs e)
+        {
+            <span class="keyword">if</span> (isDragging)
+            {
+                isDragging = <span class="keyword">false</span>;
+                draggedShape.ReleaseMouseCapture(); <span class="comment">// Oddajemy myszkę systemowi</span>
+                Panel.SetZIndex(draggedShape, 0);   <span class="comment">// Zdejmujemy priorytet wyświetlania na wierzchu</span>
+                draggedShape = <span class="keyword">null</span>;
+
+                StatusText = <span class="string">$"Kształt upuszczony. Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
+            }
+        }
+
+        <span class="comment">// =========================================================</span>
+        <span class="comment">// 4. MENU KANWY: Czyszczenie całego płótna</span>
+        <span class="comment">// =========================================================</span>
+        <span class="keyword">private void</span> ClearCanvas_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
+        {
+            DrawCanvas.Children.Clear();
+            StatusText = <span class="string">"Płótno wyczyszczone!"</span>;
+        }
+
+        <span class="comment">// Wymagana implementacja DataBindingu</span>
+        <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
+        <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> name = <span class="keyword">null</span>)
+        {
+            PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(name));
+        }
+    }
+}</code></pre>
+  </div>
+
 </main>
 
 </body>
