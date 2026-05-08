@@ -1,0 +1,193 @@
+<Window x:Class="WpfApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApp1"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="900" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="New"/>
+                <MenuItem Header="Open"/>
+                <MenuItem Header="Save"/>
+            </MenuItem>
+            <MenuItem Header="Exit" Click="MenuItem_Exit"/>
+        </Menu>
+
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="17*"/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+
+            <GroupBox Header="Fourier Plot" Grid.Row="0" Grid.Column="0" Margin="5">
+                <Image x:Name="PlotImage" Stretch="Uniform"/>
+            </GroupBox>
+
+            <GroupBox Header="Data Collection" Grid.Row="0" Grid.Column="1" Margin="5">
+                <DataGrid x:Name="MainDataGrid" ItemsSource="{Binding MyData}" CellEditEnding="MainDataGrid_CellEditEnding" AutoGenerateColumns="True"/>
+            </GroupBox>
+
+            <GroupBox Header="Progress" Grid.Row="1" Grid.Column="0" Margin="5">
+                <ProgressBar x:Name="MainProgressBar" Minimum="0" Maximum="100" Height="30" Margin="10"/>
+            </GroupBox>
+
+            <GroupBox Header="Controls" Grid.Row="1" Grid.Column="1" Margin="5">
+                <StackPanel VerticalAlignment="Center">
+                    <Button x:Name="BtnStart" Content="Start" Margin="5" Click="BtnStart_Click"/>
+                    <Button x:Name="BtnPause" Content="Pause" Margin="5" Click="BtnPause_Click"/>
+                    <Button x:Name="BtnReset" Content="Reset" Margin="5" Click="BtnReset_Click"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+    </DockPanel>
+
+</Window>
+
+
+
+
+
+using System.Collections.ObjectModel;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Threading; // Konieczne dla DispatcherTimer
+using System.Diagnostics;
+using System.Security.Policy;
+
+namespace WpfApp1
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+
+    public class  ForierData
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public double Radius { get; set; }
+    }
+
+
+    public partial class MainWindow : Window
+    {
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            double elapsed = _stopwatch.Elapsed.TotalSeconds;
+            double progress = elapsed*100 / TotalTimeSeconds;
+            if (progress >= 100)
+            {
+                MainProgressBar.Value = 100;
+                progress = 100;
+                _timer.Stop();
+
+                //rysowanie koła
+                radius = MyData[0].Radius;
+                DrawCircle(radius);
+            }
+            else
+            {
+                MainProgressBar.Value = progress;
+
+            }
+        }
+
+        public ObservableCollection<ForierData> MyData { get; set; }
+        public DispatcherTimer _timer { get; set; }
+        public Stopwatch _stopwatch { get; set; }
+        public const double TotalTimeSeconds = 10.0;
+        public double radius { get; set; }
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromMilliseconds(50); // Aktualizacja co 100 ms
+            _timer.Tick += Timer_Tick;
+            _stopwatch = new Stopwatch();
+
+
+            MyData = new ObservableCollection<ForierData>
+            {
+                new ForierData { Id = 1, Name = "Circle", Radius = 5.0 },
+                new ForierData { Id = 2, Name = "Ellipse", Radius = 3.0 },
+                new ForierData { Id = 3, Name = "Spiral", Radius = 7.0 }
+            };
+
+           this.DataContext = this;
+        }
+
+        private void MenuItem_Exit(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void BtnStart_Click(object sender, RoutedEventArgs e)
+        {
+            _timer.Start();
+            _stopwatch.Start();
+        }
+
+        private void BtnPause_Click(object sender, RoutedEventArgs e)
+        {
+            _timer.Stop();
+            _stopwatch.Stop();
+        }
+
+        private void BtnReset_Click(object sender, RoutedEventArgs e)
+        {
+            _timer.Stop();
+            _stopwatch.Reset();
+            MainProgressBar.Value = 0;
+            PlotImage.Source = null; // Resetowanie obrazu
+            radius = 0;
+        }
+
+        private void DrawCircle(double radius)
+        {
+            int width = 400;
+            int height = 400;
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using(DrawingContext dc = drawingVisual.RenderOpen())
+            {
+                Point center = new Point(width / 2, height / 2);
+                dc.DrawEllipse(null, new Pen(Brushes.Blue, 2), center, radius, radius);
+            }
+            RenderTargetBitmap rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(drawingVisual);
+            PlotImage.Source = rtb;
+        }
+
+        private void MainDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (MyData.Count > 0 && MainProgressBar.Value >= 100)
+                {
+                    radius = MyData[0].Radius;
+                    DrawCircle(radius);
+                }
+            }, DispatcherPriority.Background);
+        }
+    }
+}
