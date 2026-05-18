@@ -3,1061 +3,444 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WPF: Contact Manager & MiNIPotter - Notatki</title>
+  <title>Kolos 2 - Podstawy transakcji</title>
   <style>
-      :root {
-          --primary: #68217a;
-          --secondary: #512bd4;
-          --bg: #f8fafc;
-          --text: #333;
-          --box-bg: #ffffff;
-          --code-bg: #1e1e1e;
-          --code-text: #d4d4d4;
-          --accent: #0ea5e9;
-      }
-
       body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-color: var(--bg);
-          color: var(--text);
           line-height: 1.6;
           margin: 0;
-          display: flex;
-      }
-
-      nav {
-          width: 300px;
-          height: 100vh;
-          background: #2d2d30;
-          color: white;
-          position: fixed;
           padding: 20px;
-          overflow-y: auto;
-          box-sizing: border-box;
+          background-color: #f9f9f9;
+          color: #333;
       }
-
-      nav h2 { font-size: 1.2rem; border-bottom: 1px solid #555; padding-bottom: 10px; color: #fff; }
-      nav ul { list-style: none; padding: 0; }
-      nav li { margin-bottom: 12px; }
-      nav a { color: #aaa; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
-      nav a:hover { color: #fff; padding-left: 5px; }
-
-      main {
-          margin-left: 300px;
-          padding: 40px;
-          max-width: 1000px;
-          width: 100%;
-          box-sizing: border-box;
-      }
-
-      h1 { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
-      h2 { color: var(--secondary); margin-top: 50px; border-left: 5px solid var(--primary); padding-left: 15px; }
-
-      .task-box {
-          background: var(--box-bg);
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
+      .container {
+          max-width: 900px;
+          margin: auto;
+          background: #fff;
           padding: 30px;
-          margin-top: 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       }
-
-      .explanation {
-          font-size: 1rem;
+      h1, h2, h3 {
+          color: #0056b3;
+      }
+      h1 {
+          border-bottom: 2px solid #0056b3;
+          padding-bottom: 10px;
+      }
+      .author {
+          font-weight: bold;
+          font-size: 1.1em;
+          color: #444;
           margin-bottom: 20px;
+          padding: 10px;
+          background-color: #e9ecef;
+          border-left: 4px solid #0056b3;
       }
-
-      .explanation h4 {
-          color: var(--accent);
-          margin-top: 0;
-          margin-bottom: 10px;
-          font-size: 1.1rem;
-      }
-
-      .explanation p {
-          margin-top: 0;
-      }
-
-      .code-header {
-          background: #2d2d30;
-          color: #9cdcfe;
-          padding: 8px 15px;
-          font-family: Consolas, monospace;
-          font-size: 0.85rem;
-          border-top-left-radius: 6px;
-          border-top-right-radius: 6px;
-          border-bottom: 1px solid #444;
-          display: inline-block;
-          margin-top: 15px;
-          width: 100%;
-          box-sizing: border-box;
-      }
-
       pre {
-          background: var(--code-bg);
-          color: var(--code-text);
-          padding: 20px;
-          border-bottom-left-radius: 6px;
-          border-bottom-right-radius: 6px;
+          background-color: #2d2d2d;
+          color: #f8f8f2;
+          padding: 15px;
+          border-radius: 5px;
           overflow-x: auto;
-          font-family: 'Consolas', monospace;
-          font-size: 0.95rem;
-          margin-top: 0;
-          line-height: 1.5;
-          box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+          font-family: 'Consolas', 'Monaco', monospace;
       }
-
-      /* Klasy do kolorowania składni XAML */
-      .xml-elem { color: #569cd6; }
-      .xml-attr { color: #9cdcfe; }
-      .xml-val { color: #ce9178; }
-      .xml-ns { color: #c586c0; }
-      .xml-punct { color: #808080; }
-
-      .comment { color: #6a9955; font-style: italic; }
-      .keyword { color: #569cd6; }
-      .string { color: #ce9178; }
-      .class-name { color: #4ec9b0; }
+      code {
+          font-family: 'Consolas', 'Monaco', monospace;
+      }
+      p > code {
+          background-color: #f1f1f1;
+          color: #c7254e;
+          padding: 2px 4px;
+          border-radius: 3px;
+      }
+      ul {
+          margin-top: 0;
+      }
   </style>
 </head>
 <body>
 
-<nav>
-  <h2>Spis Treści</h2>
-  <ul>
-    <li><a href="#podstawy-wlasciwosci">0. Właściwości Okna</a></li>
-    <li><a href="#zmiana-kolorow">0.5. Kolory i Tła</a></li>
-    <li><a href="#podstawy-okna">1. Ustawienia Okna i Layout</a></li>
-    <li><a href="#dane">2. Powiadomienia (INotifyPropertyChanged)</a></li>
-    <li><a href="#enum-combobox">3. Bindowanie Enuma</a></li>
-    <li><a href="#listbox">4. Kolory ListBoxa</a></li>
-    <li><a href="#walidacja">5. Zaawansowana Walidacja</a></li>
-    <li><a href="#minipotter-wprowadzenie">6. MiNIPotter: Wprowadzenie</a></li>
-    <li><a href="#minipotter-konwertery">7. MiNIPotter: Konwertery C#</a></li>
-    <li><a href="#minipotter-xaml">8. MiNIPotter: Boilerplate XAML</a></li>
-    <li><a href="#todo-list">9. Projekt: To-Do List</a></li>
-  </ul>
-</nav>
+<div class="container">
+  <div class="author">Autor: Jakub Mendel</div>
 
-<main>
+  <h1>Kolos 2 - Podstawy transakcji</h1>
 
-  <h2 id="podstawy-wlasciwosci">0. Podstawy WPF: Właściwości Okna (Window)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Jak zmienić nazwę, wymiary i logo aplikacji?</h4>
-      <p>Wszystkie podstawowe ustawienia Twojej aplikacji definiujesz w głównym tagu <code>&lt;Window&gt;</code> na samej górze pliku XAML. To tutaj ustalasz, co wyświetla się na pasku tytułowym, jak duże jest okno na starcie i czy użytkownik ma prawo je minimalizować lub rozciągać.</p>
-      <ul>
-        <li><strong>Title</strong> - Nazwa okienka widoczna na samej górze.</li>
-        <li><strong>Icon</strong> - Ścieżka do pliku z logo (np. <code>.png</code> lub <code>.ico</code>). Ważne: plik graficzny musi być dodany do projektu w Visual Studio, a jego <em>Build Action</em> najlepiej ustawić na <em>Resource</em>.</li>
-        <li><strong>Width / Height</strong> - Wymiary startowe, z jakimi okno się uruchomi.</li>
-        <li><strong>MinWidth / MinHeight</strong> - Blokada przed zbytnim pomniejszeniem okna. Przydatne, by interfejs się nie "zgniótł".</li>
-        <li><strong>WindowStartupLocation</strong> - <code>CenterScreen</code> sprawia, że okno zawsze pojawia się na środku monitora, a nie w losowym rogu.</li>
-        <li><strong>ResizeMode</strong> - Ustawienie na <code>NoResize</code> zabrania użytkownikowi powiększania/pomniejszania okna (ukrywa przycisk maksymalizacji).</li>
-      </ul>
-    </div>
+  <h2>Transakcje</h2>
+  <p><strong>Transakcja</strong> - logiczny ciąg operacji DB zapewniający: atomowość, spójność, izolację, trwałość (ACID).</p>
 
-    <div class="code-header">Plik: MainWindow.xaml (Główny tag okna)</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"MojaAplikacja.MainWindow"</span>
-        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
-        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
+  <h3>Składnia (MS SQL):</h3>
+  <pre><code class="language-sql">BEGIN TRANSACTION;
+-- operacje DML
+COMMIT;   -- zatwierdzenie
+ROLLBACK; -- wycofanie</code></pre>
 
-        <span class="comment">&lt;!-- 1. NAZWA I LOGO --&gt;</span>
-        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Moja Super Aplikacja"</span>
-        <span class="xml-attr">Icon</span><span class="xml-punct">=</span><span class="xml-val">"logo.png"</span>
+  <h3>Przykład:</h3>
+  <p>Dodanie rekordu do <code>OrderDetails</code> i aktualizacja pola <code>UnitsInStock</code> dla <code>ProductID = 11</code> w tabeli <code>Products</code>:</p>
+  <pre><code class="language-sql">BEGIN TRANSACTION;
 
-        <span class="comment">&lt;!-- 2. WYMIARY STARTOWE --&gt;</span>
-        <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"800"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"600"</span>
+-- 1) INSERT do OrderDetails
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+VALUES (10248, 11, 5);
 
-        <span class="comment">&lt;!-- 3. WYMIARY MINIMALNE (Zabezpieczenie przed zgnieceniem UI) --&gt;</span>
-        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"500"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"400"</span>
+-- 2) UPDATE w Products
+UPDATE Products
+SET UnitsInStock = UnitsInStock - 5
+WHERE ProductID = 11;
 
-        <span class="comment">&lt;!-- 4. ZACHOWANIE OKNA --&gt;</span>
-        <span class="xml-attr">WindowStartupLocation</span><span class="xml-punct">=</span><span class="xml-val">"CenterScreen"</span>
-        <span class="xml-attr">ResizeMode</span><span class="xml-punct">=</span><span class="xml-val">"CanResize"</span><span class="xml-punct">&gt;</span>
+-- 3) Sprawdzenie i COMMIT/ROLLBACK
+IF @@ERROR = 0
+    COMMIT;
+ELSE
+    ROLLBACK;</code></pre>
 
-    <span class="comment">&lt;!-- Tutaj wchodzi reszta interfejsu np. &lt;Grid&gt; --&gt;</span>
+  <hr>
 
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
+  <h2>Procedury składowane</h2>
+  <p><strong>Definicja:</strong> Procedura składowana - blok kodu SQL przechowywany w bazie, wywoływany z przekazanymi parametrami.</p>
 
-  <h2 id="zmiana-kolorow">0.5. Podstawy WPF: Kolory (Background i Foreground)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Jak poprawnie kolorować interfejs?</h4>
-      <p>W WPF nie używamy właściwości <code>Color</code>. Zamiast tego mamy dwie główne właściwości:</p>
-      <ul>
-        <li><strong>Background</strong> - Zmienia kolor tła kontrolki (np. tło przycisku, siatki, okna).</li>
-        <li><strong>Foreground</strong> - Zmienia kolor tego, co jest "na wierzchu", czyli najczęściej <strong>kolor tekstu</strong>.</li>
-      </ul>
-      <p>Wartości możemy podawać na trzy sposoby:</p>
-      <ol>
-        <li><strong>Nazwa koloru:</strong> Wbudowane nazwy z języka angielskiego (np. <code>Red</code>, <code>LightBlue</code>, <code>Transparent</code>).</li>
-        <li><strong>Kod HEX (ARGB):</strong> Podobnie jak w CSS, np. <code>#FF0000</code> to czerwony. <strong>Ważne:</strong> W WPF często podaje się 8 znaków zamiast 6 (np. <code>#80FF0000</code>). Pierwsze dwie litery (<code>80</code>) to kanał Alpha, czyli <strong>przezroczystość</strong> (gdzie FF to w pełni widoczny, a 00 to całkowicie niewidzialny, 80 to około 50%).</li>
-        <li><strong>Pędzle (Brushes):</strong> Jeśli chcesz zrobić coś bardziej zaawansowanego, np. płynne przejście kolorów (gradient), używasz np. <code>LinearGradientBrush</code>.</li>
-      </ol>
-    </div>
+  <h3>Składnia ogólna</h3>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.NazwaProcedury
+    @Param1 INT,
+    @Param2 INT = 0, -- domyślna wartość
+    @Param3 NVARCHAR(50) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON; -- wyłączanie komunikatu np. (1 row(s) affected)
+    -- ciało procedury: INSERT/UPDATE/DELETE/SELECT
+END;</code></pre>
 
-    <div class="code-header">Plik: MainWindow.xaml (Przykłady zmiany kolorów)</div>
-    <pre><code><span class="comment">&lt;!-- 1. TŁO OKNA: Zwykły kod HEX (Szare tło) --&gt;</span>
-<span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"#F0F0F0"</span><span class="xml-punct">&gt;</span>
+  <h3>Przykłady</h3>
 
-    <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"20"</span><span class="xml-punct">&gt;</span>
+  <h4>1. INSERT</h4>
+  <p>Procedura <code>AddOrderDetail</code>, która przyjmuje OrderID, ProductID i Quantity, dodaje go do tabeli OrderDetails i zwraca w parametrze OUTPUT komunikat sukcesu albo błędu.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.AddOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Quantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+        VALUES (@OrderID, @ProductID, @Quantity);
 
-        <span class="comment">&lt;!-- 2. KOLORY NAZWANE: Zwykły tekst --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"Uwaga, błąd systemu!"</span>
-                   <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"Red"</span>
-                   <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"Black"</span>
-                   <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"20"</span>
-                   <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
+        SET @Message = N'Wstawiono wiersz pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
+  <p><strong>Wywołanie:</strong></p>
+  <pre><code class="language-sql">DECLARE @Msg NVARCHAR(100);
+EXEC dbo.AddOrderDetail
+    @OrderID = 10248,
+    @ProductID = 11,
+    @Quantity = 5,
+    @Message = @Msg OUTPUT;
 
-        <span class="comment">&lt;!-- 3. PRZEZROCZYSTOŚĆ W HEX (Kanał Alpha) --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"Półprzezroczysty zielony przycisk"</span>
-                <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"#8000FF00"</span>
-                <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"#FFFFFF"</span>
-                <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,20,0,0"</span>
-                <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
+SELECT @Msg AS Message;</code></pre>
 
-        <span class="comment">&lt;!-- 4. ZAADWANSOWANE: Gradient (LinearGradientBrush) --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"Przycisk z Gradientem"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"White"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,20,0,0"</span> <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Button.Background</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">LinearGradientBrush</span> <span class="xml-attr">StartPoint</span><span class="xml-punct">=</span><span class="xml-val">"0,0"</span> <span class="xml-attr">EndPoint</span><span class="xml-punct">=</span><span class="xml-val">"1,1"</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">GradientStop</span> <span class="xml-attr">Color</span><span class="xml-punct">=</span><span class="xml-val">"Blue"</span> <span class="xml-attr">Offset</span><span class="xml-punct">=</span><span class="xml-val">"0.0"</span> <span class="xml-punct">/&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">GradientStop</span> <span class="xml-attr">Color</span><span class="xml-punct">=</span><span class="xml-val">"Purple"</span> <span class="xml-attr">Offset</span><span class="xml-punct">=</span><span class="xml-val">"1.0"</span> <span class="xml-punct">/&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">LinearGradientBrush</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Button.Background</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Button</span><span class="xml-punct">&gt;</span>
+  <h4>2. UPDATE</h4>
+  <p>Procedura przyjmuje OrderID, ProductID, NewQuantity i aktualizuje wartości w tabeli OrderDetails oraz zwraca komunikat.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.UpdateOrderDetailQuantity
+    @OrderID INT,
+    @ProductID INT,
+    @NewQuantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        UPDATE OrderDetails
+        SET Quantity = @NewQuantity
+        WHERE OrderID = @OrderID AND ProductID = @ProductID;
 
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
+        -- systemowa zmienna
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Brak wiersza';
+        ELSE
+            SET @Message = N'OK';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
 
-  <h1>WPF: Contact Manager - Głęboka Analiza</h1>
-  <p>XAML potrafi być przytłaczający. Rozłóżmy go na czynniki pierwsze, żebyś rozumiał każdą linijkę, którą wpisujesz.</p>
+  <h4>3. DELETE</h4>
+  <p>Procedura przyjmuje OrderID, ProductID i usuwa odpowiadający wiersz z OrderDetails oraz zwraca komunikat.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.DeleteOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        DELETE FROM OrderDetails
+        WHERE OrderID = @OrderID AND ProductID = @ProductID;
 
-  <h2 id="podstawy-okna">1. Ustawienia Okna i Układ (Grid) w XAML</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Po co nam Grid i RowDefinitions?</h4>
-      <p>Wymaganie z PDF mówi jasno: "Pasek menu na górze okna, reszta okna podzielona na zakładki". W WPF nie używamy pozycjonowania pikselowego. Używamy <code>&lt;Grid&gt;</code>, który działa jak niewidzialna tabela.</p>
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Nie znaleziono wiersza do usunięcia';
+        ELSE
+            SET @Message = N'Wiersz usunięty pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
 
+  <h4>4. UPDATE z REPLACE</h4>
+  <p>Procedura modyfikuje numery telefonów w danym kraju.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.UpdateCustomerPhoneByCountry
+    @Country NVARCHAR(50),
+    @OldChar CHAR(1),
+    @NewChar CHAR(1),
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        UPDATE Customers
+        SET Phone = REPLACE(Phone, @OldChar, @NewChar)
+        WHERE Country = @Country;
 
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Brak klientów w kraju ' + @Country;
+        ELSE
+            SET @Message = CAST(@@ROWCOUNT AS NVARCHAR(10)) + N' numerów zmieniono pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
 
-      <p>Dzielimy okno na dwa wiersze:</p>
-      <ul>
-        <li><code>Height="Auto"</code> - Pierwszy wiersz dopasuje swoją wysokość do zawartości (czyli będzie miał dokładnie taką wysokość jak Pasek Menu).</li>
-        <li><code>Height="*"</code> - Znak gwiazdki to "weź całą resztę wolnego miejsca". Tu wrzucimy zakładki (TabControl).</li>
-      </ul>
-    </div>
+  <hr>
 
-    <div class="code-header">Plik: MainWindow.xaml (Fragment Głównego Układu)</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"ContactManager.MainWindow"</span>
-        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Contact Manager"</span>
-        <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"600"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"800"</span>
-        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"500"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"500"</span>
-        <span class="xml-attr">WindowStartupLocation</span><span class="xml-punct">=</span><span class="xml-val">"CenterScreen"</span><span class="xml-punct">&gt;</span>
+  <h2>Tabela logowa i logowanie operacji</h2>
+  <p>Chcemy, żeby każda procedura po wykonaniu dopisywała do osobnej tabeli informacje o wywołaniu.</p>
+  <pre><code class="language-sql">CREATE TABLE dbo.ChangeLog (
+    -- IDENTITY(1, 1) -> zaczynamy od 1, inkrementujemy o 1
+    LogID INT IDENTITY(1,1) PRIMARY KEY,
+    ProcName NVARCHAR(128) NOT NULL,
+    ExecTime DATETIME NOT NULL DEFAULT GETDATE(),
+    Details NVARCHAR(4000) NULL,
+    Result NVARCHAR(100) NULL
+);</code></pre>
 
-    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-        <span class="comment">&lt;!-- Definicja naszej tabeli (2 wiersze) --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
+  <p>Modyfikacja procedury <code>AddOrderDetail</code> (użycie <code>ALTER PROCEDURE</code>):</p>
+  <pre><code class="language-sql">ALTER PROCEDURE dbo.AddOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Quantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+        VALUES (@OrderID, @ProductID, @Quantity);
 
-        <span class="comment">&lt;!-- Wiersz 0: Menu --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Menu</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"File"</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Exit"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"MenuItem_Exit"</span> <span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">MenuItem</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Menu</span><span class="xml-punct">&gt;</span>
+        SET @Message = N'Wstawiono wiersz pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
 
-        <span class="comment">&lt;!-- Wiersz 1: Zakładki zajmujące resztę ekranu --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">TabControl</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">TabItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"List"</span><span class="xml-punct">&gt;</span> <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span><span class="xml-punct">/&gt;</span> <span class="xml-punct">&lt;/</span><span class="xml-elem">TabItem</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">TabItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Grid"</span><span class="xml-punct">&gt;</span> <span class="xml-punct">&lt;</span><span class="xml-elem">DataGrid</span><span class="xml-punct">/&gt;</span> <span class="xml-punct">&lt;/</span><span class="xml-elem">TabItem</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">TabControl</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
+    -- LOGOWANIE
+    INSERT INTO dbo.ChangeLog (ProcName, Details, Result)
+    VALUES (
+        N'AddOrderDetail',
+        N'OrderID=' + CAST(@OrderID AS NVARCHAR(10)) +
+        N', ProductID=' + CAST(@ProductID AS NVARCHAR(10)) +
+        N', Quantity=' + CAST(@Quantity AS NVARCHAR(10)),
+        @Message
+    );
+END;</code></pre>
 
-  <h2 id="dane">2. Powiadomienia Widoku (INotifyPropertyChanged)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Dlaczego ObservableCollection nie wystarcza?</h4>
-      <p>Samo użycie <code>ObservableCollection&lt;Contact&gt;</code> informuje widok tylko o tym, że element został dodany lub usunięty z listy. Nie powiadamia o edycji wartości (np. zmianie nazwiska). Używamy do tego interfejsu <code>INotifyPropertyChanged</code>.</p>
+  <hr>
 
-
-
-    </div>
-    <div class="code-header">Plik: Contact.cs</div>
-    <pre><code><span class="keyword">using</span> System.ComponentModel;
-<span class="keyword">using</span> System.Runtime.CompilerServices;
-
-<span class="keyword">public class</span> <span class="class-name">Contact</span> : <span class="class-name">INotifyPropertyChanged</span>
-{
-    <span class="keyword">private string</span> name;
-
-    <span class="keyword">public string</span> Name
-    {
-        <span class="keyword">get</span> { <span class="keyword">return</span> name; }
-        <span class="keyword">set</span>
-        {
-            name = value;
-            OnPropertyChanged();
-        }
+  <h2>Integracja z Javą (JDBC)</h2>
+  <h3>Auto-commit</h3>
+  <p>Domyślnie każde DML w JDBC jest od razu zatwierdzane. Aby grupować operacje w transakcję:</p>
+  <pre><code class="language-java">try (Connection con = DriverManager.getConnection(url)) {
+    con.setAutoCommit(false);
+    try {
+        // operacje DML lub wywołania procedur
+        con.commit();
+    } catch (SQLException e) {
+        con.rollback();
+        throw e;
     }
+} catch (Exception e) {
+    e.printStackTrace();
+}</code></pre>
 
-    <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
-    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propertyName = <span class="keyword">null</span>)
-    {
-        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propertyName));
+  <h3>Przykładowe wywołanie procedury</h3>
+  <pre><code class="language-java">con.setAutoCommit(false);
+String sql = "{ call dbo.AddOrderDetail(?, ?, ?, ?) }";
+try (CallableStatement cs = con.prepareCall(sql)) {
+    cs.setInt(1, 10248);
+    cs.setInt(2, 11);
+    cs.setInt(3, 5);
+    cs.registerOutParameter(4, Types.NVARCHAR);
+
+    cs.execute();
+    System.out.println("Result: " + cs.getString(4));
+    con.commit();
+} catch (SQLException e) {
+    con.rollback();
+    e.printStackTrace();
+}</code></pre>
+
+  <hr>
+
+  <h2>Szukanie błędów / niebezpieczeństw w kodzie</h2>
+
+  <h3>Zarządzanie zasobami (Connection/Statement/Scanner)</h3>
+  <p><strong>Błąd:</strong> Brak zamknięcia zasobów.</p>
+  <pre><code class="language-java">Connection conn = DriverManager.getConnection(connectionUrl);
+Statement stmt = conn.createStatement();
+Scanner scanner = new Scanner(System.in);
+// ... operacje ...
+conn.close(); // stmt i scanner wciąż otwarte!</code></pre>
+
+  <p><strong>Poprawione (try-with-resources):</strong></p>
+  <pre><code class="language-java">try (
+    Connection conn = DriverManager.getConnection(connectionUrl);
+    Statement stmt = conn.createStatement();
+    Scanner scan = new Scanner(System.in)
+) {
+    // operacje
+} catch (SQLException e) {
+    e.printStackTrace();
+}</code></pre>
+
+  <h3>Brak transakcji</h3>
+  <p>Jeśli domyślnie <code>autoCommit = true</code>, błąd w jednym zapytaniu nie wycofuje pozostałych. Zawsze używaj <code>con.setAutoCommit(false)</code> oraz <code>con.commit() / con.rollback()</code>.</p>
+
+  <h3>SQL Injection (brak PreparedStatement)</h3>
+  <p><strong>Narażone na SQL Injection (Błąd):</strong></p>
+  <pre><code class="language-java">String deleteQuery = "DELETE FROM Products WHERE ProductID = " + deleteId;
+stmt.executeUpdate(deleteQuery);
+// Jeśli atakujący wprowadzi np. "1; DROP TABLE Products;" tabela zostanie usunięta!</code></pre>
+
+  <p><strong>Poprawione (PreparedStatement):</strong></p>
+  <pre><code class="language-java">String deleteSql = "DELETE FROM Products WHERE ProductID = ?";
+try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+    ps.setInt(1, deleteId);
+    ps.executeUpdate();
+}</code></pre>
+
+  <h3>Walidacja danych wejściowych i wyjątków Scanner'a</h3>
+  <pre><code class="language-java">int productId;
+while (true) {
+    System.out.println("Enter ProductID to update price:");
+    try {
+        productId = scanner.nextInt();
+        break;
+    } catch (InputMismatchException e) {
+        System.out.println("Invalid input. Please enter an integer ProductID.");
+        scanner.next(); // usuń niepoprawny token z bufora
     }
 }</code></pre>
-  </div>
 
-  <h2 id="enum-combobox">3. Magia: ComboBox ze zmiennymi typu Enum</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Jak wyciągnąć "Male" i "Female" do listy rozwijanej?</h4>
-      <p>Aby uniknąć brzydkiego kodu w C#, korzystamy z <strong>ObjectDataProvider</strong>, ładując nasz Enum bezpośrednio do <code>Window.Resources</code> i bindując jako <code>ItemsSource</code>.</p>
-    </div>
-    <div class="code-header">Plik: AddContactWindow.xaml</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
-    <span class="comment">&lt;!-- Pobiera wartości (GetValues) z typu Enum, a dokładnie z naszego local:Gender --&gt;</span>
-    <span class="xml-punct">&lt;</span><span class="xml-elem">ObjectDataProvider</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"GenderList"</span> <span class="xml-attr">MethodName</span><span class="xml-punct">=</span><span class="xml-val">"GetValues"</span> <span class="xml-attr">ObjectType</span><span class="xml-punct">=</span><span class="xml-val">"{x:Type TypeName=System:Enum}"</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">ObjectDataProvider.MethodParameters</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">x:Type</span> <span class="xml-attr">TypeName</span><span class="xml-punct">=</span><span class="xml-val">"local:Gender"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">ObjectDataProvider.MethodParameters</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">ObjectDataProvider</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
-
-<span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-    <span class="comment">&lt;!-- ComboBox z podpiętą listą wartości Enum oraz powiązaniem wyboru z właściwością obiektu --&gt;</span>
-    <span class="xml-punct">&lt;</span><span class="xml-elem">ComboBox</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Source={StaticResource GenderList}}"</span>
-              <span class="xml-attr">SelectedItem</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Path=Gender}"</span> <span class="xml-punct">/&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
-
-  <h2 id="listbox">4. Kolorowanie co drugiego wiersza (AlternationIndex)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Dlaczego używamy Style Triggers?</h4>
-      <p>By wiersze automatycznie kolorowały się na zmianę (niezależnie od tego, jak sortujemy czy usuwamy dane ze środka), ustawiamy w <code>ListBox</code> atrybut <code>AlternationCount="2"</code>. Resztę załatwia <code>Trigger</code>.</p>
-    </div>
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code><span class="comment">&lt;!-- Kluczowe: AlternationCount włącza liczenie 0, 1, 0, 1... --&gt;</span>
-<span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Contacts}"</span> <span class="xml-attr">AlternationCount</span><span class="xml-punct">=</span><span class="xml-val">"2"</span><span class="xml-punct">&gt;</span>
-
-    <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemContainerStyle</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Style</span> <span class="xml-attr">TargetType</span><span class="xml-punct">=</span><span class="xml-val">"ListBoxItem"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Style.Triggers</span><span class="xml-punct">&gt;</span>
-                <span class="comment">&lt;!-- Wyzwalacz dla wierszy parzystych (0) --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">Trigger</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"ItemsControl.AlternationIndex"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"0"</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Background"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"#FFAFC5FF"</span> <span class="xml-punct">/&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">Trigger</span><span class="xml-punct">&gt;</span>
-
-                <span class="comment">&lt;!-- Wyzwalacz dla wierszy nieparzystych (1) --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">Trigger</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"ItemsControl.AlternationIndex"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Background"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"#FF75A1FF"</span> <span class="xml-punct">/&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">Trigger</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Style.Triggers</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Style</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemContainerStyle</span><span class="xml-punct">&gt;</span>
-
-<span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
-
-  <h2 id="walidacja">5. Zaawansowana Walidacja (IValidation)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Architektura rozszerzalna przez pliki DLL</h4>
-      <p>Wykorzystujemy interfejs <code>IValidation</code> oraz dziedziczymy po <code>ValidationRule</code>, aby aplikacja pozwalała na wstrzykiwanie nowych zasad walidacji bez modyfikowania głównego kodu okna.</p>
-    </div>
-    <div class="code-header">Plik: PhoneValidationRule.cs</div>
-    <pre><code><span class="keyword">public interface</span> <span class="class-name">IValidation</span>
-{
-    <span class="keyword">string</span> Name { <span class="keyword">get</span>; }
-    <span class="keyword">string</span> Description { <span class="keyword">get</span>; }
-}
-
-<span class="keyword">public class</span> <span class="class-name">PhoneValidationRule</span> : <span class="class-name">ValidationRule</span>, <span class="class-name">IValidation</span>
-{
-    <span class="keyword">public string</span> Name =&gt; <span class="string">"Format Telefonu"</span>;
-    <span class="keyword">public string</span> Description =&gt; <span class="string">"Format musi wynosić XXX-XXX-XXX."</span>;
-
-    <span class="keyword">public override</span> ValidationResult Validate(<span class="keyword">object</span> value, CultureInfo cultureInfo)
-    {
-        <span class="keyword">string</span> phone = value <span class="keyword">as string</span>;
-        <span class="keyword">if</span> (!System.Text.RegularExpressions.Regex.IsMatch(phone, <span class="string">@"^\d{3}-\d{3}-\d{3}$"</span>))
-            <span class="keyword">return new</span> ValidationResult(<span class="keyword">false</span>, Description);
-
-        <span class="keyword">return</span> ValidationResult.ValidResult;
-    }
-}</code></pre>
-  </div>
-
-  <h1 style="margin-top: 60px;">Projekt MiNIPotter Library</h1>
-  <p>Poniżej znajdziesz kompleksowe rozwiązanie do zadania z Harrym Potterem. Obejmuje ono łączenie słowników zasobów (Resource Dictionaries), korzystanie z wbudowanych i konfigurowanych konwerterów, kontrolek `Expander` oraz niestandardowych czcionek (Fonts).</p>
-
-  <h2 id="minipotter-wprowadzenie">6. Podłączenie danych i logiki w klasie okna</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Bindowanie ViewModelu i wywołanie asynchroniczne</h4>
-      <p>Zadanie wymaga, by <code>DataContext</code> głównego okna był ustawiony na instancję klasy <code>BookViewModel</code>. Przycisk (z błyskawicą) wywołuje metodę <code>LoadBooksAsync()</code>, która zaczyta dane.</p>
-    </div>
-    <div class="code-header">Plik: MainWindow.xaml.cs</div>
-    <pre><code><span class="keyword">using</span> System.Windows;
-
-<span class="keyword">namespace</span> MiNIPotter
-{
-    <span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window
-    {
-        <span class="keyword">public</span> MainWindow()
-        {
-            InitializeComponent();
-            <span class="comment">// Ustawienie ViewModelu wymaganego w poleceniu zadania</span>
-            DataContext = <span class="keyword">new</span> BookViewModel();
-        }
-
-        <span class="comment">// Zdarzenie Click dla przycisku z błyskawicą 🗲</span>
-        <span class="keyword">private async void</span> LoadBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
-        {
-            <span class="keyword">if</span> (DataContext <span class="keyword">is</span> BookViewModel vm)
-            {
-                <span class="keyword">await</span> vm.LoadBooksAsync();
-            }
-        }
-    }
-}</code></pre>
-  </div>
-
-  <h2 id="minipotter-konwertery">7. Konwertery (Ocena na gwiazdki i kolor RGB)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Jak przetłumaczyć liczbę 7.5 na ocenę w gwiazdkach i obliczyć kolor RGB?</h4>
-      <p>W WPF nie możemy wpisać matematyki do XAML-a. Pisząc kod, używamy interfejsu <code>IValueConverter</code>, który pośredniczy pomiędzy daną wejściową (np. ocena w Double) a daną wyjściową dla UI (np. ciąg gwiazdek "★★★☆☆" lub kolor pędzla SolidColorBrush).</p>
-      <ul>
-        <li><code>RatingToStarsConverter</code>: Tworzy napis ze znakiem "★" oraz z dopełnieniem "☆" na podstawie formuły <code>Math.Clamp</code>.</li>
-        <li><code>AverageRatingToStarsConverter</code>: Oblicza średnią ze zbioru <code>ICollection&lt;Chapter&gt;</code> dla konkretnej książki.</li>
-        <li><code>RatingToColorConverter</code>: Oblicza dynamicznie kanały Red i Green zgodnie z zadaniem (wartości od 0 do 192).</li>
-      </ul>
-    </div>
-    <div class="code-header">Plik: Converters.cs</div>
-    <pre><code><span class="keyword">using</span> System;
-<span class="keyword">using</span> System.Collections.Generic;
-<span class="keyword">using</span> System.Globalization;
-<span class="keyword">using</span> System.Linq;
-<span class="keyword">using</span> System.Windows.Data;
-<span class="keyword">using</span> System.Windows.Media;
-<span class="keyword">using</span> Potter.API;
-
-<span class="keyword">namespace</span> MiNIPotter
-{
-    <span class="keyword">public class</span> <span class="class-name">RatingToStarsConverter</span> : <span class="class-name">IValueConverter</span>
-    {
-        <span class="keyword">public object</span> Convert(<span class="keyword">object</span> value, Type targetType, <span class="keyword">object</span> parameter, CultureInfo culture)
-        {
-            <span class="keyword">if</span> (value <span class="keyword">is double</span> rating)
-            {
-                <span class="keyword">int</span> fullStars = (<span class="keyword">int</span>)Math.Clamp(rating, 0, 10);
-                <span class="keyword">return new string</span>('★', fullStars) + <span class="keyword">new string</span>('☆', 10 - fullStars);
-            }
-            <span class="keyword">return</span> <span class="string">""</span>;
-        }
-
-        <span class="keyword">public object</span> ConvertBack(<span class="keyword">object</span> value, Type targetType, <span class="keyword">object</span> parameter, CultureInfo culture) =&gt; <span class="keyword">throw new</span> NotImplementedException();
-    }
-
-    <span class="comment">// Analogicznie dla kolejnych konwerterów z polecenia...</span>
-}</code></pre>
-  </div>
-
-  <h2 id="minipotter-xaml">8. Główny Layout XAML (Wszystko w jednym)</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Kluczowe rozwiązania w kodzie:</h4>
-      <ul>
-        <li><strong>Import Słownika:</strong> <code>&lt;ResourceDictionary Source="Styles/Colors/Colors.xaml"/&gt;</code> wstrzykuje kolory, pozwalając na użycie <code>{DynamicResource PrimaryBackgroundBrush}</code>.</li>
-        <li><strong>Zewnętrzna Czcionka:</strong> Zdefiniowana jako <code>&lt;FontFamily x:Key="HarryPotterFont"&gt;./#Harry Potter&lt;/FontFamily&gt;</code>. Odnosi się to bezpośrednio do pliku TTF w głównym katalogu projektu.</li>
-        <li><strong>Formatowanie Daty:</strong> <code>StringFormat='{}{0:d MMMM yyyy}'</code> wymusza specyficzny, pełny format daty wymagany w punkcie dla kafelków z okładkami.</li>
-        <li><strong>Expander (Rozdziały):</strong> Zamknęliśmy element wewnątrz `Expander`, gdzie nagłówek "Header" przejmuje tytuł rozdziału, a jego rozwinięcie ujawnia szczegółowe opisy i dynamicznie pokolorowane gwiazdki.</li>
-      </ul>
-    </div>
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter.MainWindow"</span>
-        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
-        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
-        <span class="xml-ns">xmlns:local</span><span class="xml-punct">=</span><span class="xml-val">"clr-namespace:MiNIPotter"</span>
-        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter Library"</span>
-        <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"1200"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"800"</span>
-        <span class="xml-attr">MinWidth</span><span class="xml-punct">=</span><span class="xml-val">"1000"</span> <span class="xml-attr">MinHeight</span><span class="xml-punct">=</span><span class="xml-val">"600"</span>
-        <span class="comment">&lt;!-- Używamy DynamicResource, aby podpiąć kolory załadowane ze słownika niżej --&gt;</span>
-        <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryBackgroundBrush}"</span>
-        <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span>
-        <span class="xml-attr">Icon</span><span class="xml-punct">=</span><span class="xml-val">"potter.png"</span><span class="xml-punct">&gt;</span>
-
-    <span class="xml-punct">&lt;</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary</span><span class="xml-punct">&gt;</span>
-            <span class="comment">&lt;!-- Wciąganie dostarczonych pędzli i kolorów z zewnętrznego pliku (wymóg z PDF) --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary.MergedDictionaries</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ResourceDictionary</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"Styles/Colors/Colors.xaml"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">ResourceDictionary.MergedDictionaries</span><span class="xml-punct">&gt;</span>
-
-            <span class="comment">&lt;!-- Podłączanie lokalnych klas C# (Konwerterów) jako narzędzi dostępnych w XAML --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">local:RatingToStarsConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"RatingToStarsConverter"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">local:AverageRatingToStarsConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"AverageRatingToStarsConverter"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">local:RatingToColorConverter</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"RatingToColorConverter"</span><span class="xml-punct">/&gt;</span>
-
-            <span class="comment">&lt;!-- Deklaracja niestandardowej czcionki. Znaczek ./# wskazuje na plik w folderze programu --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">FontFamily</span> <span class="xml-attr">x:Key</span><span class="xml-punct">=</span><span class="xml-val">"HarryPotterFont"</span><span class="xml-punct">&gt;</span>./#Harry Potter<span class="xml-punct">&lt;/</span><span class="xml-elem">FontFamily</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">ResourceDictionary</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">Window.Resources</span><span class="xml-punct">&gt;</span>
-
-    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- =================== TOP BANNER =================== --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"MiNIPotter Library"</span>
-                       <span class="xml-attr">FontFamily</span><span class="xml-punct">=</span><span class="xml-val">"{StaticResource HarryPotterFont}"</span>
-                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"40"</span>
-                       <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span>
-                       <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span>
-                       <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span><span class="xml-punct">/&gt;</span>
-
-            <span class="comment">&lt;!-- Znak 🗲 to unicode &#x1F5F2; --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Right"</span> <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span>
-                    <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"40"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"40"</span>
-                    <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span>
-                    <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryForegroundBrush}"</span>
-                    <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"&#x1F5F2;"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span>
-                    <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"LoadBtn_Click"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- =================== GŁÓWNA ZAWARTOŚĆ =================== --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"400"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Sztywna szerokość 400px wymuszona w poleceniu zadania --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>   <span class="comment">&lt;!-- Reszta na Szczegóły powieści --&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-
-            <span class="comment">&lt;!-- ==== LISTA KSIĄŻEK ==== --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Books}"</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"BooksList"</span>
-                     <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span>
-                     <span class="xml-attr">ScrollViewer.HorizontalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Disabled"</span>
-                     <span class="xml-attr">ScrollViewer.VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Visible"</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-                        <span class="comment">&lt;!-- Foremka do wycinania pojedynczej książki na liście --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"5"</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"100"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Szerokość obrazka (okładki) --&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-                            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-
-                            <span class="comment">&lt;!-- Stretch="Uniform" zachowuje oryginalne proporcje --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">Image</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Cover}"</span> <span class="xml-attr">Stretch</span><span class="xml-punct">=</span><span class="xml-val">"Uniform"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"100"</span><span class="xml-punct">/&gt;</span>
-
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,0,0"</span><span class="xml-punct">&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Spycha elementy do dołu kafelka --&gt;</span>
-                                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-                                <span class="comment">&lt;!-- TextWrapping="Wrap" pozwala długim tytułom zawijać się do nowej linii --&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="val">"Wrap"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"18"</span><span class="xml-punct">/&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Author}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
-
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"3"</span> <span class="xml-attr">Orientation</span><span class="xml-punct">=</span><span class="xml-val">"Horizontal"</span> <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Bottom"</span><span class="xml-punct">&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Pages, StringFormat='Strony: {0}'}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span><span class="xml-punct">/&gt;</span>
-
-                                    <span class="comment">&lt;!-- Ważne: Formatowanie daty 'd MMMM yyyy' zamieni datę na format np. 26 czerwca 1997 --&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding ReleaseDate, StringFormat='{}{0:d MMMM yyyy}'}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span><span class="xml-punct">/&gt;</span>
-                                <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span>
-
-            <span class="comment">&lt;!-- ==== SZCZEGÓŁY WYBRANEJ KSIĄŻKI ==== --&gt;</span>
-            <span class="comment">&lt;!-- Magia WPF: ElementName połączy ten Grid ze wskazaną książką z ListBoxa obok! --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">DataContext</span><span class="xml-punct">=</span><span class="xml-val">"{Binding SelectedItem, ElementName=BooksList}"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,10,10"</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Detale (połowa miejsca) --&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Rozdziały (druga połowa) --&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-                <span class="comment">&lt;!-- Górna część: Detale + Okładka (Podział na pół) --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,0,10"</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-
-                    <span class="comment">&lt;!-- ScrollViewer zapobiega "ucinaniu" tekstu na małych ekranach --&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">ScrollViewer</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Dedication}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"DemiBold"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span><span class="xml-punct">/&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Author}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">HorizontalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Right"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,10,0,10"</span><span class="xml-punct">/&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Summary}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span><span class="xml-punct">/&gt;</span>
-
-                            <span class="comment">&lt;!-- Wywołanie naszego konwertera wyliczającego średnią dla książki --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Chapters, Converter={StaticResource AverageRatingToStarsConverter}}"</span>
-                                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"20"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"Gold"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,10,0,0"</span><span class="xml-punct">/&gt;</span>
-                        <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">ScrollViewer</span><span class="xml-punct">&gt;</span>
-
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Image</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Source</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Cover}"</span> <span class="xml-attr">Stretch</span><span class="xml-punct">=</span><span class="xml-val">"Uniform"</span><span class="xml-punct">/&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-
-                <span class="comment">&lt;!-- Dolna część: Lista Rozdziałów --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource SecondaryBackgroundBrush}"</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"Rozdziały"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{DynamicResource PrimaryForegroundBrush}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"20"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"Bold"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">/&gt;</span>
-
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">ScrollViewer</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">VerticalScrollBarVisibility</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">&gt;</span>
-                        <span class="comment">&lt;!-- ItemsControl to taka prosta lista bez klikania. Wyświetla elementy jeden pod drugim --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">ItemsControl</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Chapters}"</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">ItemsControl.ItemTemplate</span><span class="xml-punct">&gt;</span>
-                                <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-                                    <span class="comment">&lt;!-- Expander: kontrolka rozwijana (harmonijka) --&gt;</span>
-                                    <span class="xml-punct">&lt;</span><span class="xml-elem">Expander</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"14"</span> <span class="xml-attr">FontWeight</span><span class="xml-punct">=</span><span class="xml-val">"DemiBold"</span> <span class="xml-attr">IsExpanded</span><span class="xml-punct">=</span><span class="xml-val">"False"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"5"</span><span class="xml-punct">&gt;</span>
-                                        <span class="xml-punct">&lt;</span><span class="xml-elem">StackPanel</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,5,10,10"</span><span class="xml-punct">&gt;</span>
-                                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Summary}"</span> <span class="xml-attr">TextWrapping</span><span class="xml-punct">=</span><span class="xml-val">"Wrap"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"12"</span> <span class="xml-attr">FontStyle</span><span class="xml-punct">=</span><span class="xml-val">"Italic"</span><span class="xml-punct">/&gt;</span>
-
-                                            <span class="comment">&lt;!-- Dwa konwertery w akcji: Pierwszy rysuje gwiazdki, drugi liczy ich RGB --&gt;</span>
-                                            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Rating, Converter={StaticResource RatingToStarsConverter}}"</span>
-                                                       <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Rating, Converter={StaticResource RatingToColorConverter}}"</span>
-                                                       <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,5,0,0"</span><span class="xml-punct">/&gt;</span>
-                                        <span class="xml-punct">&lt;/</span><span class="xml-elem">StackPanel</span><span class="xml-punct">&gt;</span>
-                                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Expander</span><span class="xml-punct">&gt;</span>
-                                <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;/</span><span class="xml-elem">ItemsControl.ItemTemplate</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;/</span><span class="xml-elem">ItemsControl</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">ScrollViewer</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
-
-  <h1 style="margin-top: 60px;">Dodatek: Jak zrobić To-Do List w WPF</h1>
-  <p>Zbudowanie prostej listy zadań to świetny sposób na utrwalenie wiedzy. Wykorzystamy tu dynamiczną kolekcję, bindowanie właściwości <code>IsCompleted</code> pod CheckBoxa oraz magię <strong>DataTriggera</strong> do przekreślania wykonanych zadań.</p>
-
-  <h2 id="todo-list">9. Projekt: Prosta Lista Zadań (To-Do List)</h2>
-
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Krok 1: Model Danych (Zadanie)</h4>
-      <p>Wyobraź sobie, że klasa <code>ToDoItem</code> to pojedyncza karteczka z zadaniem. Ma swój tekst (<code>Title</code>) i informację, czy jest odhaczona (<code>IsCompleted</code>).</p>
-      <p><strong>Dlaczego używamy INotifyPropertyChanged?</strong> Przeglądarka (czy okno WPF) jest "ślepa" na zmiany zmiennych w tle. Kiedy zmienisz <code>IsCompleted</code> na <code>true</code>, okno o tym nie wie. Ten interfejs działa jak megafon. Kiedy włączamy checkboxa, uruchamia się <code>OnPropertyChanged()</code>, co krzyczy do interfejsu: <em>"Hej! Mój status się zmienił, odrysuj mnie na nowo!"</em>.</p>
-    </div>
-
-
-
-    <div class="code-header">Plik: ToDoItem.cs</div>
-    <pre><code><span class="keyword">using</span> System.ComponentModel;
-<span class="keyword">using</span> System.Runtime.CompilerServices;
-
-<span class="keyword">public class</span> <span class="class-name">ToDoItem</span> : <span class="class-name">INotifyPropertyChanged</span>
-{
-    <span class="keyword">private string</span> title;
-    <span class="keyword">private bool</span> isCompleted;
-
-    <span class="keyword">public string</span> Title
-    {
-        <span class="keyword">get</span> =&gt; title;
-        <span class="keyword">set</span> { title = value; OnPropertyChanged(); }
-    }
-
-    <span class="keyword">public bool</span> IsCompleted
-    {
-        <span class="keyword">get</span> =&gt; isCompleted;
-        <span class="keyword">set</span>
-        {
-            isCompleted = value;
-            <span class="comment">// Kiedy zaznaczasz checkboxa, ta linijka alarmuje XAML o zmianie!</span>
-            OnPropertyChanged();
-        }
-    }
-
-    <span class="comment">// Wymagany kod interfejsu (kopiuj-wklej)</span>
-    <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
-    <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> propName = <span class="keyword">null</span>)
-    {
-        PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(propName));
-    }
-}</code></pre>
-  </div>
-
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Krok 2: Widok (XAML) - Zrozumieć "Ścianę Kodu"</h4>
-      <p>Najtrudniejszy element to <code>&lt;DataTemplate&gt;</code>. Działa on jak <strong>foremka do ciastek</strong>. Ponieważ <code>ListBox</code> to lista, która może mieć 5, 50 albo 1000 elementów, nie piszemy kodu dla każdego z nich osobno. Tworzymy jedną "foremkę" (DataTemplate), a WPF wycina z niej wygląd dla każdego zadania na liście.</p>
-
-
-
-      <p>Druga magia to <code>&lt;DataTrigger&gt;</code>. Działa to jak system IF-THEN: <em>"JEŚLI zadanie ma IsCompleted=True, WTEDY weź element nazwany 'TaskText' i przekreśl go"</em>.</p>
-    </div>
-
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"ToDoApp.MainWindow"</span>
-        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"My To-Do List"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"450"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"400"</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10"</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- 1. PODZIAŁ OKNA NA GÓRĘ I DÓŁ --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Auto: zajmuje tylko tyle miejsca ile trzeba na wpisanie zadania --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- Gwiazdka (*): bierze CAŁĄ resztę okna na listę --&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- 2. PASEK DODAWANIA (Zajmuje Grid.Row="0") --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,0,10"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- TextBox rozpycha się na maksa --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Przycisk 'Dodaj' bierze tylko szerokość swojego tekstu --&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-
-            <span class="xml-punct">&lt;</span><span class="xml-elem">TextBox</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"NewTaskTextBox"</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,0,10,0"</span> <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"5"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"Dodaj"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"AddBtn_Click"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"80"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- 3. LISTA ZADAŃ (Zajmuje Grid.Row="1") --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">ItemsSource</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Tasks}"</span> <span class="xml-attr">HorizontalContentAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Stretch"</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
-                <span class="comment">&lt;!-- TO JEST NASZA "FOREMKA" NA POJEDYNCZE ZADANIE --&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"0,5"</span><span class="xml-punct">&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Miejsce na mały kwadracik CheckBoxa --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>    <span class="comment">&lt;!-- Długi tekst zadania --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">ColumnDefinition</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span> <span class="comment">&lt;!-- Czerwony krzyżyk do usuwania --&gt;</span>
-                        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.ColumnDefinitions</span><span class="xml-punct">&gt;</span>
-
-                        <span class="comment">&lt;!-- CheckBox powiązany z IsCompleted. Jak go klikniesz, poleci info do klasy C# --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">CheckBox</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"0"</span>
-                                  <span class="xml-attr">IsChecked</span><span class="xml-punct">=</span><span class="xml-val">"{Binding IsCompleted, UpdateSourceTrigger=PropertyChanged}"</span>
-                                  <span class="xml-attr">VerticalAlignment</span><span class="xml-punct">=</span><span class="xml-val">"Center"</span><span class="xml-punct">/&gt;</span>
-
-                        <span class="comment">&lt;!-- Tekst zadania. Zauważ, że daliśmy mu imię (x:Name="TaskText").
-                             Bez tego imienia WPF nie wiedziałby, co ma przekreślić! --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"1"</span>
-                                   <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding Title}"</span> <span class="xml-attr">Margin</span><span class="xml-punct">=</span><span class="xml-val">"10,0,0,0"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
-
-                        <span class="comment">&lt;!-- Przycisk usuwania --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">Button</span> <span class="xml-attr">Grid.Column</span><span class="xml-punct">=</span><span class="xml-val">"2"</span> <span class="xml-attr">Content</span><span class="xml-punct">=</span><span class="xml-val">"X"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"Red"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"DeleteBtn_Click"</span><span class="xml-punct">/&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-
-                    <span class="comment">&lt;!-- WYZWALACZE (TRIGGERS): Reagują na to, co robisz --&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">DataTemplate.Triggers</span><span class="xml-punct">&gt;</span>
-                        <span class="comment">&lt;!-- TŁUMACZENIE: Jeśli zmienna 'IsCompleted' w C# ulegnie zmianie na 'True'... --&gt;</span>
-                        <span class="xml-punct">&lt;</span><span class="xml-elem">DataTrigger</span> <span class="xml-attr">Binding</span><span class="xml-punct">=</span><span class="xml-val">"{Binding IsCompleted}"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"True"</span><span class="xml-punct">&gt;</span>
-
-                            <span class="comment">&lt;!-- ...TO zrób dwie rzeczy obiektowi o nazwie "TaskText" (naszemu tekstowi): --&gt;</span>
-                            <span class="comment">&lt;!-- 1. Przekreśl go (Strikethrough) --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">TargetName</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"TextDecorations"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"Strikethrough"</span><span class="xml-punct">/&gt;</span>
-
-                            <span class="comment">&lt;!-- 2. Zmień kolor na szary --&gt;</span>
-                            <span class="xml-punct">&lt;</span><span class="xml-elem">Setter</span> <span class="xml-attr">TargetName</span><span class="xml-punct">=</span><span class="xml-val">"TaskText"</span> <span class="xml-attr">Property</span><span class="xml-punct">=</span><span class="xml-val">"Foreground"</span> <span class="xml-attr">Value</span><span class="xml-punct">=</span><span class="xml-val">"Gray"</span><span class="xml-punct">/&gt;</span>
-                        <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTrigger</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate.Triggers</span><span class="xml-punct">&gt;</span>
-
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">DataTemplate</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox.ItemTemplate</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">ListBox</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
-
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Krok 3: Logika (C#) - Skąd XAML bierze dane?</h4>
-      <p>Sam XAML to tylko "pusta muszla". W kodzie C# używamy <code>DataContext = this;</code>, żeby powiedzieć XAML-owi: <em>"Szukaj zmiennych, takich jak `Tasks`, w tym pliku"</em>. Oraz oczywiście obsługujemy klikanie przycisków.</p>
-    </div>
-
-    <div class="code-header">Plik: MainWindow.xaml.cs</div>
-    <pre><code><span class="keyword">using</span> System.Collections.ObjectModel;
-<span class="keyword">using</span> System.Windows;
-<span class="keyword">using</span> System.Windows.Controls;
-
-<span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window
-{
-    <span class="comment">// Pamiętaj: ObservableCollection to specjalna lista, która informuje ListBox, </span>
-    <span class="comment">// gdy dodasz nowy element (lub usuniesz stary). Zwykłe List&lt;T&gt; by tu nie zadziałało!</span>
-    <span class="keyword">public</span> ObservableCollection&lt;ToDoItem&gt; Tasks { <span class="keyword">get</span>; <span class="keyword">set</span>; }
-
-    <span class="keyword">public</span> MainWindow()
-    {
-        InitializeComponent();
-        Tasks = <span class="keyword">new</span> ObservableCollection&lt;ToDoItem&gt;();
-
-        <span class="comment">// BARDZO WAŻNE: Mówimy oknu, że jego źródłem danych bindowania (DataContext) jest ta klasa.</span>
-        DataContext = <span class="keyword">this</span>;
-    }
-
-    <span class="comment">// Co się dzieje, gdy klikniesz "Dodaj"?</span>
-    <span class="keyword">private void</span> AddBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
-    {
-        <span class="comment">// Sprawdzamy, czy ktoś nie wpisał pustego tekstu</span>
-        <span class="keyword">if</span> (!<span class="keyword">string</span>.IsNullOrWhiteSpace(NewTaskTextBox.Text))
-        {
-            <span class="comment">// Dodajemy element do naszej listy. ListBox w XAML automatycznie to wyłapie!</span>
-            Tasks.Add(<span class="keyword">new</span> ToDoItem { Title = NewTaskTextBox.Text, IsCompleted = <span class="keyword">false</span> });
-
-            <span class="comment">// Wyczyszczenie okienka po dodaniu</span>
-            NewTaskTextBox.Clear();
-        }
-    }
-
-    <span class="comment">// Co się dzieje, gdy klikniesz "X" obok zadania?</span>
-    <span class="keyword">private void</span> DeleteBtn_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
-    {
-        <span class="comment">// Ponieważ mamy wiele przycisków "X" na liście, zmienna 'sender' pozwala </span>
-        <span class="comment">// nam namierzyć konkretnie ten JEDEN przycisk, który kliknięto.</span>
-        <span class="comment">// Następnie sprawdzamy, jaki obiekt (ToDoItem) jest do niego przypięty (DataContext).</span>
-        <span class="keyword">if</span> (sender <span class="keyword">is</span> Button btn && btn.DataContext <span class="keyword">is</span> ToDoItem itemToDelete)
-        {
-            <span class="comment">// Usuwamy zadanie z listy, a ListBox w UI automatycznie znika ten wiersz</span>
-            Tasks.Remove(itemToDelete);
-        }
-    }
-}</code></pre>
-  </div>
-
-  <h1 style="margin-top: 60px;" id="canvas-interakcje">Dodatek PRO: Interaktywny Canvas i Zdarzenia Myszki</h1>
-  <p>Prowadzący wymaga od Was stworzenia aplikacji interaktywnej. Przejdziemy przez absolutne pozycjonowanie na Canvasie, przeciąganie obiektów myszką (Drag & Drop), dynamiczne menu kontekstowe oraz Data Binding.</p>
-
-  <h2 id="teoria-canvas">10.1. Teoria: Jak działa Canvas i Zdarzenia?</h2>
-  <div class="task-box">
-    <div class="explanation">
-      <h4>A. Kontrolka Canvas (Płótno)</h4>
-      <p>W przeciwieństwie do <code>&lt;Grid&gt;</code> czy <code>&lt;StackPanel&gt;</code>, <code>&lt;Canvas&gt;</code> nie układa elementów automatycznie. To czyste płótno. Ty decydujesz, w którym pikselu (X, Y) znajdzie się dany kształt (np. Rectangle, Ellipse).</p>
-
-
-      <h4>B. Zdarzenia Myszki (Mouse Events)</h4>
-      <p>Prowadzący wymienił zdarzenia: <code>MouseMove</code>, <code>MouseLeftButtonUp</code>, <code>MouseLeftButtonDown</code>. Dlaczego potrzebujemy ich aż trzech?</p>
-      <ul>
-        <li><strong>Down (Kliknięcie):</strong> Zapisujemy w pamięci, który kształt użytkownik "złapał".</li>
-        <li><strong>Move (Ruch):</strong> Jeśli użytkownik trzyma przycisk i rusza myszką, aktualizujemy pozycję (X, Y) złapanego kształtu.</li>
-        <li><strong>Up (Puszczenie):</strong> Użytkownik puścił przycisk, więc "upuszczamy" kształt (koniec przeciągania).</li>
-      </ul>
-
-      <h4>C. Interakcja z narysowanymi kształtami</h4>
-      <p>Skąd wiemy, czy kliknęliśmy w puste tło Canvasu, czy w narysowany kwadrat? Używamy właściwości <code>e.OriginalSource</code>. WPF mówi nam dzięki temu: <em>"Zdarzenie kliknięcia dotarło do Canvasu, ale oryginalnie myszka trafiła w ten niebieski kwadrat"</em>.</p>
-    </div>
-  </div>
-
-  <h2 id="projekt-canvas">10.2. Projekt: Shape Builder (Gotowiec)</h2>
-  <p>Poniższa aplikacja spełnia wszystkie wymagania: pozwala kliknąć, by narysować kwadrat, złapać go i przesunąć (Drag & Drop), usunąć za pomocą menu kontekstowego, a na górze wyświetla licznik kształtów za pomocą Data Bindingu.</p>
-
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Część 1: XAML - Interfejs i Zdarzenia</h4>
-      <p>Dzielimy okno na górny pasek (wyświetlający bindowany status) oraz główny obszar <code>Canvas</code>. Do Canvasu podpinamy zdarzenia myszki.</p>
-    </div>
-
-    <div class="code-header">Plik: MainWindow.xaml</div>
-    <pre><code><span class="xml-punct">&lt;</span><span class="xml-elem">Window</span> <span class="xml-attr">x:Class</span><span class="xml-punct">=</span><span class="xml-val">"CanvasApp.MainWindow"</span>
-        <span class="xml-ns">xmlns</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml/presentation"</span>
-        <span class="xml-ns">xmlns:x</span><span class="xml-punct">=</span><span class="xml-val">"http://schemas.microsoft.com/winfx/2006/xaml"</span>
-        <span class="xml-attr">Title</span><span class="xml-punct">=</span><span class="xml-val">"Shape Builder"</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"450"</span> <span class="xml-attr">Width</span><span class="xml-punct">=</span><span class="xml-val">"600"</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"Auto"</span><span class="xml-punct">/&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">RowDefinition</span> <span class="xml-attr">Height</span><span class="xml-punct">=</span><span class="xml-val">"*"</span><span class="xml-punct">/&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid.RowDefinitions</span><span class="xml-punct">&gt;</span>
-
-        <span class="comment">&lt;!-- 1. DATA BINDING: Wyświetla zmienną 'StatusText' z klasy C# (np. ile jest kwadratów) --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">TextBlock</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"0"</span> <span class="xml-attr">Text</span><span class="xml-punct">=</span><span class="xml-val">"{Binding StatusText}"</span> <span class="xml-attr">Padding</span><span class="xml-punct">=</span><span class="xml-val">"10"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"#333"</span> <span class="xml-attr">Foreground</span><span class="xml-punct">=</span><span class="xml-val">"White"</span> <span class="xml-attr">FontSize</span><span class="xml-punct">=</span><span class="xml-val">"16"</span><span class="xml-punct">/&gt;</span>
-
-        <span class="comment">&lt;!-- 2. CANVAS: Nasłuchujemy 3 zdarzeń myszki.
-             Ważne: Tło MUSI być ustawione (nawet na Transparent), inaczej Canvas nie wykryje kliknięcia w puste miejsce! --&gt;</span>
-        <span class="xml-punct">&lt;</span><span class="xml-elem">Canvas</span> <span class="xml-attr">x:Name</span><span class="xml-punct">=</span><span class="xml-val">"DrawCanvas"</span> <span class="xml-attr">Grid.Row</span><span class="xml-punct">=</span><span class="xml-val">"1"</span> <span class="xml-attr">Background</span><span class="xml-punct">=</span><span class="xml-val">"White"</span>
-                <span class="xml-attr">MouseLeftButtonDown</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseDown"</span>
-                <span class="xml-attr">MouseMove</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseMove"</span>
-                <span class="xml-attr">MouseLeftButtonUp</span><span class="xml-punct">=</span><span class="xml-val">"Canvas_MouseUp"</span><span class="xml-punct">&gt;</span>
-
-            <span class="comment">&lt;!-- MENU KONTEKSTOWE KANWY (Gdy klikniesz Prawym Przyciskiem Myszki w puste tło) --&gt;</span>
-            <span class="xml-punct">&lt;</span><span class="xml-elem">Canvas.ContextMenu</span><span class="xml-punct">&gt;</span>
-                <span class="xml-punct">&lt;</span><span class="xml-elem">ContextMenu</span><span class="xml-punct">&gt;</span>
-                    <span class="xml-punct">&lt;</span><span class="xml-elem">MenuItem</span> <span class="xml-attr">Header</span><span class="xml-punct">=</span><span class="xml-val">"Wyczyść płótno"</span> <span class="xml-attr">Click</span><span class="xml-punct">=</span><span class="xml-val">"ClearCanvas_Click"</span><span class="xml-punct">/&gt;</span>
-                <span class="xml-punct">&lt;/</span><span class="xml-elem">ContextMenu</span><span class="xml-punct">&gt;</span>
-            <span class="xml-punct">&lt;/</span><span class="xml-elem">Canvas.ContextMenu</span><span class="xml-punct">&gt;</span>
-        <span class="xml-punct">&lt;/</span><span class="xml-elem">Canvas</span><span class="xml-punct">&gt;</span>
-    <span class="xml-punct">&lt;/</span><span class="xml-elem">Grid</span><span class="xml-punct">&gt;</span>
-<span class="xml-punct">&lt;/</span><span class="xml-elem">Window</span><span class="xml-punct">&gt;</span></code></pre>
-  </div>
-
-  <div class="task-box">
-    <div class="explanation">
-      <h4>Część 2: Logika w C# (Magia Interakcji)</h4>
-      <p>W tym pliku znajdziesz całą potęgę WPF. Pokazujemy tu, jak tworzyć kształty (Shapes) z poziomu kodu, jak zapamiętać przesunięcie myszki (Offset), aby przeciągany kwadrat nie "skakał" do rogu kursora, oraz jak dynamicznie dopinać do narysowanych kształtów własne Menu Kontekstowe. Zwróć też uwagę na wdrożenie `INotifyPropertyChanged` pod Data Binding.</p>
-
-
-    </div>
-
-    <div class="code-header">Plik: MainWindow.xaml.cs</div>
-    <pre><code><span class="keyword">using</span> System.ComponentModel;
-<span class="keyword">using</span> System.Runtime.CompilerServices;
-<span class="keyword">using</span> System.Windows;
-<span class="keyword">using</span> System.Windows.Controls;
-<span class="keyword">using</span> System.Windows.Input;
-<span class="keyword">using</span> System.Windows.Media;
-<span class="keyword">using</span> System.Windows.Shapes;
-
-<span class="keyword">namespace</span> CanvasApp
-{
-    <span class="keyword">public partial class</span> <span class="class-name">MainWindow</span> : Window, INotifyPropertyChanged
-    {
-        <span class="comment">// == ZMIENNE DO BINDOWANIA ==</span>
-        <span class="keyword">private string</span> statusText = <span class="string">"Kliknij na puste pole, aby narysować kwadrat!"</span>;
-        <span class="keyword">public string</span> StatusText
-        {
-            <span class="keyword">get</span> =&gt; statusText;
-            <span class="keyword">set</span> { statusText = value; OnPropertyChanged(); }
-        }
-
-        <span class="comment">// == ZMIENNE DO DRAG & DROP (PRZECIĄGANIA) ==</span>
-        <span class="keyword">private bool</span> isDragging = <span class="keyword">false</span>;     <span class="comment">// Czy aktualnie trzymamy przycisk myszy na kształcie?</span>
-        <span class="keyword">private</span> UIElement draggedShape;      <span class="comment">// Który dokładnie kształt ciągniemy?</span>
-        <span class="keyword">private</span> Point clickOffset;           <span class="comment">// Przesunięcie kursora wewnątrz kształtu (żeby nie skakał do rogu)</span>
-
-        <span class="keyword">public</span> MainWindow()
-        {
-            InitializeComponent();
-            DataContext = <span class="keyword">this</span>; <span class="comment">// Ustawienie kontekstu dla bindowania StatusText</span>
-        }
-
-        <span class="comment">// =========================================================</span>
-        <span class="comment">// 1. MOUSE DOWN (Kliknięcie lewym przyciskiem myszy)</span>
-        <span class="comment">// =========================================================</span>
-        <span class="keyword">private void</span> Canvas_MouseDown(<span class="keyword">object</span> sender, MouseButtonEventArgs e)
-        {
-            <span class="comment">// Sprawdzamy w co DOKŁADNIE uderzył kursor (OriginalSource)</span>
-            <span class="keyword">if</span> (e.OriginalSource <span class="keyword">is</span> Shape clickedShape)
-            {
-                <span class="comment">// SCENARIUSZ A: Kliknęliśmy w narysowany wcześniej kształt</span>
-                isDragging = <span class="keyword">true</span>;
-                draggedShape = clickedShape;
-
-                <span class="comment">// Zapisujemy, w którym miejscu kształtu złapaliśmy go myszką</span>
-                Point mousePos = e.GetPosition(DrawCanvas);
-                <span class="keyword">double</span> shapeLeft = Canvas.GetLeft(draggedShape);
-                <span class="keyword">double</span> shapeTop = Canvas.GetTop(draggedShape);
-                clickOffset = <span class="keyword">new</span> Point(mousePos.X - shapeLeft, mousePos.Y - shapeTop);
-
-                <span class="comment">// Złapany obiekt przenosimy na samą górę (żeby nie chował się pod innymi)</span>
-                Panel.SetZIndex(draggedShape, 999);
-
-                <span class="comment">// Przechwytujemy myszkę (nawet jak wyjedziemy szybko kursorem za kształt, dalej będziemy go trzymać)</span>
-                draggedShape.CaptureMouse();
-
-                StatusText = <span class="string">"Przesuwasz kształt..."</span>;
-            }
-            <span class="keyword">else</span>
-            {
-                <span class="comment">// SCENARIUSZ B: Kliknęliśmy w puste tło Canvasu - Rysujemy nowy kwadrat!</span>
-                Point clickPos = e.GetPosition(DrawCanvas);
-
-                Rectangle newRect = <span class="keyword">new</span> Rectangle
-                {
-                    Width = 50,
-                    Height = 50,
-                    Fill = Brushes.DodgerBlue,
-                    Stroke = Brushes.DarkBlue,
-                    StrokeThickness = 2
-                };
-
-                <span class="comment">// Ustawiamy pozycję nowego kwadratu w miejscu kliknięcia myszki (centrujemy go)</span>
-                Canvas.SetLeft(newRect, clickPos.X - 25);
-                Canvas.SetTop(newRect, clickPos.Y - 25);
-
-                <span class="comment">// DODAJEMY WŁASNE MENU KONTEKSTOWE DLA TEGO KONKRETNEGO KSZTAŁTU</span>
-                ContextMenu shapeMenu = <span class="keyword">new</span> ContextMenu();
-                MenuItem deleteItem = <span class="keyword">new</span> MenuItem { Header = <span class="string">"Usuń ten kształt"</span> };
-
-                <span class="comment">// Używamy wyrażenia lambda by podpiąć funkcję usunięcia wprost do zdarzenia Click</span>
-                deleteItem.Click += (s, args) =&gt;
-                {
-                    DrawCanvas.Children.Remove(newRect);
-                    StatusText = <span class="string">$"Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
-                };
-
-                shapeMenu.Items.Add(deleteItem);
-                newRect.ContextMenu = shapeMenu;
-
-                <span class="comment">// Wrzucamy kształt na płótno</span>
-                DrawCanvas.Children.Add(newRect);
-                StatusText = <span class="string">$"Dodano kwadrat! Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
-            }
-        }
-
-        <span class="comment">// =========================================================</span>
-        <span class="comment">// 2. MOUSE MOVE (Ruszanie myszką)</span>
-        <span class="comment">// =========================================================</span>
-        <span class="keyword">private void</span> Canvas_MouseMove(<span class="keyword">object</span> sender, MouseEventArgs e)
-        {
-            <span class="comment">// Jeśli trzymamy przycisk i mamy jakiś kształt w garści</span>
-            <span class="keyword">if</span> (isDragging && draggedShape != <span class="keyword">null</span>)
-            {
-                Point currentMousePos = e.GetPosition(DrawCanvas);
-
-                <span class="comment">// Wyliczamy nową pozycję (obecna myszka MINUS to przesunięcie wewnątrz kształtu)</span>
-                <span class="keyword">double</span> newLeft = currentMousePos.X - clickOffset.X;
-                <span class="keyword">double</span> newTop = currentMousePos.Y - clickOffset.Y;
-
-                <span class="comment">// Aktualizujemy położenie kształtu na płótnie</span>
-                Canvas.SetLeft(draggedShape, newLeft);
-                Canvas.SetTop(draggedShape, newTop);
-            }
-        }
-
-        <span class="comment">// =========================================================</span>
-        <span class="comment">// 3. MOUSE UP (Puszczenie lewego przycisku)</span>
-        <span class="comment">// =========================================================</span>
-        <span class="keyword">private void</span> Canvas_MouseUp(<span class="keyword">object</span> sender, MouseButtonEventArgs e)
-        {
-            <span class="keyword">if</span> (isDragging)
-            {
-                isDragging = <span class="keyword">false</span>;
-                draggedShape.ReleaseMouseCapture(); <span class="comment">// Oddajemy myszkę systemowi</span>
-                Panel.SetZIndex(draggedShape, 0);   <span class="comment">// Zdejmujemy priorytet wyświetlania na wierzchu</span>
-                draggedShape = <span class="keyword">null</span>;
-
-                StatusText = <span class="string">$"Kształt upuszczony. Liczba kształtów: {DrawCanvas.Children.Count}"</span>;
-            }
-        }
-
-        <span class="comment">// =========================================================</span>
-        <span class="comment">// 4. MENU KANWY: Czyszczenie całego płótna</span>
-        <span class="comment">// =========================================================</span>
-        <span class="keyword">private void</span> ClearCanvas_Click(<span class="keyword">object</span> sender, RoutedEventArgs e)
-        {
-            DrawCanvas.Children.Clear();
-            StatusText = <span class="string">"Płótno wyczyszczone!"</span>;
-        }
-
-        <span class="comment">// Wymagana implementacja DataBindingu</span>
-        <span class="keyword">public event</span> PropertyChangedEventHandler PropertyChanged;
-        <span class="keyword">protected void</span> OnPropertyChanged([CallerMemberName] <span class="keyword">string</span> name = <span class="keyword">null</span>)
-        {
-            PropertyChanged?.Invoke(<span class="keyword">this</span>, <span class="keyword">new</span> PropertyChangedEventArgs(name));
-        }
-    }
-}</code></pre>
-  </div>
-
-</main>
-
+  <hr>
+
+  <h2>Kolos z dysku (Zadania SQL)</h2>
+
+  <h3>Zad 1. Stworzyć tabelę ProductRequest i indeks</h3>
+  <pre><code class="language-sql">CREATE TABLE dbo.ProductRequest(
+    RequestID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductID INT NOT NULL,
+    SupplierID INT NOT NULL,
+    Quantity INT NOT NULL,
+    RequestDate DATETIME NOT NULL
+);
+
+CREATE INDEX IX_ProductRequest_ProductID ON dbo.ProductRequest(ProductID);</code></pre>
+
+  <h3>Zad 2. Procedura Supply</h3>
+  <p>Zlicza ile sztuk zamówiono od ostatniego zapotrzebowania, jeśli > 50, generuje nowe (zaokrąglone do pełnych 10).</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.Supply
+    @ProductID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @LastRequestDate DATETIME,
+            @TotalOrdered INT,
+            @RequestQty INT,
+            @SupplierID INT;
+
+    -- Pobieranie dostawcy
+    SELECT @SupplierID = SupplierID FROM dbo.Products WHERE ProductID = @ProductID;
+
+    -- Ostatnia data zamówienia w ProductRequest
+    SELECT @LastRequestDate = MAX(RequestDate) FROM dbo.ProductRequest WHERE ProductID = @ProductID;
+    IF @LastRequestDate IS NULL
+        SET @LastRequestDate = '1900-01-01';
+
+    -- Suma zamówionych sztuk
+    SELECT @TotalOrdered = SUM(od.Quantity)
+    FROM dbo.OrderDetails od
+    JOIN dbo.Orders o ON o.OrderID = od.OrderID
+    WHERE od.ProductID = @ProductID AND o.OrderDate > @LastRequestDate;
+
+    IF @TotalOrdered IS NULL SET @TotalOrdered = 0;
+
+    -- Jeśli > 50, dodaj nowe
+    IF @TotalOrdered > 50
+    BEGIN
+        SET @RequestQty = CEILING(@TotalOrdered / 10.0) * 10;
+        INSERT INTO dbo.ProductRequest (ProductID, SupplierID, Quantity, RequestDate)
+        VALUES (@ProductID, @SupplierID, @RequestQty, GETDATE());
+    END
+END;</code></pre>
+
+  <h3>Zad 3. Wyzwalacz OrderTrigger</h3>
+  <pre><code class="language-sql">CREATE TRIGGER dbo.OrderTrigger
+ON dbo.OrderDetails
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @pid INT;
+
+    -- Kursor dla unikalnych ProductID z wstawionych wierszy
+    DECLARE prod_cur CURSOR LOCAL FAST_FORWARD FOR
+    SELECT DISTINCT ProductID FROM inserted;
+
+    OPEN prod_cur;
+    FETCH NEXT FROM prod_cur INTO @pid;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC dbo.Supply @ProductID = @pid;
+        FETCH NEXT FROM prod_cur INTO @pid;
+    END
+
+    CLOSE prod_cur;
+    DEALLOCATE prod_cur;
+END;</code></pre>
+
+  <h3>Zad 4. Przetestowanie działania samowyzwalacza</h3>
+  <pre><code class="language-sql">-- Upewnienie się, że istnieje order 95000
+IF NOT EXISTS (SELECT 1 FROM dbo.Orders WHERE OrderID = 95000)
+BEGIN
+    INSERT INTO dbo.Orders (OrderID, CustomerID, EmployeeID, OrderDate, ShipCountry)
+    VALUES (95000, 'ALFKI', 1, GETDATE(), 'Poland');
+END
+
+-- Wstawienie 60 sztuk produktu 1 (wyzwoli Trigger)
+INSERT INTO dbo.OrderDetails (OrderID, ProductID, Quantity)
+VALUES (95000, 1, 60);
+
+-- Sprawdzenie wpisu
+SELECT * FROM dbo.ProductRequest
+WHERE ProductID = 1
+ORDER BY RequestDate DESC;</code></pre>
+
+</div>
 </body>
 </html>
