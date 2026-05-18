@@ -443,7 +443,7 @@ ORDER BY RequestDate DESC;</code></pre>
 
   <hr>
 
-  <h2>Dodatek: Aplikacja i struktura bazy (Mendel 339073)</h2>
+  <h2>Dodatek 1: Aplikacja i struktura bazy (Mendel 339073)</h2>
 
   <h3>Kod Java: <code>App_Mendel_339073.java</code></h3>
   <pre><code class="language-java">import java.sql.*;
@@ -624,6 +624,961 @@ CREATE TABLE MAGNETIC_MEASUREMENTS_MENDEL (
     measured_at DATETIME
 );
 GO</code></pre>
+
+  <hr>
+
+  <h2>Dodatek 2: Aplikacja (Kowalski 123456)</h2>
+
+  <h3>Kod Java: <code>TASK2_KOWALSKI_123456.java</code></h3>
+  <pre><code class="language-java">import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+public class TASK2_KOWALSKI_123456 {
+
+    // Dane logowania - dostosuj do swojego serwera MS SQL
+    private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=DB_KOWALSKI_123456;encrypt=true;trustServerCertificate=true;";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "TwojeHaslo123"; // <--- ZMIEŃ HASŁO
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            System.out.println("=== POŁĄCZONO Z BAZĄ DANYCH ===");
+
+            // Wyłączamy auto-commit, aby ręcznie zatwierdzać transakcje (wymóg "kolejnych transakcji")
+            conn.setAutoCommit(false);
+
+            // ==================================================
+            // TRANSAKCJA A: Usuwa wszystkie rekordy z tabeli
+            // ==================================================
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DELETE FROM ZAMOWIENIA_KOWALSKI_123456");
+                conn.commit();
+                System.out.println("\n[Transakcja A] Usunięto wszystkie rekordy z tabeli.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA B: Dodaje trzy zamówienia na konkretne rośliny (bez batcha)
+            // ==================================================
+            String insertSQL = "INSERT INTO ZAMOWIENIA_KOWALSKI_123456 (Nazwa_rosliny, Cena_sztuki, Ilosc, Cena_calosciowa) VALUES (?, ?, ?, ?)";
+            // Włączamy zwracanie wygenerowanych kluczy (przyda się tutaj i w Transakcji D)
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+
+                // Dodajemy zamówienia jedno po drugim (metoda sama robi executeUpdate)
+                insertOrder(pstmt, "Fikus", 45.50, 2);
+                insertOrder(pstmt, "Monstera", 120.00, 1);
+                insertOrder(pstmt, "Kaktus", 15.20, 5);
+
+                conn.commit();
+                System.out.println("\n[Transakcja B] Dodano 3 konkretne zamówienia.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA C: Modyfikuje rekordy (podwaja cenę) i dodaje zamówienie za 500 PLN
+            // ==================================================
+            try (Statement stmt = conn.createStatement()) {
+                // Podwajamy cenę sztuki i od razu przeliczamy cenę całościową dla wszystkich rekordów
+                stmt.executeUpdate("UPDATE ZAMOWIENIA_KOWALSKI_123456 SET Cena_sztuki = Cena_sztuki * 2, Cena_calosciowa = (Cena_sztuki * 2) * Ilosc");
+
+                // Dodajemy nowe zamówienie o łącznej wartości 500 PLN
+                stmt.executeUpdate("INSERT INTO ZAMOWIENIA_KOWALSKI_123456 (Nazwa_rosliny, Cena_sztuki, Ilosc, Cena_calosciowa) VALUES ('Złota Orchidea', 500.00, 1, 500.00)");
+
+                conn.commit();
+                System.out.println("\n[Transakcja C] Podwojono ceny i dodano zamówienie za 500 PLN.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA D: 10 losowych zamówień i modyfikacja 3 wybranych (obsługa w Javie)
+            // ==================================================
+            try (PreparedStatement pstmtInsert = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+
+                Random rand = new Random();
+                String[] plants = {"Aloes", "Paproc", "Bonsai", "Roza", "Bratek", "Dracena"};
+
+                // Lista na zapisanie ID nowo dodanych zamówień
+                List<Integer> noweZamowieniaIDs = new ArrayList<>();
+
+                // 1. Dodawanie 10 losowych zamówień
+                for (int i = 0; i < 10; i++) {
+                    String plantName = plants[rand.nextInt(plants.length)];
+                    double price = 10.0 + (rand.nextDouble() * 90.0); // Cena od 10 do 100
+                    int quantity = rand.nextInt(5) + 1; // Ilość od 1 do 5
+
+                    // Wstawiamy zamówienie i odbieramy wygenerowane dla niego ID
+                    int wygenerowaneId = insertOrder(pstmtInsert, plantName, price, quantity);
+                    noweZamowieniaIDs.add(wygenerowaneId);
+                }
+
+                // 2. Modyfikacja 3 losowych z tych 10, które przed chwilą dodaliśmy
+
+                // Tasujemy naszą listę identyfikatorów
+                Collections.shuffle(noweZamowieniaIDs);
+                // Bierzemy 3 pierwsze elementy po przetasowaniu
+                List<Integer> doModyfikacji = noweZamowieniaIDs.subList(0, 3);
+
+                // Tworzymy zapytanie UPDATE tylko dla wylosowanych ID
+                String updateSQL = "UPDATE ZAMOWIENIA_KOWALSKI_123456 " +
+                                   "SET Ilosc = Ilosc + 1, Cena_calosciowa = Cena_sztuki * (Ilosc + 1) " +
+                                   "WHERE Id_zamowienia = ?";
+
+                try (PreparedStatement pstmtUpdate = conn.prepareStatement(updateSQL)) {
+                    // Wykonujemy update dla każdego z 3 wylosowanych zamówień
+                    for (Integer id : doModyfikacji) {
+                        pstmtUpdate.setInt(1, id);
+                        pstmtUpdate.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                System.out.println("\n[Transakcja D] Dodano 10 losowych zamówień i zaktualizowano 3 wybrane przez program.");
+                printTable(conn);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Błąd bazy danych: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ==================================================
+    // METODY POMOCNICZE
+    // ==================================================
+
+    // Metoda wymagana w pkt 3b - pobiera i wyświetla zawartość całej tabeli z równym formatowaniem
+    private static void printTable(Connection conn) throws SQLException {
+        String sql = "SELECT * FROM ZAMOWIENIA_KOWALSKI_123456";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            System.out.println("ID | Nazwa rośliny       | Cena/szt | Ilość | Suma");
+            System.out.println("---------------------------------------------------------");
+            while (rs.next()) {
+                System.out.printf("%-2d | %-19s | %-8.2f | %-5d | %.2f%n",
+                        rs.getInt("Id_zamowienia"),
+                        rs.getString("Nazwa_rosliny"),
+                        rs.getDouble("Cena_sztuki"),
+                        rs.getInt("Ilosc"),
+                        rs.getDouble("Cena_calosciowa"));
+            }
+        }
+    }
+
+    // Metoda wykonująca pojedynczy INSERT i zwracająca jego wygenerowane w bazie ID
+    private static int insertOrder(PreparedStatement pstmt, String name, double price, int qty) throws SQLException {
+        pstmt.setString(1, name);
+        pstmt.setDouble(2, price);
+        pstmt.setInt(3, qty);
+        pstmt.setDouble(4, price * qty); // Obliczenie Cena_calosciowa przed wstawieniem
+
+        pstmt.executeUpdate(); // Wykonanie pojedynczego insertu
+
+        // Pobieramy ID, które wygenerował SQL Server w kolumnie IDENTITY
+        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Nie udało się pobrać wygenerowanego ID.");
+            }
+        }
+    }
+}</code></pre>
+
+</div>
+</body>
+</html><!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kolos 2 - Podstawy transakcji</title>
+  <style>
+      body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          margin: 0;
+          padding: 20px;
+          background-color: #f9f9f9;
+          color: #333;
+      }
+      .container {
+          max-width: 900px;
+          margin: auto;
+          background: #fff;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      h1, h2, h3 {
+          color: #0056b3;
+      }
+      h1 {
+          border-bottom: 2px solid #0056b3;
+          padding-bottom: 10px;
+      }
+      .author {
+          font-weight: bold;
+          font-size: 1.1em;
+          color: #444;
+          margin-bottom: 20px;
+          padding: 10px;
+          background-color: #e9ecef;
+          border-left: 4px solid #0056b3;
+      }
+      pre {
+          background-color: #2d2d2d;
+          color: #f8f8f2;
+          padding: 15px;
+          border-radius: 5px;
+          overflow-x: auto;
+          font-family: 'Consolas', 'Monaco', monospace;
+      }
+      code {
+          font-family: 'Consolas', 'Monaco', monospace;
+      }
+      p > code {
+          background-color: #f1f1f1;
+          color: #c7254e;
+          padding: 2px 4px;
+          border-radius: 3px;
+      }
+      ul {
+          margin-top: 0;
+      }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="author">Autor: Jakub Mendel</div>
+
+  <h1>Kolos 2 - Podstawy transakcji</h1>
+
+  <h2>Transakcje</h2>
+  <p><strong>Transakcja</strong> - logiczny ciąg operacji DB zapewniający: atomowość, spójność, izolację, trwałość (ACID).</p>
+
+  <h3>Składnia (MS SQL):</h3>
+  <pre><code class="language-sql">BEGIN TRANSACTION;
+-- operacje DML
+COMMIT;   -- zatwierdzenie
+ROLLBACK; -- wycofanie</code></pre>
+
+  <h3>Przykład:</h3>
+  <p>Dodanie rekordu do <code>OrderDetails</code> i aktualizacja pola <code>UnitsInStock</code> dla <code>ProductID = 11</code> w tabeli <code>Products</code>:</p>
+  <pre><code class="language-sql">BEGIN TRANSACTION;
+
+-- 1) INSERT do OrderDetails
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+VALUES (10248, 11, 5);
+
+-- 2) UPDATE w Products
+UPDATE Products
+SET UnitsInStock = UnitsInStock - 5
+WHERE ProductID = 11;
+
+-- 3) Sprawdzenie i COMMIT/ROLLBACK
+IF @@ERROR = 0
+    COMMIT;
+ELSE
+    ROLLBACK;</code></pre>
+
+  <hr>
+
+  <h2>Procedury składowane</h2>
+  <p><strong>Definicja:</strong> Procedura składowana - blok kodu SQL przechowywany w bazie, wywoływany z przekazanymi parametrami.</p>
+
+  <h3>Składnia ogólna</h3>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.NazwaProcedury
+    @Param1 INT,
+    @Param2 INT = 0, -- domyślna wartość
+    @Param3 NVARCHAR(50) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON; -- wyłączanie komunikatu np. (1 row(s) affected)
+    -- ciało procedury: INSERT/UPDATE/DELETE/SELECT
+END;</code></pre>
+
+  <h3>Przykłady</h3>
+
+  <h4>1. INSERT</h4>
+  <p>Procedura <code>AddOrderDetail</code>, która przyjmuje OrderID, ProductID i Quantity, dodaje go do tabeli OrderDetails i zwraca w parametrze OUTPUT komunikat sukcesu albo błędu.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.AddOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Quantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+        VALUES (@OrderID, @ProductID, @Quantity);
+
+        SET @Message = N'Wstawiono wiersz pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
+  <p><strong>Wywołanie:</strong></p>
+  <pre><code class="language-sql">DECLARE @Msg NVARCHAR(100);
+EXEC dbo.AddOrderDetail
+    @OrderID = 10248,
+    @ProductID = 11,
+    @Quantity = 5,
+    @Message = @Msg OUTPUT;
+
+SELECT @Msg AS Message;</code></pre>
+
+  <h4>2. UPDATE</h4>
+  <p>Procedura przyjmuje OrderID, ProductID, NewQuantity i aktualizuje wartości w tabeli OrderDetails oraz zwraca komunikat.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.UpdateOrderDetailQuantity
+    @OrderID INT,
+    @ProductID INT,
+    @NewQuantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        UPDATE OrderDetails
+        SET Quantity = @NewQuantity
+        WHERE OrderID = @OrderID AND ProductID = @ProductID;
+
+        -- systemowa zmienna
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Brak wiersza';
+        ELSE
+            SET @Message = N'OK';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
+
+  <h4>3. DELETE</h4>
+  <p>Procedura przyjmuje OrderID, ProductID i usuwa odpowiadający wiersz z OrderDetails oraz zwraca komunikat.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.DeleteOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        DELETE FROM OrderDetails
+        WHERE OrderID = @OrderID AND ProductID = @ProductID;
+
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Nie znaleziono wiersza do usunięcia';
+        ELSE
+            SET @Message = N'Wiersz usunięty pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
+
+  <h4>4. UPDATE z REPLACE</h4>
+  <p>Procedura modyfikuje numery telefonów w danym kraju.</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.UpdateCustomerPhoneByCountry
+    @Country NVARCHAR(50),
+    @OldChar CHAR(1),
+    @NewChar CHAR(1),
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        UPDATE Customers
+        SET Phone = REPLACE(Phone, @OldChar, @NewChar)
+        WHERE Country = @Country;
+
+        IF @@ROWCOUNT = 0
+            SET @Message = N'Brak klientów w kraju ' + @Country;
+        ELSE
+            SET @Message = CAST(@@ROWCOUNT AS NVARCHAR(10)) + N' numerów zmieniono pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+END;</code></pre>
+
+  <hr>
+
+  <h2>Tabela logowa i logowanie operacji</h2>
+  <p>Chcemy, żeby każda procedura po wykonaniu dopisywała do osobnej tabeli informacje o wywołaniu.</p>
+  <pre><code class="language-sql">CREATE TABLE dbo.ChangeLog (
+    -- IDENTITY(1, 1) -> zaczynamy od 1, inkrementujemy o 1
+    LogID INT IDENTITY(1,1) PRIMARY KEY,
+    ProcName NVARCHAR(128) NOT NULL,
+    ExecTime DATETIME NOT NULL DEFAULT GETDATE(),
+    Details NVARCHAR(4000) NULL,
+    Result NVARCHAR(100) NULL
+);</code></pre>
+
+  <p>Modyfikacja procedury <code>AddOrderDetail</code> (użycie <code>ALTER PROCEDURE</code>):</p>
+  <pre><code class="language-sql">ALTER PROCEDURE dbo.AddOrderDetail
+    @OrderID INT,
+    @ProductID INT,
+    @Quantity INT,
+    @Message NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+        VALUES (@OrderID, @ProductID, @Quantity);
+
+        SET @Message = N'Wstawiono wiersz pomyślnie';
+    END TRY
+    BEGIN CATCH
+        SET @Message = ERROR_MESSAGE();
+    END CATCH
+
+    -- LOGOWANIE
+    INSERT INTO dbo.ChangeLog (ProcName, Details, Result)
+    VALUES (
+        N'AddOrderDetail',
+        N'OrderID=' + CAST(@OrderID AS NVARCHAR(10)) +
+        N', ProductID=' + CAST(@ProductID AS NVARCHAR(10)) +
+        N', Quantity=' + CAST(@Quantity AS NVARCHAR(10)),
+        @Message
+    );
+END;</code></pre>
+
+  <hr>
+
+  <h2>Integracja z Javą (JDBC)</h2>
+  <h3>Auto-commit</h3>
+  <p>Domyślnie każde DML w JDBC jest od razu zatwierdzane. Aby grupować operacje w transakcję:</p>
+  <pre><code class="language-java">try (Connection con = DriverManager.getConnection(url)) {
+    con.setAutoCommit(false);
+    try {
+        // operacje DML lub wywołania procedur
+        con.commit();
+    } catch (SQLException e) {
+        con.rollback();
+        throw e;
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}</code></pre>
+
+  <h3>Przykładowe wywołanie procedury</h3>
+  <pre><code class="language-java">con.setAutoCommit(false);
+String sql = "{ call dbo.AddOrderDetail(?, ?, ?, ?) }";
+try (CallableStatement cs = con.prepareCall(sql)) {
+    cs.setInt(1, 10248);
+    cs.setInt(2, 11);
+    cs.setInt(3, 5);
+    cs.registerOutParameter(4, Types.NVARCHAR);
+
+    cs.execute();
+    System.out.println("Result: " + cs.getString(4));
+    con.commit();
+} catch (SQLException e) {
+    con.rollback();
+    e.printStackTrace();
+}</code></pre>
+
+  <hr>
+
+  <h2>Szukanie błędów / niebezpieczeństw w kodzie</h2>
+
+  <h3>Zarządzanie zasobami (Connection/Statement/Scanner)</h3>
+  <p><strong>Błąd:</strong> Brak zamknięcia zasobów.</p>
+  <pre><code class="language-java">Connection conn = DriverManager.getConnection(connectionUrl);
+Statement stmt = conn.createStatement();
+Scanner scanner = new Scanner(System.in);
+// ... operacje ...
+conn.close(); // stmt i scanner wciąż otwarte!</code></pre>
+
+  <p><strong>Poprawione (try-with-resources):</strong></p>
+  <pre><code class="language-java">try (
+    Connection conn = DriverManager.getConnection(connectionUrl);
+    Statement stmt = conn.createStatement();
+    Scanner scan = new Scanner(System.in)
+) {
+    // operacje
+} catch (SQLException e) {
+    e.printStackTrace();
+}</code></pre>
+
+  <h3>Brak transakcji</h3>
+  <p>Jeśli domyślnie <code>autoCommit = true</code>, błąd w jednym zapytaniu nie wycofuje pozostałych. Zawsze używaj <code>con.setAutoCommit(false)</code> oraz <code>con.commit() / con.rollback()</code>.</p>
+
+  <h3>SQL Injection (brak PreparedStatement)</h3>
+  <p><strong>Narażone na SQL Injection (Błąd):</strong></p>
+  <pre><code class="language-java">String deleteQuery = "DELETE FROM Products WHERE ProductID = " + deleteId;
+stmt.executeUpdate(deleteQuery);
+// Jeśli atakujący wprowadzi np. "1; DROP TABLE Products;" tabela zostanie usunięta!</code></pre>
+
+  <p><strong>Poprawione (PreparedStatement):</strong></p>
+  <pre><code class="language-java">String deleteSql = "DELETE FROM Products WHERE ProductID = ?";
+try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+    ps.setInt(1, deleteId);
+    ps.executeUpdate();
+}</code></pre>
+
+  <h3>Walidacja danych wejściowych i wyjątków Scanner'a</h3>
+  <pre><code class="language-java">int productId;
+while (true) {
+    System.out.println("Enter ProductID to update price:");
+    try {
+        productId = scanner.nextInt();
+        break;
+    } catch (InputMismatchException e) {
+        System.out.println("Invalid input. Please enter an integer ProductID.");
+        scanner.next(); // usuń niepoprawny token z bufora
+    }
+}</code></pre>
+
+  <hr>
+
+  <h2>Kolos z dysku (Zadania SQL)</h2>
+
+  <h3>Zad 1. Stworzyć tabelę ProductRequest i indeks</h3>
+  <pre><code class="language-sql">CREATE TABLE dbo.ProductRequest(
+    RequestID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductID INT NOT NULL,
+    SupplierID INT NOT NULL,
+    Quantity INT NOT NULL,
+    RequestDate DATETIME NOT NULL
+);
+
+CREATE INDEX IX_ProductRequest_ProductID ON dbo.ProductRequest(ProductID);</code></pre>
+
+  <h3>Zad 2. Procedura Supply</h3>
+  <p>Zlicza ile sztuk zamówiono od ostatniego zapotrzebowania, jeśli > 50, generuje nowe (zaokrąglone do pełnych 10).</p>
+  <pre><code class="language-sql">CREATE PROCEDURE dbo.Supply
+    @ProductID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @LastRequestDate DATETIME,
+            @TotalOrdered INT,
+            @RequestQty INT,
+            @SupplierID INT;
+
+    -- Pobieranie dostawcy
+    SELECT @SupplierID = SupplierID FROM dbo.Products WHERE ProductID = @ProductID;
+
+    -- Ostatnia data zamówienia w ProductRequest
+    SELECT @LastRequestDate = MAX(RequestDate) FROM dbo.ProductRequest WHERE ProductID = @ProductID;
+    IF @LastRequestDate IS NULL
+        SET @LastRequestDate = '1900-01-01';
+
+    -- Suma zamówionych sztuk
+    SELECT @TotalOrdered = SUM(od.Quantity)
+    FROM dbo.OrderDetails od
+    JOIN dbo.Orders o ON o.OrderID = od.OrderID
+    WHERE od.ProductID = @ProductID AND o.OrderDate > @LastRequestDate;
+
+    IF @TotalOrdered IS NULL SET @TotalOrdered = 0;
+
+    -- Jeśli > 50, dodaj nowe
+    IF @TotalOrdered > 50
+    BEGIN
+        SET @RequestQty = CEILING(@TotalOrdered / 10.0) * 10;
+        INSERT INTO dbo.ProductRequest (ProductID, SupplierID, Quantity, RequestDate)
+        VALUES (@ProductID, @SupplierID, @RequestQty, GETDATE());
+    END
+END;</code></pre>
+
+  <h3>Zad 3. Wyzwalacz OrderTrigger</h3>
+  <pre><code class="language-sql">CREATE TRIGGER dbo.OrderTrigger
+ON dbo.OrderDetails
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @pid INT;
+
+    -- Kursor dla unikalnych ProductID z wstawionych wierszy
+    DECLARE prod_cur CURSOR LOCAL FAST_FORWARD FOR
+    SELECT DISTINCT ProductID FROM inserted;
+
+    OPEN prod_cur;
+    FETCH NEXT FROM prod_cur INTO @pid;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC dbo.Supply @ProductID = @pid;
+        FETCH NEXT FROM prod_cur INTO @pid;
+    END
+
+    CLOSE prod_cur;
+    DEALLOCATE prod_cur;
+END;</code></pre>
+
+  <h3>Zad 4. Przetestowanie działania samowyzwalacza</h3>
+  <pre><code class="language-sql">-- Upewnienie się, że istnieje order 95000
+IF NOT EXISTS (SELECT 1 FROM dbo.Orders WHERE OrderID = 95000)
+BEGIN
+    INSERT INTO dbo.Orders (OrderID, CustomerID, EmployeeID, OrderDate, ShipCountry)
+    VALUES (95000, 'ALFKI', 1, GETDATE(), 'Poland');
+END
+
+-- Wstawienie 60 sztuk produktu 1 (wyzwoli Trigger)
+INSERT INTO dbo.OrderDetails (OrderID, ProductID, Quantity)
+VALUES (95000, 1, 60);
+
+-- Sprawdzenie wpisu
+SELECT * FROM dbo.ProductRequest
+WHERE ProductID = 1
+ORDER BY RequestDate DESC;</code></pre>
+
+  <hr>
+
+  <h2>Dodatek 1: Aplikacja i struktura bazy (Mendel 339073)</h2>
+
+  <h3>Kod Java: <code>App_Mendel_339073.java</code></h3>
+  <pre><code class="language-java">import java.sql.*;
+
+public class App_Mendel_339073 {
+
+    // Dane logowania - ZMIEŃ parametry na zgodne z Twoim lokalnym serwerem
+    private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=DB_MENDEL_339073;encrypt=true;trustServerCertificate=true;";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "SAstudent1"; // Wpisz swoje hasło
+
+    public static void main(String[] args) {
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement()) {
+
+            System.out.println("=== POŁĄCZONO Z BAZĄ DANYCH ===");
+
+            // ==========================================
+            // TRANSAKCJA 1: Inicjalizacja danych
+            // ==========================================
+            conn.setAutoCommit(false);
+            try {
+                System.out.println("\n--- TRANSAKCJA 1: INICJALIZACJA DANYCH ---");
+
+                // Usuwanie (Kolejność ze względu na klucze obce)
+                stmt.executeUpdate("DELETE FROM MAGNETIC_MEASUREMENTS_MENDEL");
+                stmt.executeUpdate("DELETE FROM SUNSPOTS_MENDEL");
+                stmt.executeUpdate("DELETE FROM STATIONS_MENDEL");
+
+                // Dodawanie 3 stacji
+                stmt.executeUpdate("INSERT INTO STATIONS_MENDEL (station_name, country, latitude, longitude, established_at) VALUES " +
+                        "('Stacja A', 'Polska', 50.0, 20.0, '2010-01-01')," +
+                        "('Stacja B', 'USA', 40.0, -100.0, '2012-05-15')," +
+                        "('Stacja C', 'Chile', -30.0, -70.0, '2015-11-20')");
+
+                // Dodawanie 4 plam (Zadbałem, aby jedna spełniała warunek: poziom > 7 i obszar > 5000 dla Transakcji 2)
+                stmt.executeUpdate("INSERT INTO SUNSPOTS_MENDEL (observation_date, solar_latitude, solar_longitude, area_size, detected_by, activity_level) VALUES " +
+                        "('2023-01-10', 10.0, 20.0, 6000.00, 'User1', 'M8')," +
+                        "('2023-02-15', -5.0, 15.0, 3000.00, 'User2', 'C4')," +
+                        "('2023-03-20', 12.0, -10.0, 5500.00, 'User3', 'X9')," +
+                        "('2023-04-25', -15.0, 30.0, 4000.00, 'User4', 'M5')");
+
+                // Dodawanie 6 pomiarów (Zadbałem, aby pomiary spełniały warunki Transakcji 3: > 30 dni temu, pole < 20000)
+                // Używam podzapytań do dynamicznego pobrania poprawnych kluczy obcych (bo IDENTITY mogło nadać różne numery)
+                String insertMeasurements = "INSERT INTO MAGNETIC_MEASUREMENTS_MENDEL (station_id, sunspot_id, magnetic_field_nt, measurement_type, measured_at) " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 15000.00, 'PRIMARY', DATEADD(day, -40, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 18000.00, 'PRIMARY', DATEADD(day, -50, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 25000.00, 'PRIMARY', DATEADD(day, -10, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 12000.00, 'PRIMARY', DATEADD(day, -60, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 30000.00, 'PRIMARY', GETDATE() UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 19000.00, 'PRIMARY', DATEADD(day, -35, GETDATE())";
+                stmt.executeUpdate(insertMeasurements);
+
+                conn.commit();
+
+                // Wyświetlanie wyników
+                System.out.println("Zainicjowano bazę danych. Liczba rekordów:");
+                printCount(stmt, "STATIONS_MENDEL", "Stacji");
+                printCount(stmt, "SUNSPOTS_MENDEL", "Plam słonecznych");
+                printCount(stmt, "MAGNETIC_MEASUREMENTS_MENDEL", "Pomiarów magnetycznych");
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 1 - wykonano Rollback.");
+                throw e;
+            }
+
+            // ==========================================
+            // TRANSAKCJA 2: Analiza aktywności słonecznej
+            // ==========================================
+            try {
+                System.out.println("\n--- TRANSAKCJA 2: ANALIZA AKTYWNOŚCI ---");
+
+                // Aktualizujemy poziom (SQL wyciąga cyfrę, dodaje 1, a potem skleja z literą)
+                String updateSunspots = "UPDATE SUNSPOTS_MENDEL " +
+                        "SET activity_level = LEFT(activity_level, 1) + CAST((CAST(RIGHT(activity_level, 1) AS INT) + 1) AS NVARCHAR), " +
+                        "    detected_by = 'AUTOMATED_SYSTEM' " +
+                        "WHERE CAST(RIGHT(activity_level, 1) AS INT) > 7 AND area_size > 5000";
+
+                stmt.executeUpdate(updateSunspots);
+                conn.commit();
+
+                ResultSet rs = stmt.executeQuery("SELECT sunspot_id, observation_date, activity_level, area_size, detected_by FROM SUNSPOTS_MENDEL WHERE detected_by = 'AUTOMATED_SYSTEM'");
+                System.out.println("ID | Data Obserwacji | Poziom | Rozmiar | Wykryto przez");
+                while(rs.next()) {
+                    System.out.printf("%d  | %s      | %s     | %.2f | %s%n",
+                            rs.getInt("sunspot_id"), rs.getDate("observation_date"),
+                            rs.getString("activity_level"), rs.getDouble("area_size"),
+                            rs.getString("detected_by"));
+                }
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 2 - wykonano Rollback.");
+                throw e;
+            }
+
+            // ==========================================
+            // TRANSAKCJA 3: Kalibracja pomiarów magnetycznych
+            // ==========================================
+            try {
+                System.out.println("\n--- TRANSAKCJA 3: KALIBRACJA POMIARÓW ---");
+
+                String updateMeasurements = "UPDATE MAGNETIC_MEASUREMENTS_MENDEL " +
+                        "SET magnetic_field_nt = magnetic_field_nt * 1.05, " +
+                        "    measurement_type = 'RECALIBRATED' " +
+                        "WHERE measured_at < DATEADD(day, -30, GETDATE()) AND magnetic_field_nt < 20000";
+
+                stmt.executeUpdate(updateMeasurements);
+                conn.commit();
+
+                ResultSet rs = stmt.executeQuery("SELECT measurement_id, station_id, magnetic_field_nt, measurement_type, measured_at FROM MAGNETIC_MEASUREMENTS_MENDEL WHERE measurement_type = 'RECALIBRATED'");
+                System.out.println("ID | Stacja | Pole (nT) | Typ          | Data pomiaru");
+                while(rs.next()) {
+                    System.out.printf("%d  | %d      | %.2f  | %s | %s%n",
+                            rs.getInt("measurement_id"), rs.getInt("station_id"),
+                            rs.getDouble("magnetic_field_nt"), rs.getString("measurement_type"),
+                            rs.getTimestamp("measured_at"));
+                }
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 3 - wykonano Rollback.");
+                throw e;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Metoda pomocnicza do zliczania rekordów
+    private static void printCount(Statement stmt, String table, String label) throws SQLException {
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table);
+        if (rs.next()) {
+            System.out.println(label + ": " + rs.getInt(1));
+        }
+    }
+}</code></pre>
+
+  <h3>Skrypt SQL: Inicjalizacja DB_MENDEL_339073</h3>
+  <pre><code class="language-sql">-- 1. Utworzenie bazy danych
+CREATE DATABASE DB_MENDEL_339073;
+GO
+
+USE DB_MENDEL_339073;
+GO
+
+-- 2. Tworzenie tabeli stacji badawczych
+CREATE TABLE STATIONS_MENDEL (
+    station_id INT IDENTITY(1,1) PRIMARY KEY,
+    station_name NVARCHAR(100),
+    country NVARCHAR(100),
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
+    established_at DATE
+);
+
+-- 3. Tworzenie tabeli plam słonecznych
+CREATE TABLE SUNSPOTS_MENDEL (
+    sunspot_id INT IDENTITY(1,1) PRIMARY KEY,
+    observation_date DATE,
+    solar_latitude DECIMAL(9,6),
+    solar_longitude DECIMAL(9,6),
+    area_size DECIMAL(12,2),
+    detected_by NVARCHAR(100),
+    activity_level NVARCHAR(2)
+);
+
+-- 4. Tworzenie tabeli pomiarów magnetycznych
+CREATE TABLE MAGNETIC_MEASUREMENTS_MENDEL (
+    measurement_id INT IDENTITY(1,1) PRIMARY KEY,
+    station_id INT FOREIGN KEY REFERENCES STATIONS_MENDEL(station_id),
+    sunspot_id INT FOREIGN KEY REFERENCES SUNSPOTS_MENDEL(sunspot_id),
+    magnetic_field_nt DECIMAL(10,2),
+    measurement_type NVARCHAR(100),
+    measured_at DATETIME
+);
+GO</code></pre>
+
+  <hr>
+
+  <h2>Dodatek 2: Aplikacja (Kowalski 123456)</h2>
+
+  <h3>Kod Java: <code>TASK2_KOWALSKI_123456.java</code></h3>
+  <pre><code class="language-java">import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+public class TASK2_KOWALSKI_123456 {
+
+    // Dane logowania - dostosuj do swojego serwera MS SQL
+    private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=DB_KOWALSKI_123456;encrypt=true;trustServerCertificate=true;";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "TwojeHaslo123"; // <--- ZMIEŃ HASŁO
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            System.out.println("=== POŁĄCZONO Z BAZĄ DANYCH ===");
+
+            // Wyłączamy auto-commit, aby ręcznie zatwierdzać transakcje (wymóg "kolejnych transakcji")
+            conn.setAutoCommit(false);
+
+            // ==================================================
+            // TRANSAKCJA A: Usuwa wszystkie rekordy z tabeli
+            // ==================================================
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DELETE FROM ZAMOWIENIA_KOWALSKI_123456");
+                conn.commit();
+                System.out.println("\n[Transakcja A] Usunięto wszystkie rekordy z tabeli.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA B: Dodaje trzy zamówienia na konkretne rośliny (bez batcha)
+            // ==================================================
+            String insertSQL = "INSERT INTO ZAMOWIENIA_KOWALSKI_123456 (Nazwa_rosliny, Cena_sztuki, Ilosc, Cena_calosciowa) VALUES (?, ?, ?, ?)";
+            // Włączamy zwracanie wygenerowanych kluczy (przyda się tutaj i w Transakcji D)
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+
+                // Dodajemy zamówienia jedno po drugim (metoda sama robi executeUpdate)
+                insertOrder(pstmt, "Fikus", 45.50, 2);
+                insertOrder(pstmt, "Monstera", 120.00, 1);
+                insertOrder(pstmt, "Kaktus", 15.20, 5);
+
+                conn.commit();
+                System.out.println("\n[Transakcja B] Dodano 3 konkretne zamówienia.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA C: Modyfikuje rekordy (podwaja cenę) i dodaje zamówienie za 500 PLN
+            // ==================================================
+            try (Statement stmt = conn.createStatement()) {
+                // Podwajamy cenę sztuki i od razu przeliczamy cenę całościową dla wszystkich rekordów
+                stmt.executeUpdate("UPDATE ZAMOWIENIA_KOWALSKI_123456 SET Cena_sztuki = Cena_sztuki * 2, Cena_calosciowa = (Cena_sztuki * 2) * Ilosc");
+
+                // Dodajemy nowe zamówienie o łącznej wartości 500 PLN
+                stmt.executeUpdate("INSERT INTO ZAMOWIENIA_KOWALSKI_123456 (Nazwa_rosliny, Cena_sztuki, Ilosc, Cena_calosciowa) VALUES ('Złota Orchidea', 500.00, 1, 500.00)");
+
+                conn.commit();
+                System.out.println("\n[Transakcja C] Podwojono ceny i dodano zamówienie za 500 PLN.");
+                printTable(conn);
+            }
+
+            // ==================================================
+            // TRANSAKCJA D: 10 losowych zamówień i modyfikacja 3 wybranych (obsługa w Javie)
+            // ==================================================
+            try (PreparedStatement pstmtInsert = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+
+                Random rand = new Random();
+                String[] plants = {"Aloes", "Paproc", "Bonsai", "Roza", "Bratek", "Dracena"};
+
+                // Lista na zapisanie ID nowo dodanych zamówień
+                List<Integer> noweZamowieniaIDs = new ArrayList<>();
+
+                // 1. Dodawanie 10 losowych zamówień
+                for (int i = 0; i < 10; i++) {
+                    String plantName = plants[rand.nextInt(plants.length)];
+                    double price = 10.0 + (rand.nextDouble() * 90.0); // Cena od 10 do 100
+                    int quantity = rand.nextInt(5) + 1; // Ilość od 1 do 5
+
+                    // Wstawiamy zamówienie i odbieramy wygenerowane dla niego ID
+                    int wygenerowaneId = insertOrder(pstmtInsert, plantName, price, quantity);
+                    noweZamowieniaIDs.add(wygenerowaneId);
+                }
+
+                // 2. Modyfikacja 3 losowych z tych 10, które przed chwilą dodaliśmy
+
+                // Tasujemy naszą listę identyfikatorów
+                Collections.shuffle(noweZamowieniaIDs);
+                // Bierzemy 3 pierwsze elementy po przetasowaniu
+                List<Integer> doModyfikacji = noweZamowieniaIDs.subList(0, 3);
+
+                // Tworzymy zapytanie UPDATE tylko dla wylosowanych ID
+                String updateSQL = "UPDATE ZAMOWIENIA_KOWALSKI_123456 " +
+                                   "SET Ilosc = Ilosc + 1, Cena_calosciowa = Cena_sztuki * (Ilosc + 1) " +
+                                   "WHERE Id_zamowienia = ?";
+
+                try (PreparedStatement pstmtUpdate = conn.prepareStatement(updateSQL)) {
+                    // Wykonujemy update dla każdego z 3 wylosowanych zamówień
+                    for (Integer id : doModyfikacji) {
+                        pstmtUpdate.setInt(1, id);
+                        pstmtUpdate.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                System.out.println("\n[Transakcja D] Dodano 10 losowych zamówień i zaktualizowano 3 wybrane przez program.");
+                printTable(conn);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Błąd bazy danych: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ==================================================
+    // METODY POMOCNICZE
+    // ==================================================
+
+    // Metoda wymagana w pkt 3b - pobiera i wyświetla zawartość całej tabeli z równym formatowaniem
+    private static void printTable(Connection conn) throws SQLException {
+        String sql = "SELECT * FROM ZAMOWIENIA_KOWALSKI_123456";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            System.out.println("ID | Nazwa rośliny       | Cena/szt | Ilość | Suma");
+            System.out.println("---------------------------------------------------------");
+            while (rs.next()) {
+                System.out.printf("%-2d | %-19s | %-8.2f | %-5d | %.2f%n",
+                        rs.getInt("Id_zamowienia"),
+                        rs.getString("Nazwa_rosliny"),
+                        rs.getDouble("Cena_sztuki"),
+                        rs.getInt("Ilosc"),
+                        rs.getDouble("Cena_calosciowa"));
+            }
+        }
+    }
+
+    // Metoda wykonująca pojedynczy INSERT i zwracająca jego wygenerowane w bazie ID
+    private static int insertOrder(PreparedStatement pstmt, String name, double price, int qty) throws SQLException {
+        pstmt.setString(1, name);
+        pstmt.setDouble(2, price);
+        pstmt.setInt(3, qty);
+        pstmt.setDouble(4, price * qty); // Obliczenie Cena_calosciowa przed wstawieniem
+
+        pstmt.executeUpdate(); // Wykonanie pojedynczego insertu
+
+        // Pobieramy ID, które wygenerował SQL Server w kolumnie IDENTITY
+        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Nie udało się pobrać wygenerowanego ID.");
+            }
+        }
+    }
+}</code></pre>
 
 </div>
 </body>
