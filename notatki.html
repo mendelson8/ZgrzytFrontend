@@ -441,6 +441,190 @@ SELECT * FROM dbo.ProductRequest
 WHERE ProductID = 1
 ORDER BY RequestDate DESC;</code></pre>
 
+  <hr>
+
+  <h2>Dodatek: Aplikacja i struktura bazy (Mendel 339073)</h2>
+
+  <h3>Kod Java: <code>App_Mendel_339073.java</code></h3>
+  <pre><code class="language-java">import java.sql.*;
+
+public class App_Mendel_339073 {
+
+    // Dane logowania - ZMIEŃ parametry na zgodne z Twoim lokalnym serwerem
+    private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=DB_MENDEL_339073;encrypt=true;trustServerCertificate=true;";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "SAstudent1"; // Wpisz swoje hasło
+
+    public static void main(String[] args) {
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement()) {
+
+            System.out.println("=== POŁĄCZONO Z BAZĄ DANYCH ===");
+
+            // ==========================================
+            // TRANSAKCJA 1: Inicjalizacja danych
+            // ==========================================
+            conn.setAutoCommit(false);
+            try {
+                System.out.println("\n--- TRANSAKCJA 1: INICJALIZACJA DANYCH ---");
+
+                // Usuwanie (Kolejność ze względu na klucze obce)
+                stmt.executeUpdate("DELETE FROM MAGNETIC_MEASUREMENTS_MENDEL");
+                stmt.executeUpdate("DELETE FROM SUNSPOTS_MENDEL");
+                stmt.executeUpdate("DELETE FROM STATIONS_MENDEL");
+
+                // Dodawanie 3 stacji
+                stmt.executeUpdate("INSERT INTO STATIONS_MENDEL (station_name, country, latitude, longitude, established_at) VALUES " +
+                        "('Stacja A', 'Polska', 50.0, 20.0, '2010-01-01')," +
+                        "('Stacja B', 'USA', 40.0, -100.0, '2012-05-15')," +
+                        "('Stacja C', 'Chile', -30.0, -70.0, '2015-11-20')");
+
+                // Dodawanie 4 plam (Zadbałem, aby jedna spełniała warunek: poziom > 7 i obszar > 5000 dla Transakcji 2)
+                stmt.executeUpdate("INSERT INTO SUNSPOTS_MENDEL (observation_date, solar_latitude, solar_longitude, area_size, detected_by, activity_level) VALUES " +
+                        "('2023-01-10', 10.0, 20.0, 6000.00, 'User1', 'M8')," +
+                        "('2023-02-15', -5.0, 15.0, 3000.00, 'User2', 'C4')," +
+                        "('2023-03-20', 12.0, -10.0, 5500.00, 'User3', 'X9')," +
+                        "('2023-04-25', -15.0, 30.0, 4000.00, 'User4', 'M5')");
+
+                // Dodawanie 6 pomiarów (Zadbałem, aby pomiary spełniały warunki Transakcji 3: > 30 dni temu, pole < 20000)
+                // Używam podzapytań do dynamicznego pobrania poprawnych kluczy obcych (bo IDENTITY mogło nadać różne numery)
+                String insertMeasurements = "INSERT INTO MAGNETIC_MEASUREMENTS_MENDEL (station_id, sunspot_id, magnetic_field_nt, measurement_type, measured_at) " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 15000.00, 'PRIMARY', DATEADD(day, -40, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 18000.00, 'PRIMARY', DATEADD(day, -50, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 25000.00, 'PRIMARY', DATEADD(day, -10, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 12000.00, 'PRIMARY', DATEADD(day, -60, GETDATE()) UNION ALL " +
+                        "SELECT TOP 1 (SELECT MAX(station_id) FROM STATIONS_MENDEL), (SELECT MAX(sunspot_id) FROM SUNSPOTS_MENDEL), 30000.00, 'PRIMARY', GETDATE() UNION ALL " +
+                        "SELECT TOP 1 (SELECT MIN(station_id) FROM STATIONS_MENDEL), (SELECT MIN(sunspot_id) FROM SUNSPOTS_MENDEL), 19000.00, 'PRIMARY', DATEADD(day, -35, GETDATE())";
+                stmt.executeUpdate(insertMeasurements);
+
+                conn.commit();
+
+                // Wyświetlanie wyników
+                System.out.println("Zainicjowano bazę danych. Liczba rekordów:");
+                printCount(stmt, "STATIONS_MENDEL", "Stacji");
+                printCount(stmt, "SUNSPOTS_MENDEL", "Plam słonecznych");
+                printCount(stmt, "MAGNETIC_MEASUREMENTS_MENDEL", "Pomiarów magnetycznych");
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 1 - wykonano Rollback.");
+                throw e;
+            }
+
+            // ==========================================
+            // TRANSAKCJA 2: Analiza aktywności słonecznej
+            // ==========================================
+            try {
+                System.out.println("\n--- TRANSAKCJA 2: ANALIZA AKTYWNOŚCI ---");
+
+                // Aktualizujemy poziom (SQL wyciąga cyfrę, dodaje 1, a potem skleja z literą)
+                String updateSunspots = "UPDATE SUNSPOTS_MENDEL " +
+                        "SET activity_level = LEFT(activity_level, 1) + CAST((CAST(RIGHT(activity_level, 1) AS INT) + 1) AS NVARCHAR), " +
+                        "    detected_by = 'AUTOMATED_SYSTEM' " +
+                        "WHERE CAST(RIGHT(activity_level, 1) AS INT) > 7 AND area_size > 5000";
+
+                stmt.executeUpdate(updateSunspots);
+                conn.commit();
+
+                ResultSet rs = stmt.executeQuery("SELECT sunspot_id, observation_date, activity_level, area_size, detected_by FROM SUNSPOTS_MENDEL WHERE detected_by = 'AUTOMATED_SYSTEM'");
+                System.out.println("ID | Data Obserwacji | Poziom | Rozmiar | Wykryto przez");
+                while(rs.next()) {
+                    System.out.printf("%d  | %s      | %s     | %.2f | %s%n",
+                            rs.getInt("sunspot_id"), rs.getDate("observation_date"),
+                            rs.getString("activity_level"), rs.getDouble("area_size"),
+                            rs.getString("detected_by"));
+                }
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 2 - wykonano Rollback.");
+                throw e;
+            }
+
+            // ==========================================
+            // TRANSAKCJA 3: Kalibracja pomiarów magnetycznych
+            // ==========================================
+            try {
+                System.out.println("\n--- TRANSAKCJA 3: KALIBRACJA POMIARÓW ---");
+
+                String updateMeasurements = "UPDATE MAGNETIC_MEASUREMENTS_MENDEL " +
+                        "SET magnetic_field_nt = magnetic_field_nt * 1.05, " +
+                        "    measurement_type = 'RECALIBRATED' " +
+                        "WHERE measured_at < DATEADD(day, -30, GETDATE()) AND magnetic_field_nt < 20000";
+
+                stmt.executeUpdate(updateMeasurements);
+                conn.commit();
+
+                ResultSet rs = stmt.executeQuery("SELECT measurement_id, station_id, magnetic_field_nt, measurement_type, measured_at FROM MAGNETIC_MEASUREMENTS_MENDEL WHERE measurement_type = 'RECALIBRATED'");
+                System.out.println("ID | Stacja | Pole (nT) | Typ          | Data pomiaru");
+                while(rs.next()) {
+                    System.out.printf("%d  | %d      | %.2f  | %s | %s%n",
+                            rs.getInt("measurement_id"), rs.getInt("station_id"),
+                            rs.getDouble("magnetic_field_nt"), rs.getString("measurement_type"),
+                            rs.getTimestamp("measured_at"));
+                }
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Błąd Transakcji 3 - wykonano Rollback.");
+                throw e;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Metoda pomocnicza do zliczania rekordów
+    private static void printCount(Statement stmt, String table, String label) throws SQLException {
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table);
+        if (rs.next()) {
+            System.out.println(label + ": " + rs.getInt(1));
+        }
+    }
+}</code></pre>
+
+  <h3>Skrypt SQL: Inicjalizacja DB_MENDEL_339073</h3>
+  <pre><code class="language-sql">-- 1. Utworzenie bazy danych
+CREATE DATABASE DB_MENDEL_339073;
+GO
+
+USE DB_MENDEL_339073;
+GO
+
+-- 2. Tworzenie tabeli stacji badawczych
+CREATE TABLE STATIONS_MENDEL (
+    station_id INT IDENTITY(1,1) PRIMARY KEY,
+    station_name NVARCHAR(100),
+    country NVARCHAR(100),
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
+    established_at DATE
+);
+
+-- 3. Tworzenie tabeli plam słonecznych
+CREATE TABLE SUNSPOTS_MENDEL (
+    sunspot_id INT IDENTITY(1,1) PRIMARY KEY,
+    observation_date DATE,
+    solar_latitude DECIMAL(9,6),
+    solar_longitude DECIMAL(9,6),
+    area_size DECIMAL(12,2),
+    detected_by NVARCHAR(100),
+    activity_level NVARCHAR(2)
+);
+
+-- 4. Tworzenie tabeli pomiarów magnetycznych
+CREATE TABLE MAGNETIC_MEASUREMENTS_MENDEL (
+    measurement_id INT IDENTITY(1,1) PRIMARY KEY,
+    station_id INT FOREIGN KEY REFERENCES STATIONS_MENDEL(station_id),
+    sunspot_id INT FOREIGN KEY REFERENCES SUNSPOTS_MENDEL(sunspot_id),
+    magnetic_field_nt DECIMAL(10,2),
+    measurement_type NVARCHAR(100),
+    measured_at DATETIME
+);
+GO</code></pre>
+
 </div>
 </body>
 </html>
