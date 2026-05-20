@@ -442,4 +442,295 @@ int main(int argc, char **argv) {
 
     printf("Serwer zakonczyl prace poprawnie.\n");
     return EXIT_SUCCESS;
+}////
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <signal.h>
+#include <time.h>
+
+#include "l8_common.h"
+
+#define BACKLOG 3
+#define MAXBUF 576
+#define STACK_SIZE 16
+#define DIVISION_NAMES_SIZE 128
+#define MAP_SIZE 100
+
+int make_socket(int domain, int type)
+{
+    int sock;
+    sock = socket(domain, type, 0);
+    if (sock < 0)
+        ERR("socket");
+    return sock;
+}
+
+int bind_inet_socket(uint16_t port, int type)
+{
+    struct sockaddr_in addr;
+    int socketfd, t = 1;
+    socketfd = make_socket(PF_INET, type);
+    memset(&addr, 0, sizeof(struct sockaddr_in));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &t, sizeof(t)))
+        ERR("setsockopt");
+    if (bind(socketfd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+        ERR("bind");
+    if (SOCK_STREAM == type)
+        if (listen(socketfd, BACKLOG) < 0)
+            ERR("listen");
+    return socketfd;
+}
+
+void usage(char *name) { fprintf(stderr, "USAGE: %s port\n", name); }
+
+// --- STRUKTURY DANYCH ---
+
+// Pojedynczy raport odkładany na stos
+typedef struct {
+    char text[256];
+    struct sockaddr_in sender_addr;
+} Raport;
+
+// Centralna struktura sztabu
+typedef struct {
+    // Współdzielone gniazdo UDP (potrzebne Napoleonowi do wysyłania)
+    int sockfd;
+
+    // Etap 2: Stos raportów
+    Raport messages[STACK_SIZE];
+    int top;
+    pthread_mutex_t m;
+    pthread_cond_t c;
+
+    // Etap 3 & 4: Rejestr oddziałów (nazwy, przynależność, adresy)
+    char division_names[DIVISION_NAMES_SIZE][128];
+    int division_affiliation[DIVISION_NAMES_SIZE]; // 1 - sojusznik, 0 - wróg
+    struct sockaddr_in division_addrs[DIVISION_NAMES_SIZE]; // Adresy nadawców
+    int num_divisions;
+    pthread_mutex_t names_mutex;
+
+    // Etap 3: Mapa sztabowa
+    int map[MAP_SIZE][MAP_SIZE];
+    pthread_mutex_t map_row_mutexes[MAP_SIZE];
+} Sztab;
+
+// --- WĄTKI ---
+
+void* doAdiutant(void* arg) {
+    Sztab* p = (Sztab*)arg;
+    Raport roboczy_raport;
+
+    while (1) {
+        pthread_mutex_lock(&p->m);
+        while (p->top == 0) {
+            if (pthread_cond_wait(&p->c, &p->m) != 0)
+                ERR("pthread_cond_wait");
+        }
+
+        p->top--;
+        roboczy_raport = p->messages[p->top]; // Kopiujemy cały raport (tekst + adres)
+        pthread_mutex_unlock(&p->m);
+
+        usleep(10 * 1000); // 10ms pracy
+
+        int x, y, czy_nasz;
+        char wiadomosc[128] = {0};
+
+        if (sscanf(roboczy_raport.text, "%d %d %d %127[^\n\r]", &x, &y, &czy_nasz, wiadomosc) == 4) {
+
+            if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) continue;
+
+            // Rejestracja oddziału
+            int division_id = -1;
+            pthread_mutex_lock(&p->names_mutex);
+
+            for (int i = 0; i < p->num_divisions; i++) {
+                if (strcmp(p->division_names[i], wiadomosc) == 0) {
+                    division_id = i;
+                    break;
+                }
+            }
+
+            if (division_id == -1 && p->num_divisions < DIVISION_NAMES_SIZE) {
+                division_id = p->num_divisions;
+                strncpy(p->division_names[division_id], wiadomosc, 127);
+                p->num_divisions++;
+            }
+
+            // Etap 4: Aktualizacja danych o oddziale (adres i flaga sojusznika)
+            if (division_id != -1) {
+                p->division_affiliation[division_id] = czy_nasz;
+                p->division_addrs[division_id] = roboczy_raport.sender_addr;
+            }
+            pthread_mutex_unlock(&p->names_mutex);
+
+            if (division_id == -1) continue; // Brak miejsca w tablicy
+
+            // Aktualizacja mapy
+            for (int i = 0; i < MAP_SIZE; i++) {
+                pthread_mutex_lock(&p->map_row_mutexes[i]);
+                for (int j = 0; j < MAP_SIZE; j++) {
+                    if (p->map[i][j] == division_id) p->map[i][j] = -1;
+                }
+                pthread_mutex_unlock(&p->map_row_mutexes[i]);
+            }
+
+            pthread_mutex_lock(&p->map_row_mutexes[y]);
+            p->map[y][x] = division_id;
+            pthread_mutex_unlock(&p->map_row_mutexes[y]);
+
+        }
+    }
+    return NULL;
+}
+
+void* doNapoleon(void* arg) {
+    Sztab* p = (Sztab*)arg;
+    unsigned int seed = time(NULL); // Seed dla rand_r
+    char buf[256];
+
+    while (1) {
+        usleep(30 * 1000); // Cesarz radzi co 30ms
+
+        // 1. Wypisywanie stanu mapy
+        // Ze względu na to, że wypisywanie macierzy 100x100 co 30ms zaspamuje konsolę,
+        // wypisujemy tylko zajęte koordynaty (jako podgląd mapy).
+        printf("\n[NAPOLEON] Stan Mapy:\n");
+        int active_units = 0;
+        for (int i = 0; i < MAP_SIZE; i++) {
+            pthread_mutex_lock(&p->map_row_mutexes[i]);
+            for (int j = 0; j < MAP_SIZE; j++) {
+                if (p->map[i][j] != -1) {
+                    int d_id = p->map[i][j];
+                    printf(" -> [%02d:%02d] %s\n", j, i, p->division_names[d_id]);
+                    active_units++;
+                }
+            }
+            pthread_mutex_unlock(&p->map_row_mutexes[i]);
+        }
+        if (active_units == 0) printf(" -> Mapa pusta.\n");
+
+        // 2. Szukanie sojuszników
+        pthread_mutex_lock(&p->names_mutex);
+        int allied_indices[DIVISION_NAMES_SIZE];
+        int allied_count = 0;
+
+        for (int i = 0; i < p->num_divisions; i++) {
+            if (p->division_affiliation[i] == 1) {
+                allied_indices[allied_count++] = i;
+            }
+        }
+
+        // 3. Wysłanie rozkazu
+        if (allied_count > 0) {
+            int random_idx = rand_r(&seed) % allied_count;
+            int target_id = allied_indices[random_idx];
+
+            struct sockaddr_in target_addr = p->division_addrs[target_id];
+            char target_name[128];
+            strcpy(target_name, p->division_names[target_id]);
+
+            pthread_mutex_unlock(&p->names_mutex); // Zwalniamy przed wysłaniem!
+
+            int order_x = rand_r(&seed) % MAP_SIZE;
+            int order_y = rand_r(&seed) % MAP_SIZE;
+
+            // Format rozkazu: <X> <Y> <P> <nazwa oddziału>
+            int msg_len = snprintf(buf, sizeof(buf), "%d %d 1 %s\n", order_x, order_y, target_name);
+
+            if (TEMP_FAILURE_RETRY(sendto(p->sockfd, buf, msg_len, 0, (struct sockaddr*)&target_addr, sizeof(target_addr))) < 0) {
+                ERR("sendto");
+            }
+
+            printf("[NAPOLEON] Wysłano rozkaz do %s: udaj się na %d:%d\n", target_name, order_x, order_y);
+
+        } else {
+            pthread_mutex_unlock(&p->names_mutex);
+        }
+    }
+    return NULL;
+}
+
+void doServer(int fd, Sztab* p) {
+    char buf[MAXBUF + 1];
+    struct sockaddr_in addr;
+    socklen_t size;
+
+    while (1) {
+        size = sizeof(addr);
+        int receivedBytes = TEMP_FAILURE_RETRY(recvfrom(fd, buf, MAXBUF, 0, (struct sockaddr *)&addr, &size));
+        if (receivedBytes < 0) ERR("recvfrom");
+
+        buf[receivedBytes] = '\0';
+
+        pthread_mutex_lock(&p->m);
+        if (p->top < STACK_SIZE) {
+            strncpy(p->messages[p->top].text, buf, 256);
+            p->messages[p->top].sender_addr = addr; // Zapisz adres nadawcy
+            p->top++;
+            pthread_cond_signal(&p->c);
+        } else {
+            fprintf(stderr, "Stos pelny! Odrzucono raport.\n");
+        }
+        pthread_mutex_unlock(&p->m);
+    }
+}
+
+int main(int argc, char **argv)
+{
+    int fd;
+    if (argc != 2)
+    {
+        usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+    if (sethandler(SIG_IGN, SIGPIPE)) ERR("Seting SIGPIPE:");
+
+    fd = bind_inet_socket(atoi(argv[1]), SOCK_DGRAM);
+
+    Sztab sztab;
+    memset(&sztab, 0, sizeof(Sztab)); // Zerowanie pamięci
+    sztab.sockfd = fd; // Przypisanie gniazda dla Napoleona
+
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) sztab.map[i][j] = -1;
+    }
+
+    if (pthread_mutex_init(&sztab.m, NULL) != 0) ERR("pthread_mutex_init");
+    if (pthread_cond_init(&sztab.c, NULL) != 0) ERR("pthread_cond_init");
+    if (pthread_mutex_init(&sztab.names_mutex, NULL) != 0) ERR("pthread_mutex_init");
+    for (int i = 0; i < MAP_SIZE; i++) {
+        if (pthread_mutex_init(&sztab.map_row_mutexes[i], NULL) != 0) ERR("pthread_mutex_init");
+    }
+
+    pthread_t adiutanci[4];
+    for (int i = 0; i < 4; i++) {
+        if (pthread_create(&adiutanci[i], NULL, doAdiutant, &sztab) != 0) ERR("pthread_create");
+    }
+
+    // Odpalenie wątku Napoleona
+    pthread_t napoleon_thread;
+    if (pthread_create(&napoleon_thread, NULL, doNapoleon, &sztab) != 0) ERR("pthread_create");
+
+    doServer(fd, &sztab);
+
+    if (TEMP_FAILURE_RETRY(close(fd)) < 0) ERR("close");
+
+    // Sprzątanie
+    pthread_mutex_destroy(&sztab.m);
+    pthread_cond_destroy(&sztab.c);
+    pthread_mutex_destroy(&sztab.names_mutex);
+    for (int i = 0; i < MAP_SIZE; i++) pthread_mutex_destroy(&sztab.map_row_mutexes[i]);
+
+    return EXIT_SUCCESS;
 }
